@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>LAS Partial Retirement Checklist</title>
+    <!-- Favicon PR for Partial Retirement -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23023020'/%3E%3Ctext x='16' y='20' font-family='Arial' font-size='14' font-weight='bold' text-anchor='middle' fill='white'%3EPR%3C/text%3E%3C/svg%3E">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #FAFAFA;
+            color: #1A1A1A;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: #023020;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin: 0 0 10px 0;
+        }
+
+        .header p {
+            font-size: 16px;
+            margin: 0;
+            opacity: 0.95;
+        }
+
+        .alert-box {
+            background: #FFF8E1;
+            border: 3px solid #F57C00;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .alert-box h3 {
+            color: #E65100;
+            margin: 0 0 10px 0;
+        }
+
+        .progress-container {
+            background: white;
+            border: 2px solid #CCCCCC;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #1A1A1A;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #E0E0E0;
+            border: 2px solid #023020;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #023020;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .section {
+            background: white;
+            border: 2px solid #CCCCCC;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #E0E0E0;
+        }
+
+        .step-number {
+            background: #023020;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .step-number.completed {
+            background: #2E7D32;
+        }
+
+        .step-title {
+            flex: 1;
+        }
+
+        .step-title h2 {
+            color: #023020;
+            margin: 0 0 5px 0;
+            font-size: 20px;
+        }
+
+        .step-title p {
+            color: #666;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .checklist {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #F8F9FA;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checklist-item:hover {
+            border-color: #023020;
+            background: #F0F7F4;
+        }
+
+        .checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #023020;
+            border-radius: 4px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .checkbox.checked {
+            background: #023020;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+        }
+
+        .checklist-content {
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        .checklist-item.completed {
+            opacity: 0.7;
+            background: #E8F5E9;
+        }
+
+        .checklist-item.completed .checklist-content {
+            text-decoration: line-through;
+            color: #666;
+        }
+
+        .info-box {
+            background: #E8F4F0;
+            border-left: 5px solid #023020;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .reminder-box {
+            background: #FFF3E0;
+            border: 2px solid #F57C00;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .reminder-box h3 {
+            color: #E65100;
+            margin: 0 0 10px 0;
+        }
+
+        .reminder-box ul {
+            margin: 10px 0 0 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .button {
+            background: #023020;
+            color: white;
+            border: 2px solid #023020;
+            padding: 15px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            text-decoration: none;
+        }
+
+        .button:hover {
+            background: white;
+            color: #023020;
+        }
+
+        .button-secondary {
+            background: white;
+            color: #023020;
+        }
+
+        .button-secondary:hover {
+            background: #F0F7F4;
+        }
+
+        @media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+
+        @media print {
+            .action-buttons {
+                display: none;
+            }
+            .checklist-item {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎯 LAS Partial Retirement Checklist</h1>
+            <p>Track your progress through each stage of your Partial Retirement process</p>
+        </header>
+
+        <div class="alert-box">
+            <h3>📋 Important Note</h3>
+            <p>This checklist is designed to help you keep track of each stage in your Partial Retirement process. You will not complete every step yourself—your line manager, HR, Payroll, and the LAS Pensions Team are also involved. However, it is your responsibility to monitor progress and follow up as needed.</p>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-label">
+                <span>Overall Progress</span>
+                <span id="progressText">0% Complete</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="section">
+            <div class="step-header">
+                <div class="step-number" id="step-icon-1">1</div>
+                <div class="step-title">
+                    <h2>Confirm Eligibility</h2>
+                    <p>Verify you meet the requirements for partial retirement</p>
+                </div>
+            </div>
+            <ul class="checklist">
+                <li class="checklist-item" onclick="toggleItem('1-1')">
+                    <div class="checkbox" id="check-1-1"></div>
+                    <div class="checklist-content">
+                        <strong>Confirm you meet the eligibility criteria:</strong> You must be age 55 or over and an active NHS Pension Scheme member, not had a change to your working pattern within the last 12 months.
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleItem('1-2')">
+                    <div class="checkbox" id="check-1-2"></div>
+                    <div class="checklist-content">
+                        <strong>Review the Guidelines for Partial Retirement Requests</strong> to understand the requirements and implications of partial retirement.
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="section">
+            <div class="step-header">
+                <div class="step-number" id="step-icon-2">2</div>
+                <div class="step-title">
+                    <h2>Request a Pension Estimate</h2>
+                    <p>Get an estimate of your pension benefits</p>
+                </div>
+            </div>
+            <ul class="checklist">
+                <li class="checklist-item" onclick="toggleItem('2-1')">
+                    <div class="checkbox" id="check-2-1"></div>
+                    <div class="checklist-content">
+                        Submit the <strong>Partial Retirement Estimate Request Form</strong> to NHS Pensions to receive an estimate of your pension benefits.
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="section">
+            <div class="step-header">
+                <div class="step-number" id="step-icon-3">3</div>
+                <div class="step-title">
+                    <h2>Agree a Flexible Working Arrangement</h2>
+                    <p>Discuss new working pattern with your manager</p>
+                </div>
+            </div>
+            <ul class="checklist">
+                <li class="checklist-item" onclick="toggleItem('3-1')">
+                    <div class="checkbox" id="check-3-1"></div>
+                    <div class="checklist-content">
+                        Discuss and agree a <strong>new working pattern</strong> with your line manager, ensuring it reflects at least a <strong>10% reduction in pensionable pay</strong> for a period of 12 months.
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleItem('3-2')">
+                    <div class="checkbox" id="check-3-2"></div>
+                    <div class="checklist-content">
+                        Submit a <strong>Flexible Working Request Form</strong> for line manager and HR approval.
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleItem('3-3')">
+                    <div class="checkbox" id="check-3-3"></div>
+                    <div class="checklist-content">
+                        Ensure the new working pattern is clearly documented and agreed in writing.
+                    </div>
+                </li>
+            </ul>
+            <div class="info-box">
+                <strong>💡 Key Requirement:</strong> Your pensionable pay must reduce by at least 10% for a minimum of 12 months to qualify for partial retirement.
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="section">
+            <div class="step-header">
+                <div class="step-number" id="step-icon-4">4</div>
+                <div class="step-title">
+                    <h2>Notify Pensions and Begin Application</h2>
+                    <p>Inform LAS Pensions and request the pack</p>
+                </div>
+            </div>
+            <ul class="checklist">
+                <li class="checklist-item" onclick="toggleItem('4-1')">
+                    <div class="checkbox" id="check-4-1"></div>
+                    <div class="checklist-content">
+                        Contact the <strong>LAS Pensions Department</strong> to discuss your intention to take partial retirement and request the <strong>Partial Retirement Pack</strong>.
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleItem('4-2')">
+                    <div class="checkbox" id="check-4-2"></div>
+                    <div class="checklist-content">
+                        Receive and complete the <strong>Partial Retirement Pack</strong>, including relevant forms and certificates.
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="section">
+            <div class="step-header">
+                <div class="step-number" id="step-icon-5">5</div>
+                <div class="step-title">
+                    <h2>Manager & HR Actions</h2>
+                    <p>Your manager updates payroll records</p>
+                </div>
+            </div>
+            <ul class="checklist">
+                <li class="checklist-item" onclick="toggleItem('5-1')">
+                    <div class="checkbox" id="check-5-1"></div>
+                    <div class="checklist-content">
+                        <strong>Line manager</strong> submits the <strong>MSS Change Form</strong> to the Payroll Team to update your payroll record with the new working pattern.
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleItem('5-2')">
+                    <div class="checkbox" id="check-5-2"></div>
+                    <div class="checklist-content">
+                        <strong>Line manager</strong> must ensure the MSS form indicates <strong>"Partial Retirement"</strong> as the reason for the change.
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleItem('5-3')">
+                    <div class="checkbox" id="check-5-3"></div>
+                    <div class="checklist-content">
+                        <strong>HR</strong> sends a confirmation letter to you and the LAS Pensions Team confirming the new working arrangement.
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleItem('5-4')">
+                    <div class="checkbox" id="check-5-4"></div>
+                    <div class="checklist-content">
+                        Ensure the <strong>MSS Change Form and HR Letter</strong> contain matching information regarding the <strong>effective date</strong> and agreed working pattern.
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="section">
+            <div class="step-header">
+                <div class="step-number" id="step-icon-6">6</div>
+                <div class="step-title">
+                    <h2>Submit Your Partial Retirement Application</h2>
+                    <p>Send completed forms to LAS Pensions</p>
+                </div>
+            </div>
+            <ul class="checklist">
+                <li class="checklist-item" onclick="toggleItem('6-1')">
+                    <div class="checkbox" id="check-6-1"></div>
+                    <div class="checklist-content">
+                        Return the <strong>completed Partial Retirement Application Form</strong> and all required certificates to the <strong>LAS Pensions Team</strong>.
+                    </div>
+                </li>
+                <li class="checklist-item" onclick="toggleItem('6-2')">
+                    <div class="checkbox" id="check-6-2"></div>
+                    <div class="checklist-content">
+                        Await confirmation from the LAS Pensions Team that your application has been submitted to NHS Pensions.
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="section">
+            <div class="step-header">
+                <div class="step-number" id="step-icon-7">7</div>
+                <div class="step-title">
+                    <h2>Final Confirmation</h2>
+                    <p>Await approval from NHS Pensions</p>
+                </div>
+            </div>
+            <ul class="checklist">
+                <li class="checklist-item" onclick="toggleItem('7-1')">
+                    <div class="checkbox" id="check-7-1"></div>
+                    <div class="checklist-content">
+                        Await formal notification of <strong>approval and pension arrangements</strong> from NHS Pensions.
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="reminder-box">
+            <h3>Important Reminder:</h3>
+            <p>Please ensure:</p>
+            <ul>
+                <li>✓ All forms are completed accurately</li>
+                <li>✓ Key dates and details (especially working pattern) are consistent across documents</li>
+            </ul>
+        </div>
+
+        <div class="action-buttons">
+            <button class="button" onclick="printChecklist()">📄 Print Checklist</button>
+            <button class="button button-secondary" onclick="exportProgress()">📊 Export Progress</button>
+            <button class="button button-secondary" onclick="resetProgress()">🔄 Reset All</button>
+        </div>
+    </div>
+
+    <script>
+        // Track completion state
+        const checklistItems = {};
+        const totalItems = 16; // Total number of checkboxes
+
+        // Initialize all items
+        for (let i = 1; i <= 7; i++) {
+            for (let j = 1; j <= 4; j++) {
+                const id = `${i}-${j}`;
+                if (document.getElementById(`check-${id}`)) {
+                    checklistItems[id] = false;
+                }
+            }
+        }
+
+        // Load saved progress
+        window.onload = function() {
+            loadProgress();
+            updateProgress();
+        };
+
+        function toggleItem(id) {
+            checklistItems[id] = !checklistItems[id];
+            const checkbox = document.getElementById(`check-${id}`);
+            const item = checkbox.parentElement;
+            
+            if (checklistItems[id]) {
+                checkbox.classList.add('checked');
+                item.classList.add('completed');
+            } else {
+                checkbox.classList.remove('checked');
+                item.classList.remove('completed');
+            }
+            
+            updateProgress();
+            saveProgress();
+        }
+
+        function updateProgress() {
+            const completed = Object.values(checklistItems).filter(v => v).length;
+            const percentage = Math.round((completed / Object.keys(checklistItems).length) * 100);
+            
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressBar').textContent = percentage > 0 ? percentage + '%' : '';
+            document.getElementById('progressText').textContent = percentage + '% Complete';
+            
+            // Update step icons
+            for (let step = 1; step <= 7; step++) {
+                let stepComplete = true;
+                for (let item = 1; item <= 4; item++) {
+                    const id = `${step}-${item}`;
+                    if (checklistItems[id] !== undefined && !checklistItems[id]) {
+                        stepComplete = false;
+                        break;
+                    }
+                }
+                
+                const stepIcon = document.getElementById(`step-icon-${step}`);
+                if (stepIcon) {
+                    if (stepComplete) {
+                        stepIcon.classList.add('completed');
+                        stepIcon.innerHTML = '✓';
+                    } else {
+                        stepIcon.classList.remove('completed');
+                        stepIcon.innerHTML = step.toString();
+                    }
+                }
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('partialRetirementProgress', JSON.stringify(checklistItems));
+            localStorage.setItem('partialRetirementDate', new Date().toISOString());
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('partialRetirementProgress');
+            if (saved) {
+                const savedItems = JSON.parse(saved);
+                Object.keys(savedItems).forEach(id => {
+                    if (savedItems[id]) {
+                        checklistItems[id] = true;
+                        const checkbox = document.getElementById(`check-${id}`);
+                        if (checkbox) {
+                            checkbox.classList.add('checked');
+                            checkbox.parentElement.classList.add('completed');
+                        }
+                    }
+                });
+            }
+        }
+
+        function resetProgress() {
+            if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                Object.keys(checklistItems).forEach(id => {
+                    checklistItems[id] = false;
+                    const checkbox = document.getElementById(`check-${id}`);
+                    if (checkbox) {
+                        checkbox.classList.remove('checked');
+                        checkbox.parentElement.classList.remove('completed');
+                    }
+                });
+                
+                localStorage.removeItem('partialRetirementProgress');
+                localStorage.removeItem('partialRetirementDate');
+                updateProgress();
+            }
+        }
+
+        function printChecklist() {
+            window.print();
+        }
+
+        function exportProgress() {
+            let report = "LAS PARTIAL RETIREMENT CHECKLIST\n";
+            report += "Generated: " + new Date().toLocaleDateString() + "\n";
+            report += "=====================================\n\n";
+            
+            const steps = [
+                'Confirm Eligibility',
+                'Request a Pension Estimate',
+                'Agree a Flexible Working Arrangement',
+                'Notify Pensions and Begin Application',
+                'Manager & HR Actions',
+                'Submit Your Partial Retirement Application',
+                'Final Confirmation'
+            ];
+            
+            steps.forEach((stepName, stepIndex) => {
+                report += `STEP ${stepIndex + 1}: ${stepName}\n`;
+                
+                for (let item = 1; item <= 4; item++) {
+                    const id = `${stepIndex + 1}-${item}`;
+                    const checkbox = document.getElementById(`check-${id}`);
+                    if (checkbox) {
+                        const text = checkbox.nextElementSibling.textContent.trim();
+                        const status = checklistItems[id] ? "✓" : "○";
+                        report += `  ${status} ${text}\n`;
+                    }
+                }
+                report += "\n";
+            });
+            
+            const completed = Object.values(checklistItems).filter(v => v).length;
+            const percentage = Math.round((completed / Object.keys(checklistItems).length) * 100);
+            report += `Overall Progress: ${percentage}% Complete (${completed}/${Object.keys(checklistItems).length} items)\n`;
+            
+            // Create download
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Partial_Retirement_Progress_' + new Date().toISOString().split('T')[0] + '.txt';
+            a.click();
+        }
+    </script>
+</body>
+</html>
