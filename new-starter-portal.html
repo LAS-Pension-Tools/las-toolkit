@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>LAS Pension New Starter Portal - Accessible</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23023020'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3E£%3C/text%3E%3C/svg%3E">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Core styles with accessibility focus */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #FAFAFA;
+            color: #1A1A1A;
+            line-height: 1.6;
+            font-size: 16px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Disable animations if user prefers */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Skip to main content for screen readers */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #023020;
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Header - solid colors, high contrast */
+        .header {
+            background: #023020;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        /* Transfer Alert - high visibility without animation */
+        .transfer-alert {
+            background: #FFF8E1;
+            border: 3px solid #F57C00;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .transfer-alert h3 {
+            color: #E65100;
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .transfer-alert p {
+            margin: 0;
+            color: #1A1A1A;
+            font-size: 16px;
+        }
+
+        /* Sections with clear borders */
+        .section {
+            background: white;
+            border: 2px solid #CCCCCC;
+            padding: 30px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .section h2 {
+            color: #023020;
+            margin: 0 0 20px 0;
+            border-bottom: 3px solid #023020;
+            padding-bottom: 10px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* Progress bar - simple, clear */
+        .progress-container {
+            background: #F5F5F5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #CCCCCC;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #1A1A1A;
+            font-size: 16px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #E0E0E0;
+            border: 2px solid #023020;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #023020;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        /* Task items - clear, structured */
+        .task-item {
+            background: white;
+            border: 2px solid #CCCCCC;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .task-item:hover {
+            border-color: #023020;
+        }
+
+        .task-item:focus-within {
+            outline: 3px solid #023020;
+            outline-offset: 2px;
+        }
+
+        .task-item.completed {
+            background: #F0F7F4;
+            border-color: #2E7D32;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #023020;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+            background: white;
+        }
+
+        .checkbox.checked {
+            background: #023020;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 18px;
+            color: #1A1A1A;
+        }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: #666666;
+        }
+
+        .time-badge {
+            display: inline-block;
+            background: #023020;
+            color: white;
+            padding: 4px 12px;
+            font-size: 14px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .task-description {
+            color: #333333;
+            font-size: 16px;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .task-link {
+            color: #023020;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .task-link:hover {
+            text-decoration: underline;
+        }
+
+        .task-link:focus {
+            outline: 2px solid #023020;
+            outline-offset: 2px;
+        }
+
+        /* Documents - clear grid */
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .document-card {
+            background: white;
+            border: 2px solid #CCCCCC;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .document-card:hover {
+            border-color: #023020;
+        }
+
+        .document-card.critical {
+            background: #FFF3E0;
+            border: 3px solid #F57C00;
+        }
+
+        .critical-badge {
+            background: #E65100;
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+            margin: 0 0 10px 0;
+            border-radius: 4px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .document-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .document-card a {
+            color: #023020;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .document-card a:hover {
+            text-decoration: underline;
+        }
+
+        .document-card a:focus {
+            outline: 2px solid #023020;
+            outline-offset: 2px;
+        }
+
+        .document-description {
+            margin: 8px 0 0;
+            font-size: 14px;
+            color: #333333;
+        }
+
+        /* Video section */
+        .video-item {
+            background: white;
+            border: 2px solid #CCCCCC;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .video-item:hover {
+            border-color: #023020;
+        }
+
+        .video-title {
+            font-weight: 700;
+            color: #023020;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .video-title:hover {
+            text-decoration: underline;
+        }
+
+        .video-title:focus {
+            outline: 2px solid #023020;
+            outline-offset: 2px;
+        }
+
+        .video-duration {
+            font-size: 16px;
+            color: #333333;
+            line-height: 1.5;
+        }
+
+        /* Help section */
+        .help-section {
+            background: #F0F7F4;
+            border: 3px solid #023020;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .help-section h2 {
+            color: #023020;
+            border: none;
+            margin: 0 0 15px 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .help-text {
+            color: #1A1A1A;
+            margin: 0 0 25px 0;
+            font-size: 16px;
+        }
+
+        .contact-info {
+            background: white;
+            border: 2px solid #023020;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .contact-info p {
+            margin: 10px 0;
+            font-size: 16px;
+            color: #1A1A1A;
+        }
+
+        .contact-info a {
+            color: #023020;
+            font-weight: 600;
+        }
+
+        .qa-box {
+            background: white;
+            border: 2px solid #023020;
+            padding: 25px;
+            border-radius: 8px;
+        }
+
+        .qa-box h3 {
+            color: #023020;
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .qa-description {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            color: #1A1A1A;
+            line-height: 1.5;
+        }
+
+        .join-button {
+            background: #023020;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 16px;
+            border: 2px solid #023020;
+        }
+
+        .join-button:hover {
+            background: white;
+            color: #023020;
+        }
+
+        .join-button:focus {
+            outline: 3px solid #023020;
+            outline-offset: 3px;
+        }
+
+        /* Tips and alerts */
+        .tip-box {
+            background: #F0F7F4;
+            border-left: 5px solid #2E7D32;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+
+        .tip-box p {
+            margin: 0;
+            font-size: 16px;
+            color: #1A1A1A;
+        }
+
+        .download-tip {
+            background: #FFF8E1;
+            border-left: 5px solid #F57C00;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+
+        .download-tip p {
+            margin: 0;
+            font-size: 16px;
+            color: #1A1A1A;
+        }
+
+        /* Action buttons */
+        .action-buttons {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .action-button {
+            background: #023020;
+            color: white;
+            border: 2px solid #023020;
+            padding: 15px 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .action-button:hover {
+            background: white;
+            color: #023020;
+        }
+
+        .action-button:focus {
+            outline: 3px solid #023020;
+            outline-offset: 3px;
+        }
+
+        /* Accessibility preferences */
+        .accessibility-controls {
+            background: white;
+            border: 2px solid #023020;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .accessibility-controls label {
+            font-weight: 600;
+            margin-right: 15px;
+        }
+
+        /* High contrast mode */
+        body.high-contrast {
+            background: white;
+            color: black;
+        }
+
+        body.high-contrast .header {
+            background: black;
+            color: white;
+        }
+
+        body.high-contrast .section {
+            border-color: black;
+        }
+
+        body.high-contrast a {
+            color: black;
+            text-decoration: underline;
+        }
+
+        /* Large text mode */
+        body.large-text {
+            font-size: 18px;
+        }
+
+        body.large-text h1 { font-size: 32px; }
+        body.large-text h2 { font-size: 28px; }
+        body.large-text h3 { font-size: 24px; }
+
+        @media (max-width: 768px) {
+            .documents-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+
+        @media print {
+            .action-buttons,
+            .accessibility-controls {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+    
+    <div class="container">
+        <!-- Accessibility Controls -->
+        <div class="accessibility-controls" role="region" aria-label="Display preferences">
+            <label for="contrast-toggle">
+                <input type="checkbox" id="contrast-toggle" onchange="toggleContrast()">
+                High Contrast
+            </label>
+            <label for="text-size-toggle">
+                <input type="checkbox" id="text-size-toggle" onchange="toggleTextSize()">
+                Large Text
+            </label>
+        </div>
+
+        <!-- Header -->
+        <header class="header">
+            <h1>LAS Pension New Starter Portal</h1>
+            <p>Complete your pension setup in approximately 15 minutes</p>
+        </header>
+
+        <!-- Critical Transfer Alert -->
+        <div class="transfer-alert" role="alert" aria-live="assertive">
+            <h3>⏰ Critical: 12-Month Transfer Deadline</h3>
+            <p>If you have previous pensions, you have exactly 12 months from your NHS start date to transfer them. This deadline is absolute - no extensions are granted.</p>
+        </div>
+
+        <!-- Main content -->
+        <main id="main">
+            <!-- Progress Section -->
+            <section class="section" aria-labelledby="progress-heading">
+                <h2 id="progress-heading">📋 Your Setup Progress</h2>
+                
+                <div class="progress-container" role="region" aria-label="Progress tracking">
+                    <div class="progress-label">
+                        <span>Complete these essential steps to secure your pension benefits:</span>
+                        <span id="progressText" aria-live="polite">0% Complete</span>
+                    </div>
+                    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-labelledby="progressText">
+                        <div class="progress-fill" id="progressBar"></div>
+                    </div>
+                </div>
+
+                <!-- Task 1 -->
+                <div class="task-item" id="task-1" onclick="toggleTask(1)" role="button" tabindex="0" aria-pressed="false" onkeypress="if(event.key==='Enter') toggleTask(1)">
+                    <div class="task-header">
+                        <div class="checkbox" id="checkbox-1" role="checkbox" aria-checked="false"></div>
+                        <div class="task-content">
+                            <div class="task-title">
+                                Read Your 2015 Members Guide
+                                <span class="time-badge">5 mins</span>
+                            </div>
+                            <p class="task-description">Understand your benefits and how the NHS Pension Scheme works for you</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2 -->
+                <div class="task-item" id="task-2" onclick="toggleTask(2)" role="button" tabindex="0" aria-pressed="false" onkeypress="if(event.key==='Enter') toggleTask(2)">
+                    <div class="task-header">
+                        <div class="checkbox" id="checkbox-2" role="checkbox" aria-checked="false"></div>
+                        <div class="task-content">
+                            <div class="task-title">
+                                Complete Your Nomination Forms
+                                <span class="time-badge">2-5 mins</span>
+                            </div>
+                            <p class="task-description">Protect your loved ones with DB2 (death benefits) and/or PN1 (unmarried partner) forms</p>
+                            <a href="#" class="task-link" onclick="event.stopPropagation()">→ View detailed guide on Death Benefits & Nominations</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3 -->
+                <div class="task-item" id="task-3" onclick="toggleTask(3)" role="button" tabindex="0" aria-pressed="false" onkeypress="if(event.key==='Enter') toggleTask(3)">
+                    <div class="task-header">
+                        <div class="checkbox" id="checkbox-3" role="checkbox" aria-checked="false"></div>
+                        <div class="task-content">
+                            <div class="task-title">
+                                Review Pension Transfer Options
+                                <span class="time-badge">3 mins</span>
+                            </div>
+                            <p class="task-description">If you have previous pensions, decide whether to transfer them within your 12-month deadline</p>
+                            <a href="#" class="task-link" onclick="event.stopPropagation()">→ View detailed guide on Transferring Pension Benefits</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip-box">
+                    <p><strong>💡 Tracking Tip:</strong> Your progress saves automatically. Access this page anytime to continue where you left off.</p>
+                </div>
+            </section>
+
+            <!-- Essential Documents -->
+            <section class="section" aria-labelledby="documents-heading">
+                <h2 id="documents-heading">📚 Essential Documents</h2>
+                
+                <div class="documents-grid">
+                    <div class="document-card">
+                        <div class="document-icon" aria-hidden="true">📘</div>
+                        <a href="https://www.nhsbsa.nhs.uk/sites/default/files/2024-05/2015%20Members%20Guide%20%28V13%29%2005.2024.pdf" target="_blank" rel="noopener noreferrer">
+                            <strong>2015 Members Guide</strong>
+                        </a>
+                        <p class="document-description">Complete guide to NHS Pension benefits</p>
+                    </div>
+
+                    <div class="document-card">
+                        <div class="document-icon" aria-hidden="true">📋</div>
+                        <a href="https://www.nhsbsa.nhs.uk/sites/default/files/2025-05/Nomination-DB2-20250514-%28V12%29.pdf" target="_blank" rel="noopener noreferrer">
+                            <strong>DB2 Form</strong>
+                        </a>
+                        <p class="document-description">Death benefit nomination</p>
+                    </div>
+
+                    <div class="document-card">
+                        <div class="document-icon" aria-hidden="true">💑</div>
+                        <a href="https://www.nhsbsa.nhs.uk/sites/default/files/2024-05/Nomination-PN1-20240430-%28V11%29.pdf" target="_blank" rel="noopener noreferrer">
+                            <strong>PN1 Form</strong>
+                        </a>
+                        <p class="document-description">Unmarried partner nomination</p>
+                    </div>
+
+                    <div class="document-card critical">
+                        <span class="critical-badge">TIME CRITICAL</span>
+                        <div class="document-icon" aria-hidden="true">🔄</div>
+                        <a href="https://www.nhsbsa.nhs.uk/sites/default/files/2024-04/Transfer%20Booklet%20%28V22%29%2004.2024.pdf" target="_blank" rel="noopener noreferrer">
+                            <strong>Transfer Guide</strong>
+                        </a>
+                        <p class="document-description">12-month deadline applies</p>
+                    </div>
+                </div>
+
+                <div class="download-tip">
+                    <p><strong>💡 Download Tip:</strong> Right-click each link and select "Save as". Can't access? Email <a href="mailto:londamb.pensions@nhs.net">londamb.pensions@nhs.net</a> for all documents.</p>
+                </div>
+            </section>
+
+            <!-- Videos Section -->
+            <section class="section" aria-labelledby="videos-heading">
+                <h2 id="videos-heading">🎥 Quick Help Videos</h2>
+
+                <div class="video-item">
+                    <a href="#" class="video-title" onclick="alert('Video would open here'); return false;">
+                        ▶️ Understanding Your NHS Pension
+                    </a>
+                    <p class="video-duration">Approximately 4 minutes - Benefits, contributions, and how it all works</p>
+                </div>
+
+                <div class="video-item">
+                    <a href="#" class="video-title" onclick="alert('Video would open here'); return false;">
+                        ▶️ Completing Your Forms
+                    </a>
+                    <p class="video-duration">Approximately 6 minutes - Step-by-step form completion guide</p>
+                </div>
+
+                <div class="video-item">
+                    <a href="#" class="video-title" onclick="alert('Video would open here'); return false;">
+                        ▶️ Pension Transfers - Do You Need to Act?
+                    </a>
+                    <p class="video-duration">Approximately 3 minutes - Critical guidance for previous pension holders</p>
+                </div>
+
+                <div class="video-item">
+                    <a href="#" class="video-title" onclick="alert('Video would open here'); return false;">
+                        ▶️ Maximising Your Pension Benefits
+                    </a>
+                    <p class="video-duration">Approximately 4 minutes - Optional ways to boost your retirement income</p>
+                </div>
+            </section>
+
+            <!-- Help Section -->
+            <section class="help-section" aria-labelledby="help-heading">
+                <h2 id="help-heading">Need Support?</h2>
+                <p class="help-text">Our specialist pensions team is here to guide you through every step</p>
+                
+                <div class="contact-info">
+                    <p><strong>📧 Email:</strong> <a href="mailto:londamb.pensions@nhs.net">londamb.pensions@nhs.net</a></p>
+                    <p><strong>📞 Phone:</strong> <a href="tel:02032674866">020 3267 4866</a></p>
+                    <p><strong>📍 Visit:</strong> 220 Waterloo Road, London SE1 8SD</p>
+                </div>
+
+                <div class="qa-box">
+                    <h3>Weekly Friday Pension Q&A @ 12pm</h3>
+                    <p class="qa-description">Have questions about your NHS Pension? Join our Friday Q&A session on Teams for expert guidance. No appointment needed - drop in with your questions.</p>
+                    <a href="https://teams.microsoft.com/l/meetup-join/19%3ameeting_ODlmNWZmYjEtZGRjMi00OWQ0LTkzMDItNzk3MjI0NjllYjg1%40thread.v2/0?context=%7b%22Tid%22%3a%2237c354b2-85b0-47f5-b222-07b48d774ee3%22%2c%22Oid%22%3a%2208f42037-6f68-4d39-9854-2e4a8fcba943%22%7d" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       class="join-button">Join Friday Q&A Session</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button class="action-button" onclick="printProgress()" aria-label="Print your progress">📄 Print</button>
+        <button class="action-button" onclick="resetProgress()" aria-label="Reset all progress">🔄 Reset</button>
+    </div>
+
+    <script>
+        // Task completion states
+        const taskStates = {
+            1: false,
+            2: false,
+            3: false
+        };
+
+        // Load saved progress on page load
+        window.onload = function() {
+            loadProgress();
+            updateProgress();
+            loadPreferences();
+        };
+
+        // Toggle task completion
+        function toggleTask(taskId) {
+            taskStates[taskId] = !taskStates[taskId];
+            
+            const taskItem = document.getElementById(`task-${taskId}`);
+            const checkbox = document.getElementById(`checkbox-${taskId}`);
+            
+            if (taskStates[taskId]) {
+                taskItem.classList.add('completed');
+                taskItem.setAttribute('aria-pressed', 'true');
+                checkbox.classList.add('checked');
+                checkbox.setAttribute('aria-checked', 'true');
+            } else {
+                taskItem.classList.remove('completed');
+                taskItem.setAttribute('aria-pressed', 'false');
+                checkbox.classList.remove('checked');
+                checkbox.setAttribute('aria-checked', 'false');
+            }
+            
+            updateProgress();
+            saveProgress();
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const totalTasks = Object.keys(taskStates).length;
+            const completedTasks = Object.values(taskStates).filter(state => state).length;
+            const percentage = Math.round((completedTasks / totalTasks) * 100);
+            
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressBarElement = document.querySelector('.progress-bar');
+            
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage > 0 ? percentage + '%' : '';
+            progressText.textContent = percentage + '% Complete';
+            progressBarElement.setAttribute('aria-valuenow', percentage);
+            
+            // Update visual states
+            Object.keys(taskStates).forEach(taskId => {
+                const taskItem = document.getElementById(`task-${taskId}`);
+                const checkbox = document.getElementById(`checkbox-${taskId}`);
+                
+                if (taskStates[taskId]) {
+                    taskItem.classList.add('completed');
+                    taskItem.setAttribute('aria-pressed', 'true');
+                    checkbox.classList.add('checked');
+                    checkbox.setAttribute('aria-checked', 'true');
+                } else {
+                    taskItem.classList.remove('completed');
+                    taskItem.setAttribute('aria-pressed', 'false');
+                    checkbox.classList.remove('checked');
+                    checkbox.setAttribute('aria-checked', 'false');
+                }
+            });
+        }
+
+        // Save progress to localStorage
+        function saveProgress() {
+            localStorage.setItem('lasNewStarterProgress', JSON.stringify(taskStates));
+            localStorage.setItem('lasNewStarterProgressDate', new Date().toISOString());
+        }
+
+        // Load progress from localStorage
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('lasNewStarterProgress');
+            
+            if (savedProgress) {
+                const savedStates = JSON.parse(savedProgress);
+                Object.keys(savedStates).forEach(taskId => {
+                    taskStates[taskId] = savedStates[taskId];
+                });
+            }
+        }
+
+        // Reset all progress
+        function resetProgress() {
+            if (confirm('Are you sure you want to reset your progress? This cannot be undone.')) {
+                Object.keys(taskStates).forEach(taskId => {
+                    taskStates[taskId] = false;
+                });
+                
+                localStorage.removeItem('lasNewStarterProgress');
+                localStorage.removeItem('lasNewStarterProgressDate');
+                
+                updateProgress();
+                alert('Your progress has been reset.');
+            }
+        }
+
+        // Print progress
+        function printProgress() {
+            window.print();
+        }
+
+        // Accessibility preferences
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+            localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
+        }
+
+        function toggleTextSize() {
+            document.body.classList.toggle('large-text');
+            localStorage.setItem('largeText', document.body.classList.contains('large-text'));
+        }
+
+        function loadPreferences() {
+            if (localStorage.getItem('highContrast') === 'true') {
+                document.body.classList.add('high-contrast');
+                document.getElementById('contrast-toggle').checked = true;
+            }
+            if (localStorage.getItem('largeText') === 'true') {
+                document.body.classList.add('large-text');
+                document.getElementById('text-size-toggle').checked = true;
+            }
+        }
+    </script>
+</body>
+</html>
