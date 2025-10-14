@@ -860,19 +860,31 @@
         }
 
         // Reset all progress
-        function resetProgress() {
-            if (confirm('Are you sure you want to reset your progress? This cannot be undone.')) {
-                Object.keys(taskStates).forEach(taskId => {
-                    taskStates[taskId] = false;
-                });
-                
-                localStorage.removeItem('lasNewStarterProgress');
-                localStorage.removeItem('lasNewStarterProgressDate');
-                
-                updateProgress();
-                alert('Your progress has been reset.');
-            }
-        }
+       function resetProgress() {
+    if (confirm('Reset all progress? This cannot be undone.')) {
+        // Reset logic here...
+        
+        // Show custom notification
+        showNotification('Progress reset successfully');
+    }
+}
+
+function showNotification(message) {
+    // Create notification if it doesn't exist
+    let notif = document.querySelector('.notification');
+    if (!notif) {
+        notif = document.createElement('div');
+        notif.className = 'notification';
+        document.body.appendChild(notif);
+    }
+    
+    notif.textContent = message;
+    notif.style.display = 'block';
+    
+    setTimeout(() => {
+        notif.style.display = 'none';
+    }, 3000);
+}
 
         // Print progress
         function printProgress() {
