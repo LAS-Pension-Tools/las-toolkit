@@ -638,7 +638,10 @@
                                 <span class="time-badge">2-5 mins</span>
                             </div>
                             <p class="task-description">Protect your loved ones with DB2 (death benefits) and/or PN1 (unmarried partner) forms</p>
-                            <a href="#" class="task-link" onclick="event.stopPropagation()">→ View detailed guide on Death Benefits & Nominations</a>
+                            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/death-benefits-and-nominations" 
+                               class="task-link" 
+                               target="_blank"
+                               onclick="event.stopPropagation()">→ View detailed guide on Death Benefits & Nominations</a>
                         </div>
                     </div>
                 </div>
@@ -653,7 +656,10 @@
                                 <span class="time-badge">3 mins</span>
                             </div>
                             <p class="task-description">If you have previous pensions, decide whether to transfer them within your 12-month deadline</p>
-                            <a href="#" class="task-link" onclick="event.stopPropagation()">→ View detailed guide on Transferring Pension Benefits</a>
+                            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/transferring-pension-benefits" 
+                               class="task-link" 
+                               target="_blank"
+                               onclick="event.stopPropagation()">→ View detailed guide on Transferring Pension Benefits</a>
                         </div>
                     </div>
                 </div>
@@ -708,45 +714,45 @@
             </section>
 
             <!-- Videos Section -->
-<section class="section" aria-labelledby="videos-heading">
-    <h2 id="videos-heading">🎥 Quick Help Videos</h2>
+            <section class="section" aria-labelledby="videos-heading">
+                <h2 id="videos-heading">🎥 Quick Help Videos</h2>
 
-    <div class="video-item">
-        <a href="https://londonambulanceservice.workvivo.com/file/968999" 
-           class="video-title" 
-           target="_blank">
-            ▶️ Understanding Your NHS Pension
-        </a>
-        <p class="video-duration">Approximately 4 minutes - Benefits, contributions, and how it all works</p>
-    </div>
+                <div class="video-item">
+                    <a href="https://londonambulanceservice.workvivo.com/file/968999" 
+                       class="video-title" 
+                       target="_blank">
+                        ▶️ Understanding Your NHS Pension
+                    </a>
+                    <p class="video-duration">Approximately 4 minutes - Benefits, contributions, and how it all works</p>
+                </div>
 
-    <div class="video-item">
-        <a href="https://londonambulanceservice.workvivo.com/file/968994" 
-           class="video-title" 
-           target="_blank">
-            ▶️ Completing Your Forms
-        </a>
-        <p class="video-duration">Approximately 6 minutes - Step-by-step form completion guide</p>
-    </div>
+                <div class="video-item">
+                    <a href="https://londonambulanceservice.workvivo.com/file/968994" 
+                       class="video-title" 
+                       target="_blank">
+                        ▶️ Completing Your Forms
+                    </a>
+                    <p class="video-duration">Approximately 6 minutes - Step-by-step form completion guide</p>
+                </div>
 
-    <div class="video-item">
-        <a href="https://londonambulanceservice.workvivo.com/file/969022" 
-           class="video-title" 
-           target="_blank">
-            ▶️ Pension Transfers - Do You Need to Act?
-        </a>
-        <p class="video-duration">Approximately 3 minutes - Critical guidance for previous pension holders</p>
-    </div>
+                <div class="video-item">
+                    <a href="https://londonambulanceservice.workvivo.com/file/969022" 
+                       class="video-title" 
+                       target="_blank">
+                        ▶️ Pension Transfers - Do You Need to Act?
+                    </a>
+                    <p class="video-duration">Approximately 3 minutes - Critical guidance for previous pension holders</p>
+                </div>
 
-    <div class="video-item">
-        <a href="https://londonambulanceservice.workvivo.com/file/969028" 
-           class="video-title" 
-           target="_blank">
-            ▶️ Maximising Your Pension Benefits
-        </a>
-        <p class="video-duration">Approximately 4 minutes - Optional ways to boost your retirement income</p>
-    </div>
-</section>
+                <div class="video-item">
+                    <a href="https://londonambulanceservice.workvivo.com/file/969028" 
+                       class="video-title" 
+                       target="_blank">
+                        ▶️ Maximising Your Pension Benefits
+                    </a>
+                    <p class="video-duration">Approximately 4 minutes - Optional ways to boost your retirement income</p>
+                </div>
+            </section>
 
             <!-- Help Section -->
             <section class="help-section" aria-labelledby="help-heading">
@@ -872,16 +878,16 @@
         }
     }
 
-    // Reset all progress
+    // Reset all progress - no confirmation needed
     function resetProgress() {
-    Object.keys(taskStates).forEach(function(taskId) {
-        taskStates[taskId] = false;
-    });
-    
-    localStorage.removeItem('lasNewStarterProgress');
-    localStorage.removeItem('lasNewStarterProgressDate');
-    
-    updateProgress();
+        Object.keys(taskStates).forEach(function(taskId) {
+            taskStates[taskId] = false;
+        });
+        
+        localStorage.removeItem('lasNewStarterProgress');
+        localStorage.removeItem('lasNewStarterProgressDate');
+        
+        updateProgress();
     }
 
     // Print progress
@@ -916,6 +922,6 @@
             }
         }
     }
-</script>
+    </script>
 </body>
 </html>
