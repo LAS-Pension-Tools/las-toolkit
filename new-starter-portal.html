@@ -861,7 +861,7 @@
 
         // Reset all progress
        function resetProgress() {
-    if (confirm('Reset all progress?\n\nThis cannot be undone.')) {
+    if (confirm('Reset all progress?')) {
         Object.keys(taskStates).forEach(taskId => {
             taskStates[taskId] = false;
         });
@@ -870,16 +870,9 @@
         localStorage.removeItem('lasNewStarterProgressDate');
         
         updateProgress();
-        
-        // Visual feedback instead of alert
-        document.getElementById('progressText').textContent = 'Progress Reset - 0% Complete';
-        document.getElementById('progressText').style.color = '#E65100';
-        
-        // Reset color after 3 seconds
-        setTimeout(() => {
-            document.getElementById('progressText').style.color = '';
-        }, 3000);
+        // No alert at all - the visual reset is confirmation enough
     }
+}
 }
 
 function showNotification(message) {
