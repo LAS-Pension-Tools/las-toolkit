@@ -766,7 +766,7 @@
     <!-- Action Buttons -->
     <div class="action-buttons">
         <button class="action-button" onclick="printProgress()" aria-label="Print your progress">📄 Print</button>
-        <button class="action-button" onclick="resetProgress()" aria-label="Reset all progress">🔄 Reset</button>
+        <button class="action-button" onclick="Progress()" aria-label=" all progress">🔄 </button>
     </div>
 
     <script>
@@ -866,16 +866,15 @@
 
     // Reset all progress
     function resetProgress() {
-        if (confirm('Reset all progress?')) {
-            Object.keys(taskStates).forEach(function(taskId) {
-                taskStates[taskId] = false;
-            });
-            
-            localStorage.removeItem('lasNewStarterProgress');
-            localStorage.removeItem('lasNewStarterProgressDate');
-            
-            updateProgress();
-        }
+    Object.keys(taskStates).forEach(function(taskId) {
+        taskStates[taskId] = false;
+    });
+    
+    localStorage.removeItem('lasNewStarterProgress');
+    localStorage.removeItem('lasNewStarterProgressDate');
+    
+    updateProgress();
+}
     }
 
     // Print progress
