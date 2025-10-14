@@ -770,63 +770,67 @@
     </div>
 
     <script>
-        // Task completion states
-        const taskStates = {
-            1: false,
-            2: false,
-            3: false
-        };
+    // Task completion states
+    const taskStates = {
+        1: false,
+        2: false,
+        3: false
+    };
 
-        // Load saved progress on page load
-        window.onload = function() {
-            loadProgress();
-            updateProgress();
-            loadPreferences();
-        };
+    // Load saved progress on page load
+    window.onload = function() {
+        loadProgress();
+        updateProgress();
+        loadPreferences();
+    };
 
-        // Toggle task completion
-        function toggleTask(taskId) {
-            taskStates[taskId] = !taskStates[taskId];
-            
-            const taskItem = document.getElementById(`task-${taskId}`);
-            const checkbox = document.getElementById(`checkbox-${taskId}`);
-            
-            if (taskStates[taskId]) {
-                taskItem.classList.add('completed');
-                taskItem.setAttribute('aria-pressed', 'true');
-                checkbox.classList.add('checked');
-                checkbox.setAttribute('aria-checked', 'true');
-            } else {
-                taskItem.classList.remove('completed');
-                taskItem.setAttribute('aria-pressed', 'false');
-                checkbox.classList.remove('checked');
-                checkbox.setAttribute('aria-checked', 'false');
-            }
-            
-            updateProgress();
-            saveProgress();
+    // Toggle task completion
+    function toggleTask(taskId) {
+        taskStates[taskId] = !taskStates[taskId];
+        
+        const taskItem = document.getElementById('task-' + taskId);
+        const checkbox = document.getElementById('checkbox-' + taskId);
+        
+        if (taskStates[taskId]) {
+            taskItem.classList.add('completed');
+            taskItem.setAttribute('aria-pressed', 'true');
+            checkbox.classList.add('checked');
+            checkbox.setAttribute('aria-checked', 'true');
+        } else {
+            taskItem.classList.remove('completed');
+            taskItem.setAttribute('aria-pressed', 'false');
+            checkbox.classList.remove('checked');
+            checkbox.setAttribute('aria-checked', 'false');
         }
+        
+        updateProgress();
+        saveProgress();
+    }
 
-        // Update progress bar
-        function updateProgress() {
-            const totalTasks = Object.keys(taskStates).length;
-            const completedTasks = Object.values(taskStates).filter(state => state).length;
-            const percentage = Math.round((completedTasks / totalTasks) * 100);
-            
-            const progressBar = document.getElementById('progressBar');
-            const progressText = document.getElementById('progressText');
-            const progressBarElement = document.querySelector('.progress-bar');
-            
-            progressBar.style.width = percentage + '%';
-            progressBar.textContent = percentage > 0 ? percentage + '%' : '';
-            progressText.textContent = percentage + '% Complete';
+    // Update progress bar
+    function updateProgress() {
+        const totalTasks = Object.keys(taskStates).length;
+        const completedTasks = Object.values(taskStates).filter(state => state).length;
+        const percentage = Math.round((completedTasks / totalTasks) * 100);
+        
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const progressBarElement = document.querySelector('.progress-bar');
+        
+        progressBar.style.width = percentage + '%';
+        progressBar.textContent = percentage > 0 ? percentage + '%' : '';
+        progressText.textContent = percentage + '% Complete';
+        
+        if (progressBarElement) {
             progressBarElement.setAttribute('aria-valuenow', percentage);
+        }
+        
+        // Update visual states
+        Object.keys(taskStates).forEach(function(taskId) {
+            const taskItem = document.getElementById('task-' + taskId);
+            const checkbox = document.getElementById('checkbox-' + taskId);
             
-            // Update visual states
-            Object.keys(taskStates).forEach(taskId => {
-                const taskItem = document.getElementById(`task-${taskId}`);
-                const checkbox = document.getElementById(`checkbox-${taskId}`);
-                
+            if (taskItem && checkbox) {
                 if (taskStates[taskId]) {
                     taskItem.classList.add('completed');
                     taskItem.setAttribute('aria-pressed', 'true');
@@ -838,86 +842,74 @@
                     checkbox.classList.remove('checked');
                     checkbox.setAttribute('aria-checked', 'false');
                 }
+            }
+        });
+    }
+
+    // Save progress to localStorage
+    function saveProgress() {
+        localStorage.setItem('lasNewStarterProgress', JSON.stringify(taskStates));
+        localStorage.setItem('lasNewStarterProgressDate', new Date().toISOString());
+    }
+
+    // Load progress from localStorage
+    function loadProgress() {
+        const savedProgress = localStorage.getItem('lasNewStarterProgress');
+        
+        if (savedProgress) {
+            const savedStates = JSON.parse(savedProgress);
+            Object.keys(savedStates).forEach(function(taskId) {
+                taskStates[taskId] = savedStates[taskId];
             });
         }
+    }
 
-        // Save progress to localStorage
-        function saveProgress() {
-            localStorage.setItem('lasNewStarterProgress', JSON.stringify(taskStates));
-            localStorage.setItem('lasNewStarterProgressDate', new Date().toISOString());
-        }
-
-        // Load progress from localStorage
-        function loadProgress() {
-            const savedProgress = localStorage.getItem('lasNewStarterProgress');
+    // Reset all progress
+    function resetProgress() {
+        if (confirm('Reset all progress?')) {
+            Object.keys(taskStates).forEach(function(taskId) {
+                taskStates[taskId] = false;
+            });
             
-            if (savedProgress) {
-                const savedStates = JSON.parse(savedProgress);
-                Object.keys(savedStates).forEach(taskId => {
-                    taskStates[taskId] = savedStates[taskId];
-                });
-            }
+            localStorage.removeItem('lasNewStarterProgress');
+            localStorage.removeItem('lasNewStarterProgressDate');
+            
+            updateProgress();
         }
-
-        // Reset all progress
-       function resetProgress() {
-    if (confirm('Reset all progress?')) {
-        Object.keys(taskStates).forEach(taskId => {
-            taskStates[taskId] = false;
-        });
-        
-        localStorage.removeItem('lasNewStarterProgress');
-        localStorage.removeItem('lasNewStarterProgressDate');
-        
-        updateProgress();
-        // No alert at all - the visual reset is confirmation enough
     }
-}
-}
 
-function showNotification(message) {
-    // Create notification if it doesn't exist
-    let notif = document.querySelector('.notification');
-    if (!notif) {
-        notif = document.createElement('div');
-        notif.className = 'notification';
-        document.body.appendChild(notif);
+    // Print progress
+    function printProgress() {
+        window.print();
     }
-    
-    notif.textContent = message;
-    notif.style.display = 'block';
-    
-    setTimeout(() => {
-        notif.style.display = 'none';
-    }, 3000);
-}
 
-        // Print progress
-        function printProgress() {
-            window.print();
-        }
+    // Accessibility preferences
+    function toggleContrast() {
+        document.body.classList.toggle('high-contrast');
+        localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
+    }
 
-        // Accessibility preferences
-        function toggleContrast() {
-            document.body.classList.toggle('high-contrast');
-            localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
-        }
+    function toggleTextSize() {
+        document.body.classList.toggle('large-text');
+        localStorage.setItem('largeText', document.body.classList.contains('large-text'));
+    }
 
-        function toggleTextSize() {
-            document.body.classList.toggle('large-text');
-            localStorage.setItem('largeText', document.body.classList.contains('large-text'));
-        }
-
-        function loadPreferences() {
-            if (localStorage.getItem('highContrast') === 'true') {
-                document.body.classList.add('high-contrast');
-                document.getElementById('contrast-toggle').checked = true;
-            }
-            if (localStorage.getItem('largeText') === 'true') {
-                document.body.classList.add('large-text');
-                document.getElementById('text-size-toggle').checked = true;
+    function loadPreferences() {
+        if (localStorage.getItem('highContrast') === 'true') {
+            document.body.classList.add('high-contrast');
+            const contrastToggle = document.getElementById('contrast-toggle');
+            if (contrastToggle) {
+                contrastToggle.checked = true;
             }
         }
-    </script>
+        if (localStorage.getItem('largeText') === 'true') {
+            document.body.classList.add('large-text');
+            const textToggle = document.getElementById('text-size-toggle');
+            if (textToggle) {
+                textToggle.checked = true;
+            }
+        }
+    }
+</script>
 </body>
 </html>
