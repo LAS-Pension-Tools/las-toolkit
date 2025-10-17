@@ -548,6 +548,22 @@ const RATE_TABLES = {
     ]
   }
 };
+// Simple officer-type logic for officers/practice staff
+// A: default (use previous year's WTE pay)
+// B: multiple employments (aggregate) – enable via checkbox
+// C: material change in circumstances (≥12 months) – enable via checkbox
+// D: new starter in year – enable via checkbox
+function getOfficerType({ isNewStarter, hasMultiplePosts, hasMaterialChange }) {
+  if (isNewStarter) return "D";
+  if (hasMultiplePosts) return "B";
+  if (hasMaterialChange) return "C";
+  return "A";
+}
+
+// Choose which pay to tier on (prev-year WTE vs estimated current-year)
+function getTieringPay({ officerType, prevYearWTE, estCurrentYearWTE }) {
+  return (officerType === "C" || officerType === "D") ? estCurrentYearWTE : prevYearWTE;
+}
 
 function getCurrentSchemeYear(date=new Date()){
   const y = date.getFullYear(), m = date.getMonth()+1; // Jan=1
