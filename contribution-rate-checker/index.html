@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>LAS Contribution Rate Checker</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23023020'/%3E%3Ctext x='16' y='21' font-family='Arial' font-size='13' font-weight='bold' text-anchor='middle' fill='white'%3ECR%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./assets/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>LAS Contribution Rate Checker</h1>
+      <p>Check your NHS Pension <strong>member</strong> contribution rate by scheme year. Uses WTE pay for officers/practice staff.</p>
+    </header>
+
+    <section class="card">
+      <div class="grid">
+        <div class="field">
+          <label for="schemeYear">Scheme year</label>
+          <select id="schemeYear" class="input"></select>
+          <div class="help">Scheme year runs 1 April to 31 March.</div>
+        </div>
+
+        <div class="field">
+          <label>Employment group</label>
+          <div class="toggle">
+            <div class="chip" data-toggle="emp" data-value="officer" title="Officers / practice staff (AfC) – uses WTE pay.">Officer / Practice staff</div>
+            <div class="chip" data-toggle="emp" data-value="pract" title="Practitioners (GPs/dentists) – use actual annual pensionable income.">Practitioner</div>
+          </div>
+          <div class="help">Practitioners’ tiering is based on aggregated practitioner income each year.</div>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="field">
+        <label>How will you enter pay?</label>
+        <div class="toggle">
+          <div class="chip" data-toggle="mode" data-value="wte">I know my annual WTE pensionable pay</div>
+          <div class="chip" data-toggle="mode" data-value="helper">Help me annualise / WTE it</div>
+        </div>
+      </div>
+
+      <div id="panel-wte" class="mode-panel" style="display:none">
+        <div class="field">
+          <label for="wtePay">Annual pensionable pay (WTE for officers)</label>
+          <input id="wtePay" class="input" type="number" inputmode="decimal" placeholder="e.g. 34500">
+          <div class="help">Exclude overtime beyond whole-time hours. Include regular pensionable allowances. Unsocial hours for officers are added at basic rate after WTE is calculated.</div>
+        </div>
+      </div>
+
+      <div id="panel-helper" class="mode-panel" style="display:none">
+        <div class="grid">
+          <div class="field">
+            <label for="actualPay">Your expected <u>actual</u> pensionable pay this year</label>
+            <input id="actualPay" class="input" type="number" inputmode="decimal" placeholder="e.g. 21000">
+          </div>
+          <div class="field">
+            <label for="unsocial">Unsocial hours (annual, pensionable)</label>
+            <input id="unsocial" class="input" type="number" inputmode="decimal" placeholder="optional">
+            <div class="help small">For officers, this is <em>added</em> after the WTE basic is calculated.</div>
+          </div>
+          <div class="field">
+            <label for="hours">Contracted hours per week</label>
+            <input id="hours" class="input" type="number" inputmode="decimal" placeholder="e.g. 30">
+          </div>
+          <div class="field">
+            <label for="wtHours">Whole-time hours per week</label>
+            <input id="wtHours" class="input" type="number" inputmode="decimal" value="37.5">
+          </div>
+        </div>
+        <div class="note small">WTE formula: <span class="kbd">actual pay × (whole‑time hours ÷ contracted hours) + unsocial</span></div>
+      </div>
+    </section>
+
+    <section class="card result">
+      <div class="grid">
+        <div><strong>Year:</strong> <span id="outYear">—</span></div>
+        <div><strong>Assessed pay (WTE):</strong> <span id="outPay">—</span></div>
+        <div><strong>Contribution rate:</strong> <span id="outRate">—</span> <span class="badge" id="outBand"></span></div>
+        <div><strong>Estimated employee contribution (annual):</strong> <span id="outAnnual">—</span></div>
+        <div><strong>Estimated employee contribution (per month):</strong> <span id="outMonthly">—</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Banding for selected year</h3>
+      <table class="table">
+        <thead><tr><th>Pay band (annualised)</th><th>Rate</th><th>Applies</th></tr></thead>
+        <tbody id="bandsBody"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h3>Notes</h3>
+      <ul class="small">
+        <li><strong>Officers/practice staff:</strong> Tiering uses last year’s WTE pensionable pay unless there is a <em>change in circumstances</em> (new starter, promotion/step down, rate change expected to last ≥12 months), in which case use this year’s estimated annualised pay.</li>
+        <li><strong>Part‑time officers:</strong> Use <em>whole‑time equivalent</em> pay to set the tier. Unsocial hours are added <em>after</em> the WTE basic is calculated.</li>
+        <li><strong>Practitioners/non‑GP providers:</strong> Your tier is based on total pensionable practitioner income in the year.</li>
+        <li><strong>2022/23 split:</strong> From <u>1 Oct 2022</u> a new structure of bands/rates applies. Choose “2022/23 (Apr–Sep)” for the first half of the year and “2022/23 (Oct–Mar)” for the second half.</li>
+      </ul>
+    </section>
+
+    <section id="admin" class="card" style="display:none">
+      <h3>Admin – load/merge new bands JSON</h3>
+      <textarea id="bandsJson" class="input" rows="8" placeholder='{ "2026/27": { "bands":[{"lower":0,"upper":..., "rate":0.052}, ...] } }'></textarea>
+      <div class="row" style="margin-top:8px">
+        <button id="import" class="btn">Import JSON (merge)</button>
+        <button id="export" class="btn ghost">Export current JSON</button>
+      </div>
+      <p class="small">Tip: open with <code>?admin=1</code> to see this panel.</p>
+    </section>
+
+    <div class="footer">
+      Built for LAS Pensions. Paste this page into <span class="kbd">/contribution-rate-checker/index.html</span> in your repo and embed in Workvivo via an iframe. Dark‑mode friendly; also works in a compact column.
+    </div>
+  </div>
+
+  <script src="./assets/app.js"></script>
+</body>
+</html>
