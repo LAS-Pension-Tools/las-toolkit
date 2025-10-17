@@ -42,6 +42,21 @@
           <div class="chip" data-toggle="mode" data-value="helper">Help me annualise / WTE it</div>
         </div>
       </div>
+      <fieldset class="flags">
+  <label><input type="checkbox" id="isNewStarter"> New starter this scheme year</label>
+  <label><input type="checkbox" id="hasMaterialChange"> Role/pay pattern changed (likely ≥12 months)</label>
+  <label><input type="checkbox" id="hasMultiplePosts"> Multiple concurrent LAS employments</label>
+  <details class="hint">
+    <summary>What are Officer Types A–D?</summary>
+    <ul>
+      <li><strong>A</strong> – Standard officer/practice staff: use previous year’s whole-time equivalent (WTE) pay.</li>
+      <li><strong>B</strong> – Multiple employments: aggregate pensionable pay to set tier.</li>
+      <li><strong>C</strong> – Material change (expected ≥12 months): use estimated current-year WTE.</li>
+      <li><strong>D</strong> – New starter in year: use estimated current-year WTE.</li>
+    </ul>
+  </details>
+</fieldset>
+
 
       <div id="panel-wte" class="mode-panel" style="display:none">
         <div class="field">
