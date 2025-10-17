@@ -1,12 +1,13 @@
 /* LAS Contribution Rate Checker
    ----------------------------------------------------
-   - Renders a full app inside <div id="app"></div>
-   - Officer Types A–D logic + role-change warnings
+   - Renders a full app inside <div id="app"></div> (creates one if missing)
+   - Officer Types A–D logic + role-change warning
    - Band is set from WTE "tiering pay" (officers/practice staff rules)
-   - Contributions are estimated from actual annual pensionable pay
-   - 2023/24, 2024/25, 2025/26 bands preloaded
-   - Admin override: add ?admin=1 to the URL to paste a new year's bands
-   - Neurodivergent-friendly behaviours (focus, reduced motion, etc.)
+   - Contributions estimated from actual annual pensionable pay
+   - Bands included: 2015/16 → 2021/22 (legacy), 2022/23 (Apr–Sep legacy),
+     2022/23 (Oct–Mar new), 2023/24, 2024/25, 2025/26
+   - Admin override: add ?admin=1 to paste a new year's bands (saved to this browser)
+   - Neurodivergent-friendly behaviours (focus, reduced motion)
 */
 
 (function () {
@@ -14,58 +15,101 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
+  // Make sure a container exists (safer if script isn't deferred)
+  let app = document.getElementById("app");
+  if (!app) {
+    app = document.createElement("div");
+    app.id = "app";
+    document.body.prepend(app);
+  }
+
   const currency = (n) =>
-    isFinite(n) ? n.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 }) : "—";
+    isFinite(n) ? Number(n).toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 }) : "—";
 
-  const pct = (n) =>
-    isFinite(n) ? (n * 100).toFixed(n * 100 % 1 === 0 ? 0 : 1) + "%" : "—";
+  const pct = (n) => {
+    if (!isFinite(n)) return "—";
+    const p = n * 100;
+    return (p % 1 === 0 ? p.toFixed(0) : p.toFixed(1)) + "%";
+  };
 
-  const clamp = (n, lo, hi) => Math.min(Math.max(n, lo), hi);
+  const num = (v) => {
+    if (typeof v === "number") return v;
+    if (!v) return 0;
+    return parseFloat(String(v).replace(/[,\s£]/g, "")) || 0;
+  };
 
-  // Determine current NHS scheme year string from a JS Date
+  // Determine scheme year display like "2025/26"
   function schemeYearFromDate(d = new Date()) {
     const y = d.getFullYear();
-    const m = d.getMonth() + 1; // 1–12
+    const m = d.getMonth() + 1;
     if (m >= 4) return `${y}/${String((y + 1) % 100).padStart(2, "0")}`;
     return `${y - 1}/${String(y % 100).padStart(2, "0")}`;
   }
 
   // ---------- Rate tables ----------
-  // Each year: array of { lower, upper, rate } (inclusive lower, inclusive upper)
-  // Preloaded from your spreadsheets (you can edit/extend easily):
+  // Legacy 7-band (used 2015/16 → 2021/22 and 2022/23 Apr–Sep)
+  const LEGACY_2015_TO_2022 = [
+    { lower: 0,       upper: 15431.99, rate: 0.05  },
+    { lower: 15432,   upper: 21477.99, rate: 0.056 },
+    { lower: 21478,   upper: 26823.99, rate: 0.071 },
+    { lower: 26824,   upper: 47845.99, rate: 0.093 },
+    { lower: 47846,   upper: 70630.99, rate: 0.125 },
+    { lower: 70631,   upper: 111376.99, rate: 0.135 },
+    { lower: 111377,  upper: 9999999.99, rate: 0.145 },
+  ];
+
+  // New multi-band from Oct-2022 (we use 2023/24 published table for 22/23 Oct–Mar)
+  const NEW_2023_24 = [
+    { lower: 0,     upper: 13246.99, rate: 0.051 },
+    { lower: 13247, upper: 17673.99, rate: 0.057 },
+    { lower: 17674, upper: 24022.99, rate: 0.061 },
+    { lower: 24023, upper: 25146.99, rate: 0.068 },
+    { lower: 25147, upper: 29635.99, rate: 0.077 },
+    { lower: 29636, upper: 30638.99, rate: 0.088 },
+    { lower: 30639, upper: 45996.99, rate: 0.098 },
+    { lower: 45997, upper: 51708.99, rate: 0.100 },
+    { lower: 51709, upper: 58972.99, rate: 0.116 },
+    { lower: 58973, upper: 75632.99, rate: 0.125 },
+    { lower: 75633, upper: 9999999.99, rate: 0.135 },
+  ];
+
+  // 2024/25
+  const TABLE_2024_25 = [
+    { lower: 0,     upper: 13259.99, rate: 0.052 },
+    { lower: 13260, upper: 27288.99, rate: 0.065 },
+    { lower: 27289, upper: 33247.99, rate: 0.083 },
+    { lower: 33248, upper: 49913.99, rate: 0.098 },
+    { lower: 49914, upper: 63994.99, rate: 0.107 },
+    { lower: 63995, upper: 9999999.99, rate: 0.125 },
+  ];
+
+  // 2025/26
+  const TABLE_2025_26 = [
+    { lower: 0,     upper: 13259.99, rate: 0.052 },
+    { lower: 13260, upper: 27797.99, rate: 0.065 },
+    { lower: 27798, upper: 33868.99, rate: 0.083 },
+    { lower: 33869, upper: 50845.99, rate: 0.098 },
+    { lower: 50846, upper: 65190.99, rate: 0.107 },
+    { lower: 65191, upper: 9999999.99, rate: 0.125 },
+  ];
+
+  // Build base map with explicit years
   const RATE_TABLES_BASE = {
-    "2023/24": [
-      { lower: 0,     upper: 13246.99, rate: 0.051 },
-      { lower: 13247, upper: 17673.99, rate: 0.057 },
-      { lower: 17674, upper: 24022.99, rate: 0.061 },
-      { lower: 24023, upper: 25146.99, rate: 0.068 },
-      { lower: 25147, upper: 29635.99, rate: 0.077 },
-      { lower: 29636, upper: 30638.99, rate: 0.088 },
-      { lower: 30639, upper: 45996.99, rate: 0.098 },
-      { lower: 45997, upper: 51708.99, rate: 0.100 },
-      { lower: 51709, upper: 58972.99, rate: 0.116 },
-      { lower: 58973, upper: 75632.99, rate: 0.125 },
-      { lower: 75633, upper: 999999.99, rate: 0.135 }
-    ],
-    "2024/25": [
-      { lower: 0,     upper: 13259.99, rate: 0.052 },
-      { lower: 13260, upper: 27288.99, rate: 0.065 },
-      { lower: 27289, upper: 33247.99, rate: 0.083 },
-      { lower: 33248, upper: 49913.99, rate: 0.098 },
-      { lower: 49914, upper: 63994.99, rate: 0.107 },
-      { lower: 63995, upper: 9999999.99, rate: 0.125 }
-    ],
-    "2025/26": [
-      { lower: 0,     upper: 13259.99, rate: 0.052 },
-      { lower: 13260, upper: 27797.99, rate: 0.065 },
-      { lower: 27798, upper: 33868.99, rate: 0.083 },
-      { lower: 33869, upper: 50845.99, rate: 0.098 },
-      { lower: 50846, upper: 65190.99, rate: 0.107 },
-      { lower: 65191, upper: 9999999.99, rate: 0.125 }
-    ]
+    "2015/16": LEGACY_2015_TO_2022,
+    "2016/17": LEGACY_2015_TO_2022,
+    "2017/18": LEGACY_2015_TO_2022,
+    "2018/19": LEGACY_2015_TO_2022,
+    "2019/20": LEGACY_2015_TO_2022,
+    "2020/21": LEGACY_2015_TO_2022,
+    "2021/22": LEGACY_2015_TO_2022,
+    "2022/23 (Apr–Sep)": LEGACY_2015_TO_2022,
+    "2022/23 (Oct–Mar)": NEW_2023_24,
+    "2023/24": NEW_2023_24,
+    "2024/25": TABLE_2024_25,
+    "2025/26": TABLE_2025_26,
   };
 
-  // Allow localStorage overrides (from the Admin panel)
+  // Optional browser-side override via Admin panel
   function loadRateOverrides() {
     try {
       const raw = localStorage.getItem("las_rate_tables_override");
@@ -76,14 +120,40 @@
       return {};
     }
   }
-
   const RATE_TABLES = { ...RATE_TABLES_BASE, ...loadRateOverrides() };
 
+  // Custom sort so split 2022/23 halves order correctly
+  function yearSortKey(label) {
+    // Examples: "2025/26", "2022/23 (Apr–Sep)", "2022/23 (Oct–Mar)"
+    const m = label.match(/^(\d{4})\/(\d{2})(?:\s*\((Apr–Sep|Oct–Mar)\))?$/);
+    if (!m) return { y: 0, half: 0 };
+    const y = parseInt(m[1], 10); // start year
+    let half = 2; // default full year
+    if (m[3] === "Apr–Sep") half = 1;
+    if (m[3] === "Oct–Mar") half = 2; // comes after Apr–Sep in the same scheme year
+    return { y, half };
+  }
+  const years = Object.keys(RATE_TABLES).sort((a, b) => {
+    const ka = yearSortKey(a), kb = yearSortKey(b);
+    if (ka.y !== kb.y) return ka.y - kb.y;
+    return ka.half - kb.half;
+  });
+
+  const defaultYear = (() => {
+    const y = schemeYearFromDate();
+    // If current year exists, pick it; otherwise latest available
+    const match = years.findLast ? years.findLast(x => x.startsWith(y)) : years.filter(x=>x.startsWith(y)).pop();
+    return match || years[years.length - 1];
+  })();
+
+  const url = new URL(window.location.href);
+  const showAdmin = url.searchParams.get("admin") === "1";
+
   // ---------- Officer Types A–D ----------
-  // A = Standard (use previous year WTE for tiering)
-  // B = Multiple employments (aggregate – here just a flag; you can extend aggregation logic later)
-  // C = Material change expected to last ≥12 months (use current-year estimated WTE for tiering)
-  // D = New starter in scheme year (use current-year estimated WTE for tiering)
+  // A = Standard (use previous-year WTE for tiering)
+  // B = Multiple employments (aggregate – flag only here)
+  // C = Material change expected to last ≥12 months (use current-year WTE)
+  // D = New starter (use current-year WTE)
   function getOfficerType(flags) {
     const { isNewStarter, hasMultiplePosts, hasMaterialChange } = flags;
     if (isNewStarter) return "D";
@@ -91,49 +161,25 @@
     if (hasMaterialChange) return "C";
     return "A";
   }
-
   function getTieringPay(officerType, prevYearWTE, estCurrentYearWTE) {
-    if (officerType === "C" || officerType === "D") return estCurrentYearWTE || 0;
-    return prevYearWTE || 0; // Types A and B use previous year's WTE for tiering
+    return (officerType === "C" || officerType === "D") ? estCurrentYearWTE || 0 : prevYearWTE || 0;
   }
 
-  // ---------- WTE Helper ----------
-  // Compute whole-time equivalent from actual basic pay and hours.
-  // If user supplies:
-  //   - annualBasicAtYourHours, yourWeeklyHours, contractWeeklyHours (default 37.5)
-  //   WTE basic = annualBasicAtYourHours * (contractWeeklyHours / yourWeeklyHours)
+  // WTE helper
   function computeWTEBasic({ annualBasicAtYourHours, yourWeeklyHours, contractWeeklyHours = 37.5 }) {
-    const a = +annualBasicAtYourHours || 0;
-    const h = +yourWeeklyHours || 0;
-    const c = +contractWeeklyHours || 37.5;
+    const a = num(annualBasicAtYourHours), h = num(yourWeeklyHours), c = num(contractWeeklyHours) || 37.5;
     if (a <= 0 || h <= 0 || c <= 0) return 0;
     return a * (c / h);
   }
 
-  // ---------- Band lookup ----------
+  // Band lookup
   function findBandForYear(year, wteTieringPay) {
     const table = RATE_TABLES[year];
     if (!table) return null;
-    // Inclusive ranges (treat upper as inclusive)
     return table.find(b => wteTieringPay >= b.lower && wteTieringPay <= b.upper) || null;
   }
 
   // ---------- UI ----------
-  const app = document.getElementById("app");
-  if (!app) {
-    console.error('Contribution Rate Checker: please include <div id="app"></div> in your HTML.');
-    return;
-  }
-
-  const years = Object.keys(RATE_TABLES).sort(); // ascending; we’ll set default in the select
-  const defaultYear = (function () {
-    const y = schemeYearFromDate();
-    return years.includes(y) ? y : years[years.length - 1];
-  })();
-
-  const url = new URL(window.location.href);
-  const showAdmin = url.searchParams.get("admin") === "1";
-
   app.innerHTML = `
     <div class="las-wrap">
       <header class="las-header">
@@ -150,6 +196,7 @@
 
       <section class="las-panel" aria-labelledby="inputsTitle">
         <h2 id="inputsTitle" class="panel-title">Inputs</h2>
+
         <div class="grid">
           <label class="form-row">
             <span>Scheme year</span>
@@ -167,26 +214,26 @@
               <summary>What are Officer Types A–D?</summary>
               <ul>
                 <li><strong>A</strong> – Standard officers/practice staff: tier from <em>previous year’s</em> WTE.</li>
-                <li><strong>B</strong> – Multiple employments: aggregate employments for tiering (speak to Pensions).</li>
+                <li><strong>B</strong> – Multiple employments: aggregate for tiering (speak to Pensions).</li>
                 <li><strong>C</strong> – Material change ≥12 months: tier from <em>current-year</em> WTE.</li>
-                <li><strong>D</strong> – New starter this year: tier from <em>current-year</em> WTE.</li>
+                <li><strong>D</strong> – New starter: tier from <em>current-year</em> WTE.</li>
               </ul>
             </details>
           </fieldset>
 
           <label class="form-row">
-            <span>Previous year WTE basic (£) <em class="muted">(for Types A/B)</em></span>
-            <input id="prevWte" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 38,000">
+            <span>Previous year WTE basic (£) <em class="muted">(Types A/B)</em></span>
+            <input id="prevWte" type="text" inputmode="decimal" placeholder="e.g. £38,000">
           </label>
 
           <label class="form-row">
-            <span>Current-year WTE basic (£) <em class="muted">(for Types C/D)</em></span>
-            <input id="currWte" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 39,500">
+            <span>Current-year WTE basic (£) <em class="muted">(Types C/D)</em></span>
+            <input id="currWte" type="text" inputmode="decimal" placeholder="e.g. 39,500">
           </label>
 
           <label class="form-row">
             <span>Annual pensionable pay (actual/estimated) (£)</span>
-            <input id="annualActual" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 28,400">
+            <input id="annualActual" type="text" inputmode="decimal" placeholder="e.g. 28,400">
             <small class="help">Used to estimate yearly/monthly employee contributions. Include unsocial hours etc.</small>
           </label>
         </div>
@@ -196,15 +243,15 @@
           <div class="helper-grid">
             <label class="form-row">
               <span>Your basic annual salary at your hours (£)</span>
-              <input id="helpAnnualAtYourHours" type="number" min="0" step="0.01" inputmode="decimal">
+              <input id="helpAnnualAtYourHours" type="text" inputmode="decimal">
             </label>
             <label class="form-row">
               <span>Your weekly hours</span>
-              <input id="helpYourHours" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 30">
+              <input id="helpYourHours" type="text" inputmode="decimal" placeholder="e.g. 30">
             </label>
             <label class="form-row">
               <span>Contract WTE hours</span>
-              <input id="helpContractHours" type="number" min="1" step="0.1" inputmode="decimal" value="37.5">
+              <input id="helpContractHours" type="text" inputmode="decimal" value="37.5">
             </label>
           </div>
           <div class="helper-actions">
@@ -242,7 +289,7 @@
       ${showAdmin ? `
       <section class="las-panel admin" aria-labelledby="adminTitle">
         <h2 id="adminTitle" class="panel-title">Admin: import/override year bands</h2>
-        <p class="muted">Paste JSON like: <code>{"2026/27":[{"lower":0,"upper":14000,"rate":0.05},...]}</code></p>
+        <p class="muted">Paste JSON like: <code>{"2026/27":[{"lower":0,"upper":14000,"rate":0.05}, ...]}</code></p>
         <textarea id="adminJson" rows="8" spellcheck="false" placeholder='{"2026/27":[...]}'></textarea>
         <div class="actions">
           <button class="btn" id="btnPreviewJSON">Preview</button>
@@ -254,9 +301,7 @@
       ` : ``}
 
       <footer class="foot">
-        <p>
-          LAS Pensions • This tool is an estimate only and does not replace official figures from NHS Pensions.
-        </p>
+        <p>LAS Pensions • This tool is an estimate only and does not replace official figures from NHS Pensions.</p>
       </footer>
     </div>
   `;
@@ -268,20 +313,19 @@
 
   $("#btnReset").addEventListener("click", () => {
     ["prevWte","currWte","annualActual","helpAnnualAtYourHours","helpYourHours","helpContractHours"].forEach(id => {
-      const el = $("#" + id);
-      if (el) el.value = el.type === "number" ? "" : "";
+      const el = $("#" + id); if (el) el.value = "";
     });
     ["isNewStarter","hasMaterialChange","hasMultiplePosts"].forEach(id => { const cb=$("#"+id); if(cb) cb.checked=false; });
     $("#wteOut").textContent = "";
     $("#result").innerHTML = `<p class="muted">Enter values above and click <strong>Calculate</strong>.</p>`;
-    renderBands(); // refresh highlight
+    renderBands();
   });
 
   $("#btnComputeWTE").addEventListener("click", () => {
     const wte = computeWTEBasic({
-      annualBasicAtYourHours: +$("#helpAnnualAtYourHours").value,
-      yourWeeklyHours: +$("#helpYourHours").value,
-      contractWeeklyHours: +$("#helpContractHours").value || 37.5
+      annualBasicAtYourHours: $("#helpAnnualAtYourHours").value,
+      yourWeeklyHours: $("#helpYourHours").value,
+      contractWeeklyHours: $("#helpContractHours").value || 37.5
     });
     $("#wteOut").textContent = wte ? `WTE basic ≈ ${currency(wte)}` : "Please enter valid numbers above.";
   });
@@ -291,21 +335,15 @@
   if (showAdmin) {
     $("#btnPreviewJSON").addEventListener("click", () => {
       const t = $("#adminJson").value.trim();
-      try {
-        const obj = JSON.parse(t);
-        $("#adminPreview").textContent = JSON.stringify(obj, null, 2);
-      } catch (e) {
-        $("#adminPreview").textContent = "Invalid JSON.";
-      }
+      try { $("#adminPreview").textContent = JSON.stringify(JSON.parse(t), null, 2); }
+      catch { $("#adminPreview").textContent = "Invalid JSON."; }
     });
     $("#btnImportJSON").addEventListener("click", () => {
       try {
         const obj = JSON.parse($("#adminJson").value.trim());
         localStorage.setItem("las_rate_tables_override", JSON.stringify(obj));
         alert("Imported. Reload the page to apply.");
-      } catch {
-        alert("Invalid JSON.");
-      }
+      } catch { alert("Invalid JSON."); }
     });
     $("#btnClearJSON").addEventListener("click", () => {
       localStorage.removeItem("las_rate_tables_override");
@@ -313,11 +351,10 @@
     });
   }
 
-  // Re-render bands when year changes or inputs that affect highlight change
+  // Re-render highlight when inputs toggle
   ["yearSel","prevWte","currWte","isNewStarter","hasMaterialChange","hasMultiplePosts"].forEach(id => {
     const el = $("#"+id);
-    if (el) el.addEventListener("input", renderBands);
-    if (el) el.addEventListener("change", renderBands);
+    if (el) { el.addEventListener("input", renderBands); el.addEventListener("change", renderBands); }
   });
 
   // ---------- Rendering ----------
@@ -330,8 +367,8 @@
       hasMaterialChange: $("#hasMaterialChange").checked
     };
     const officerType = getOfficerType(flags);
-    const prevWte = +$("#prevWte").value || 0;
-    const currWte = +$("#currWte").value || 0;
+    const prevWte = num($("#prevWte").value);
+    const currWte = num($("#currWte").value);
     const tieringPay = getTieringPay(officerType, prevWte, currWte);
 
     const rows = table.map((b, idx) => {
@@ -380,9 +417,8 @@
       hasMaterialChange: $("#hasMaterialChange").checked
     };
     const officerType = getOfficerType(flags);
-
-    const prevWte = +$("#prevWte").value || 0;
-    const currWte = +$("#currWte").value || 0;
+    const prevWte = num($("#prevWte").value);
+    const currWte = num($("#currWte").value);
     const tieringPay = getTieringPay(officerType, prevWte, currWte);
 
     const band = findBandForYear(year, tieringPay);
@@ -400,8 +436,7 @@
       return;
     }
 
-    // Contributions are estimated from actual annual pensionable pay (user input).
-    const annualActual = +$("#annualActual").value || 0;
+    const annualActual = num($("#annualActual").value);
     const estYearly = annualActual * band.rate;
     const estMonthly = estYearly / 12;
 
