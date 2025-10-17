@@ -1,9 +1,12 @@
-/* LAS Contribution Rate Checker (stable ES2017 build)
-   - Renders into <div id="app"></div> (creates one if missing)
-   - Officer Types A–D, role-change note
-   - WTE helper, robust number parsing (£, commas)
-   - Years: 2015/16 → 2021/22 (legacy), 2022/23 split, 2023/24, 2024/25, 2025/26
-   - Admin override (?admin=1) stored in localStorage
+/* LAS Contribution Rate Checker (staff-friendly)
+   ----------------------------------------------------
+   - No A/B/C/D officer types in the UI
+   - From Oct-2022 onward: tier is based on *actual annualised pensionable pay*
+   - Legacy years (2015/16–2021/22 + 2022/23 Apr–Sep): tier is based on *WTE pensionable pay*
+   - Contributions estimated from *actual annual pensionable pay*
+   - Years included: 2015/16 → 2021/22, 2022/23 (Apr–Sep), 2022/23 (Oct–Mar),
+     2023/24, 2024/25, 2025/26
+   - Admin override (?admin=1) lets you paste JSON for future years
 */
 
 (function () {
@@ -11,13 +14,9 @@
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
 
-  // Make sure a container exists even if script isn’t deferred
+  // Ensure a mount point exists
   var app = document.getElementById("app");
-  if (!app) {
-    app = document.createElement("div");
-    app.id = "app";
-    document.body.prepend(app);
-  }
+  if (!app) { app = document.createElement("div"); app.id = "app"; document.body.prepend(app); }
 
   // ---------- format & parse ----------
   function currency(n) {
@@ -35,14 +34,13 @@
   }
   function schemeYearFromDate(d) {
     d = d || new Date();
-    var y = d.getFullYear();
-    var m = d.getMonth() + 1;
+    var y = d.getFullYear(), m = d.getMonth() + 1;
     return (m >= 4) ? (y + "/" + String((y + 1) % 100).padStart(2, "0"))
                     : (y - 1 + "/" + String(y % 100).padStart(2, "0"));
   }
 
   // ---------- rate tables ----------
-  // Legacy structure (used 2015/16 → 2021/22 and 2022/23 Apr–Sep)
+  // Legacy (used up to 30 Sep 2022)
   var LEGACY_2015_TO_2022 = [
     { lower: 0,      upper: 15431.99,   rate: 0.05  },
     { lower: 15432,  upper: 21477.99,   rate: 0.056 },
@@ -53,7 +51,7 @@
     { lower: 111377, upper: 9999999.99, rate: 0.145 }
   ];
 
-  // 2023/24 table (also used from 1 Oct 2022 for 2022/23 Oct–Mar)
+  // 2023/24 table (also applies from 1 Oct 2022 for 2022/23 Oct–Mar)
   var TABLE_2023_24 = [
     { lower: 0,     upper: 13246.99,   rate: 0.051 },
     { lower: 13247, upper: 17673.99,   rate: 0.057 },
@@ -68,7 +66,7 @@
     { lower: 75633, upper: 9999999.99, rate: 0.135 }
   ];
 
-  // 2024/25
+  // 2024/25 (6 tiers)
   var TABLE_2024_25 = [
     { lower: 0,     upper: 13259.99,   rate: 0.052 },
     { lower: 13260, upper: 27288.99,   rate: 0.065 },
@@ -78,7 +76,7 @@
     { lower: 63995, upper: 9999999.99, rate: 0.125 }
   ];
 
-  // 2025/26
+  // 2025/26 (6 tiers)
   var TABLE_2025_26 = [
     { lower: 0,     upper: 13259.99,   rate: 0.052 },
     { lower: 13260, upper: 27797.99,   rate: 0.065 },
@@ -96,8 +94,8 @@
     "2019/20": LEGACY_2015_TO_2022,
     "2020/21": LEGACY_2015_TO_2022,
     "2021/22": LEGACY_2015_TO_2022,
-    "2022/23 (Apr-Sep)": LEGACY_2015_TO_2022,
-    "2022/23 (Oct-Mar)": TABLE_2023_24,
+    "2022/23 (Apr–Sep)": LEGACY_2015_TO_2022,
+    "2022/23 (Oct–Mar)": TABLE_2023_24,
     "2023/24": TABLE_2023_24,
     "2024/25": TABLE_2024_25,
     "2025/26": TABLE_2025_26
@@ -113,18 +111,15 @@
   }
   var RATE_TABLES = Object.assign({}, RATE_TABLES_BASE, loadRateOverrides());
 
-  // stable sort for labels like "2022/23 (Apr-Sep)" vs "(Oct-Mar)"
+  // Split-year ordering
   function yearSortKey(label) {
-    // 2025/26, 2022/23 (Apr-Sep), 2022/23 (Oct-Mar)
     var m = label.match(/^(\d{4})\/(\d{2})(?:\s*\(([^)]+)\))?$/);
     if (!m) return { y: 0, half: 0 };
-    var y = parseInt(m[1], 10);
-    var half = 2; // full year or "Oct-Mar"
+    var y = parseInt(m[1], 10), half = 2;
     var h = (m[3] || "").toLowerCase();
     if (h.indexOf("apr") === 0) half = 1;
     return { y: y, half: half };
   }
-
   var years = Object.keys(RATE_TABLES).sort(function (a, b) {
     var ka = yearSortKey(a), kb = yearSortKey(b);
     if (ka.y !== kb.y) return ka.y - kb.y;
@@ -133,41 +128,32 @@
 
   var currentSY = schemeYearFromDate();
   var defaultYear = (function () {
-    // pick the first label that starts with currentSY; else the last (latest)
-    for (var i = 0; i < years.length; i++) {
-      if (years[i].indexOf(currentSY) === 0) return years[i];
-    }
+    for (var i = 0; i < years.length; i++) if (years[i].indexOf(currentSY) === 0) return years[i];
     return years[years.length - 1];
   })();
 
   var url = new URL(window.location.href);
   var showAdmin = url.searchParams.get("admin") === "1";
 
-  // ---------- Officer Types ----------
-  function getOfficerType(flags) {
-    if (flags.isNewStarter) return "D";
-    if (flags.hasMultiplePosts) return "B";
-    if (flags.hasMaterialChange) return "C";
-    return "A";
-  }
-  function getTieringPay(officerType, prevYearWTE, estCurrentYearWTE) {
-    return (officerType === "C" || officerType === "D") ? (estCurrentYearWTE || 0) : (prevYearWTE || 0);
+  // Legacy/modern rule
+  function isLegacyYear(label) {
+    return /2015\/16|2016\/17|2017\/18|2018\/19|2019\/20|2020\/21|2021\/22|2022\/23 \(Apr–Sep\)/.test(label);
   }
 
-  // ---------- WTE helper ----------
+  // WTE helper
   function computeWTEBasic(o) {
     var a = num(o.annualBasicAtYourHours), h = num(o.yourWeeklyHours), c = num(o.contractWeeklyHours) || 37.5;
     if (a <= 0 || h <= 0 || c <= 0) return 0;
     return a * (c / h);
   }
 
-  // ---------- band lookup ----------
-  function findBandForYear(year, wteTieringPay) {
+  // Band lookup
+  function findBandForYear(year, pay) {
     var table = RATE_TABLES[year];
     if (!table) return null;
     for (var i = 0; i < table.length; i++) {
       var b = table[i];
-      if (wteTieringPay >= b.lower && wteTieringPay <= b.upper) return b;
+      if (pay >= b.lower && pay <= b.upper) return b;
     }
     return null;
   }
@@ -178,7 +164,7 @@
     + '  <header class="las-header">'
     + '    <div class="title">'
     + '      <h1>LAS Contribution Rate Checker</h1>'
-    + '      <p class="sub">Estimate your NHS Pension <em>member</em> contribution rate and costs</p>'
+    + '      <p class="sub">Check your NHS Pension <em>member</em> contribution rate by scheme year.</p>'
     + '    </div>'
     + '    <div class="toggles">'
     + '      <label class="hc-toggle"><input type="checkbox" id="hcToggle" aria-label="Enable high contrast"> High contrast</label>'
@@ -195,34 +181,19 @@
     + '        </select>'
     + '      </label>'
 
-    + '      <fieldset class="form-row flags"><legend>Officer flags</legend>'
-    + '        <label><input type="checkbox" id="isNewStarter"> New starter this scheme year</label>'
-    + '        <label><input type="checkbox" id="hasMaterialChange"> Role/pay pattern changed (likely ≥ 12 months)</label>'
-    + '        <label><input type="checkbox" id="hasMultiplePosts"> Multiple concurrent LAS employments</label>'
-    + '        <details class="hint"><summary>What are Officer Types A–D?</summary>'
-    + '          <ul>'
-    + '            <li><strong>A</strong> – Standard officers/practice staff: tier from <em>previous year’s</em> WTE.</li>'
-    + '            <li><strong>B</strong> – Multiple employments: aggregate for tiering (speak to Pensions).</li>'
-    + '            <li><strong>C</strong> – Material change ≥12 months: tier from <em>current-year</em> WTE.</li>'
-    + '            <li><strong>D</strong> – New starter: tier from <em>current-year</em> WTE.</li>'
-    + '          </ul>'
-    + '        </details>'
-    + '      </fieldset>'
+    + '      <label class="form-row" id="legacyWTERow" hidden><span>WTE pensionable pay (legacy years only) (£)</span>'
+    + '        <input id="legacyWTE" type="text" inputmode="decimal" placeholder="e.g. 38,000">'
+    + '        <small class="help">Used to set your contribution <em>band</em> for years before 1 Oct 2022.</small>'
+    + '      </label>'
 
-    + '      <label class="form-row"><span>Previous year WTE basic (£) <em class="muted">(Types A/B)</em></span>'
-    + '        <input id="prevWte" type="text" inputmode="decimal" placeholder="e.g. £38,000"></label>'
-
-    + '      <label class="form-row"><span>Current-year WTE basic (£) <em class="muted">(Types C/D)</em></span>'
-    + '        <input id="currWte" type="text" inputmode="decimal" placeholder="e.g. 39,500"></label>'
-
-    + '      <label class="form-row"><span>Annual pensionable pay (actual/estimated) (£)</span>'
-    + '        <input id="annualActual" type="text" inputmode="decimal" placeholder="e.g. 28,400">'
-    + '        <small class="help">Used to estimate yearly/monthly employee contributions. Include unsocial hours etc.</small>'
+    + '      <label class="form-row" id="annualRow"><span>Annual pensionable pay (actual/annualised) (£)</span>'
+    + '        <input id="annualPensionable" type="text" inputmode="decimal" placeholder="e.g. 28,400">'
+    + '        <small class="help">Includes <strong>Basic</strong>, <strong>High Cost Area Supplement (HCAS)</strong>, and <strong>unsocial hours</strong> enhancements. Excludes overtime, expenses and one-off bonuses.</small>'
     + '      </label>'
 
     + '    </div>'
 
-    + '    <details class="helper"><summary>Need help working out your WTE?</summary>'
+    + '    <details class="helper" id="wteHelper" hidden><summary>Need help working out WTE? (legacy years)</summary>'
     + '      <div class="helper-grid">'
     + '        <label class="form-row"><span>Your basic annual salary at your hours (£)</span>'
     + '          <input id="helpAnnualAtYourHours" type="text" inputmode="decimal"></label>'
@@ -239,7 +210,7 @@
     + '      <button class="btn" id="btnReset">Reset</button></div>'
 
     + '    <div class="note role-change" role="note"><div class="note-icon" aria-hidden="true">ℹ️</div>'
-    + '      <div><strong>Note on role changes:</strong> If you’ve changed job/role, started a concurrent post, or your working pattern changed in a way likely to last 12+ months, your contribution <em>rate may change</em> during the year.</div>'
+    + '      <div><strong>Heads-up:</strong> Employers may set your rate using pay from a previous year if required by the rules. If your payslip shows a different rate, please follow your payroll guidance.</div>'
     + '    </div>'
     + '  </section>'
 
@@ -266,16 +237,27 @@
     + '  <footer class="foot"><p>LAS Pensions • This tool is an estimate only and does not replace official figures from NHS Pensions.</p></footer>'
     + '</div>';
 
-  // ---------- events ----------
+  // ---------- behaviour ----------
+  function syncLegacyVisibility() {
+    var y = $("#yearSel").value;
+    var legacy = isLegacyYear(y);
+    $("#legacyWTERow").hidden = !legacy;
+    $("#wteHelper").hidden = !legacy;
+  }
+  syncLegacyVisibility();
+
   $("#hcToggle").addEventListener("change", function (e) {
     document.body.classList.toggle("hc", e.target.checked);
   });
 
+  $("#yearSel").addEventListener("change", function () {
+    syncLegacyVisibility();
+    renderBands();
+  });
+
   $("#btnReset").addEventListener("click", function () {
-    ["prevWte","currWte","annualActual","helpAnnualAtYourHours","helpYourHours","helpContractHours"]
+    ["legacyWTE","annualPensionable","helpAnnualAtYourHours","helpYourHours","helpContractHours"]
       .forEach(function(id){ var el=$("#"+id); if(el) el.value=""; });
-    ["isNewStarter","hasMaterialChange","hasMultiplePosts"]
-      .forEach(function(id){ var cb=$("#"+id); if(cb) cb.checked=false; });
     $("#wteOut").textContent = "";
     $("#result").innerHTML = '<p class="muted">Enter values above and click <strong>Calculate</strong>.</p>';
     renderBands();
@@ -311,27 +293,25 @@
     });
   }
 
-  ["yearSel","prevWte","currWte","isNewStarter","hasMaterialChange","hasMultiplePosts"].forEach(function (id) {
+  ["legacyWTE","annualPensionable"].forEach(function (id) {
     var el = $("#"+id);
     if (el) { el.addEventListener("input", renderBands); el.addEventListener("change", renderBands); }
   });
 
   // ---------- rendering ----------
+  function tieringPayForUI() {
+    var year = $("#yearSel").value;
+    var legacy = isLegacyYear(year);
+    return legacy ? num($("#legacyWTE").value) : num($("#annualPensionable").value);
+  }
+
   function renderBands() {
     var year = $("#yearSel").value;
     var table = RATE_TABLES[year] || [];
-    var flags = {
-      isNewStarter: $("#isNewStarter").checked,
-      hasMultiplePosts: $("#hasMultiplePosts").checked,
-      hasMaterialChange: $("#hasMaterialChange").checked
-    };
-    var officerType = getOfficerType(flags);
-    var prevWte = num($("#prevWte").value);
-    var currWte = num($("#currWte").value);
-    var tieringPay = getTieringPay(officerType, prevWte, currWte);
+    var pay = tieringPayForUI();
 
     var rows = table.map(function (b, idx) {
-      var active = tieringPay >= b.lower && tieringPay <= b.upper;
+      var active = pay >= b.lower && pay <= b.upper;
       return ''
         + '<tr class="' + (active ? 'active' : '') + '">'
         +   '<td class="idx">' + (idx + 1) + '</td>'
@@ -343,60 +323,51 @@
 
     $("#bandTable").innerHTML = ''
       + '<div class="band-meta">'
-      +   '<div><span class="badge">Type ' + officerType + '</span>'
-      +   '<span class="sep">·</span><span class="muted">Tiering pay used:</span> '
-      +   '<strong>' + currency(tieringPay) + '</strong></div>'
+      +   '<div><span class="muted">Tiering pay used:</span> <strong>' + currency(pay) + '</strong></div>'
       +   '<div class="muted">Year: <strong>' + year + '</strong></div>'
       + '</div>'
       + '<div class="table-wrap" role="region" aria-label="Contribution bands for ' + year + '" tabindex="0">'
       +   '<table class="table"><thead><tr>'
-      +     '<th>#</th><th>Pensionable pay range (WTE)</th><th>Rate</th><th>Status</th>'
+      +     '<th>#</th><th>Pensionable pay range (WTE/Actual)*</th><th>Rate</th><th>Status</th>'
       +   '</tr></thead><tbody>' + rows + '</tbody></table>'
-      + '</div>';
+      + '</div>'
+      + '<p class="small muted">* For legacy years (to 30 Sep 2022) bands use <em>WTE</em>. From 1 Oct 2022 onward, bands use <em>actual annualised pensionable pay</em>.</p>';
   }
 
   function calculateAndRender() {
     var year = $("#yearSel").value;
-    var flags = {
-      isNewStarter: $("#isNewStarter").checked,
-      hasMultiplePosts: $("#hasMultiplePosts").checked,
-      hasMaterialChange: $("#hasMaterialChange").checked
-    };
-    var officerType = getOfficerType(flags);
-    var prevWte = num($("#prevWte").value);
-    var currWte = num($("#currWte").value);
-    var tieringPay = getTieringPay(officerType, prevWte, currWte);
+    var payForBand = tieringPayForUI();
+    var band = findBandForYear(year, payForBand);
 
-    var band = findBandForYear(year, tieringPay);
     if (!band) {
       $("#result").innerHTML = ''
         + '<div class="warn"><div class="warn-icon" aria-hidden="true">⚠️</div>'
         + '<div><strong>We couldn’t determine a band for the inputs provided.</strong>'
-        + '<p>Check the scheme year and your WTE values. You can also try the WTE helper below.</p></div></div>';
+        + '<p>Check the scheme year and your pay inputs. Use the WTE helper for legacy years.</p></div></div>';
       renderBands();
       return;
     }
 
-    var annualActual = num($("#annualActual").value);
+    var annualActual = num($("#annualPensionable").value);
     var estYearly = annualActual * band.rate;
     var estMonthly = estYearly / 12;
 
     $("#result").innerHTML = ''
       + '<div class="result-row">'
       +   '<div class="kpi"><div class="kpi-label">Employee rate</div><div class="kpi-value">' + pct(band.rate) + '</div></div>'
-      +   '<div class="kpi"><div class="kpi-label">Officer Type</div><div class="kpi-value"><span class="badge">Type ' + officerType + '</span></div></div>'
-      +   '<div class="kpi"><div class="kpi-label">Tiering pay used</div><div class="kpi-value">' + currency(tieringPay) + '</div></div>'
+      +   '<div class="kpi"><div class="kpi-label">Tiering pay used</div><div class="kpi-value">' + currency(payForBand) + '</div></div>'
+      +   '<div class="kpi"><div class="kpi-label">Year selected</div><div class="kpi-value">' + year + '</div></div>'
       + '</div>'
       + '<div class="result-row alt">'
-      +   '<div><div class="kpi-small-label">Est. annual pensionable pay (actual)</div><div class="kpi-small-value">' + currency(annualActual) + '</div></div>'
+      +   '<div><div class="kpi-small-label">Annual pensionable pay (actual/annualised)</div><div class="kpi-small-value">' + currency(annualActual) + '</div></div>'
       +   '<div><div class="kpi-small-label">Est. yearly employee contributions</div><div class="kpi-small-value">' + currency(estYearly) + '</div></div>'
       +   '<div><div class="kpi-small-label">Est. monthly employee contributions</div><div class="kpi-small-value">' + currency(estMonthly) + '</div></div>'
       + '</div>'
-      + '<p class="small muted">Band for ' + year + ': ' + currency(band.lower) + ' – ' + currency(band.upper) + ' at ' + pct(band.rate) + '. This tool is an estimate only and does not replace official figures from NHS Pensions.</p>';
+      + '<p class="small muted">Band for ' + year + ': ' + currency(band.lower) + ' – ' + currency(band.upper) + ' at ' + pct(band.rate) + '.</p>';
 
     renderBands();
   }
 
-  // initial paint
+  // Initial paint
   renderBands();
 })();
