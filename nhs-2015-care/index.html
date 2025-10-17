@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NHS 2015 Pension (CARE) Calculator</title>
+  <link rel="preload" href="./assets/styles.css" as="style">
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>NHS 2015 Pension (CARE) Calculator</h1>
+    <p>Year-by-year build-up using 1/54 accrual and Active Revaluation (CPI<sub>Sep</sub> + 1.5%).</p>
+  </header>
+
+  <main class="wrap">
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="calc" role="tab" aria-selected="true">Calculator</button>
+      <button class="tab" data-tab="ara" role="tab" aria-selected="false">ARA Admin</button>
+      <button class="tab" data-tab="settings" role="tab" aria-selected="false">Settings</button>
+    </nav>
+
+    <!-- Calculator Panel -->
+    <section id="panel-calc" class="panel active" role="tabpanel" aria-labelledby="Calculator">
+      <div class="card">
+        <header class="card-header">
+          <strong>Instructions</strong>
+          <div class="muted">Enter your <em>actual pensionable pay</em> per year. ARA values are editable in the ARA Admin tab. The calculator ignores contributions paid.</div>
+        </header>
+
+        <div class="controls">
+          <button id="recalcBtn" class="btn">Recalculate</button>
+          <button id="addYearBtn" class="btn outline">Add Year</button>
+          <button id="exportBtn" class="btn outline">Export CSV</button>
+          <div class="spacer"></div>
+          <label>ABS Target (£): <input id="absTarget" type="number" step="0.01" placeholder="10875.90"/></label>
+        </div>
+
+        <div class="table-wrap">
+          <table id="calcTable">
+            <thead>
+              <tr>
+                <th class="center">Scheme Year</th>
+                <th class="center">Year End<br>(31 Mar)</th>
+                <th class="center">ARA<br>(e.g. 0.014)</th>
+                <th>Opening Balance (£)</th>
+                <th>Revalued Opening (£)</th>
+                <th>Pensionable Pay (£)</th>
+                <th>Accrual = Pay/54 (£)</th>
+                <th>Closing Balance (£)</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="7" style="text-align:right;">Final Pension at <span id="finalYear"></span>:</td>
+                <td id="finalValue">£0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="summary">
+          <div>Difference (Calc − ABS): <span id="diffPill" class="pill">£0.00</span></div>
+          <div class="muted">Tip: If this doesn't match your ABS, check pay is pensionable-only and ARA spikes for 2022/23 (0.116) and 2023/24 (0.082).</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARA Admin Panel -->
+    <section id="panel-ara" class="panel" role="tabpanel" aria-labelledby="ARA Admin">
+      <div class="card">
+        <header class="card-header">
+          <strong>Active Revaluation (ARA) – Admin</strong>
+          <div class="muted">ARA = CPI (September) + 1.5%. Update annually here. Saved in your browser (localStorage). You can export/import JSON for audit and future years.</div>
+        </header>
+
+        <div class="controls">
+          <button id="araAddYearBtn" class="btn outline">Add Year</button>
+          <button id="araResetBtn" class="btn outline danger">Reset to Defaults</button>
+          <button id="araExportBtn" class="btn outline">Export JSON</button>
+          <label class="btn file">
+            Import JSON<input id="araImportInput" type="file" accept="application/json" />
+          </label>
+          <div class="spacer"></div>
+          <button id="araApplyBtn" class="btn">Apply to Calculator</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="araTable">
+            <thead>
+              <tr>
+                <th class="center">Scheme Year</th>
+                <th class="center">Year End</th>
+                <th class="center">ARA (decimal)</th>
+                <th class="center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="araBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings Panel -->
+    <section id="panel-settings" class="panel" role="tabpanel" aria-labelledby="Settings">
+      <div class="card">
+        <header class="card-header">
+          <strong>Settings & Embeds</strong>
+          <div class="muted">Optimise for Workvivo embeds or personal preference. Theme can follow system or be fixed.</div>
+        </header>
+
+        <div class="settings-grid">
+          <div class="setting">
+            <label class="label">Theme</label>
+            <div class="row">
+              <select id="themeSelect">
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+              <span class="muted">Dark mode is optimised for contrast and small screens.</span>
+            </div>
+          </div>
+
+          <div class="setting">
+            <label class="label">Compact mode</label>
+            <div class="row">
+              <input id="compactToggle" type="checkbox"/>
+              <span class="muted">Tightens spacing and typography for narrow iframes (e.g., Workvivo column).</span>
+            </div>
+          </div>
+
+          <div class="setting">
+            <label class="label">Embed code</label>
+            <div class="row">
+              <input id="embedAbs" type="number" step="0.01" placeholder="10875.90"/>
+              <button id="copyEmbedBtn" class="btn outline">Copy iframe</button>
+            </div>
+            <div class="muted">Generates an iframe with <code>?embed=1&compact=1&theme=dark&abs=10875.90</code>.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>Disclaimer: For guidance only. Uses CARE 1/54 accrual and simple active revaluation. Breaks/opt-outs may revalue earlier slices at CPI-only during the break.</div>
+  </footer>
+
+  <script src="./assets/app.js"></script>
+</body>
+</html>
