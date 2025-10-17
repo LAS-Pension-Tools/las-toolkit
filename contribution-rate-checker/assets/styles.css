@@ -36,7 +36,7 @@ body{
 }
 
 .las-wrap{
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -113,6 +113,7 @@ textarea:focus{
 }
 .flags legend{ font-weight:700; padding:0 6px; }
 .flags label{ display:inline-flex; gap:8px; align-items:center; }
+.flags .hint summary{ cursor:pointer; font-weight:700; }
 
 /* Helper */
 .helper{
@@ -298,6 +299,7 @@ body.hc{
   .table thead th{ background:#0f1715; color:#cfe9df; }
   .kpi, .result-row.alt > div, .table td{ background:#0f1214; }
 }
+
 @media (max-width: 720px){
   .grid{ grid-template-columns: 1fr; }
   .helper-grid{ grid-template-columns: 1fr; }
