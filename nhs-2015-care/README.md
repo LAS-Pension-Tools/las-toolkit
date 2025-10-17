@@ -72,3 +72,5 @@ Workvivo strips scripts, so **embed via iframe**:
 
 ## Licence
 MIT © London Ambulance Service Pensions Tools (LAS)
+feat(nhs-2015-care): 2015 CARE calculator with ARA admin, dark mode, compact embed
+
