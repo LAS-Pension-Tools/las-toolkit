@@ -37,7 +37,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sa
 
 .controls { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding: 16px 20px; border-top:1px solid var(--line); }
 .controls .spacer { flex:1; }
-.controls input[type="number"], controls input[type="text"], select { padding:8px 10px; border:1px solid var(--line); border-radius: 8px; min-width: 120px; background: transparent; color: var(--fg); }
+.controls input[type="number"], .controls input[type="text"], select { padding:8px 10px; border:1px solid var(--line); border-radius: 8px; min-width: 120px; background: transparent; color: var(--fg); }
 .controls .btn { padding:10px 14px; border:1px solid var(--brand); background: var(--btn-bg); color:var(--btn-fg); border-radius:10px; cursor:pointer; }
 .controls .btn.outline { background: var(--btn-outline-bg); color: var(--btn-outline-fg); }
 .controls .btn.danger { border-color: var(--danger); color: var(--danger); background:transparent; }
@@ -50,7 +50,7 @@ thead th { position: sticky; top: 0; background:var(--th-bg); color:var(--th-fg)
 tbody td { border-bottom:1px solid var(--line); padding:8px 10px; text-align:right; }
 tbody td.center, thead th.center { text-align:center; }
 tbody input[type="number"], tbody input[type="text"] { width: 140px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; text-align:right; background: transparent; color: var(--fg); }
-tbody input[type="text"].center { text-align:center; width: 90px; }
+tbody input[type="text"].center { text-align:center; width: 120px; }
 tfoot td { padding: 14px 10px; font-weight:700; }
 .summary { display:flex; flex-wrap:wrap; gap:14px; align-items:center; padding: 16px 20px; border-top:1px solid var(--line); }
 .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:var(--pill-bg); color:var(--pill-fg); font-weight:600; }
