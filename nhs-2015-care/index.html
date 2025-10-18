@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NHS 2015 Pension (CARE) Calculator — v2</title>
+  <title>NHS 2015 Pension (CARE) Calculator — v2.1</title>
   <link rel="stylesheet" href="./assets/styles.css" />
 </head>
 <body>
   <header class="site-header">
-    <h1>NHS 2015 Pension (CARE) — v2</h1>
+    <h1>NHS 2015 Pension (CARE) — v2.1</h1>
     <p>Year-by-year CARE (pay ÷ 54), pot-by-pot revaluation to retirement, with Estimate/Award mode, VER/AGE/LATE, ERRBO, commutation (12:1), and an audit trail.</p>
   </header>
 
@@ -25,7 +25,7 @@
       <div class="card">
         <header class="card-header">
           <strong>CARE build-up (enter pensionable pay per scheme year)</strong>
-          <div class="muted">Accrual = pay ÷ 54. The engine treats each year as a separate pot and revalues using ARA at the start of each year while active.</div>
+          <div class="muted">Accrual = pay ÷ 54. Each completed year is a separate pot, revalued by ARA while active. Final year adds April→LDoM accrual.</div>
         </header>
 
         <div class="controls">
@@ -38,6 +38,7 @@
           </label>
           <button id="recalcBtn" class="btn">Recalculate</button>
           <button id="addYearBtn" class="btn outline">Add Year</button>
+          <button id="seedYearsBtn" class="btn outline">Seed 2016→Final</button>
           <button id="exportBtn" class="btn outline">Export CSV</button>
           <div class="spacer"></div>
           <label>ABS/Estimate target (£): <input id="absTarget" type="number" step="0.01" placeholder="e.g. 9303.41"/></label>
@@ -48,10 +49,11 @@
             <thead>
               <tr>
                 <th class="center">Scheme Year</th>
-                <th class="center">Year End<br>(31 Mar)</th>
-                <th class="center">ARA<br>(decimal)</th>
+                <th class="center">Year End<br/>(31 Mar)</th>
+                <th class="center">ARA<br/>(decimal)</th>
                 <th>Pensionable Pay (£)</th>
                 <th>Accrual (Pay/54) (£)</th>
+                <th class="center">Actions</th>
               </tr>
             </thead>
             <tbody id="tbody"></tbody>
@@ -69,11 +71,12 @@
       <div class="card">
         <header class="card-header">
           <strong>Active Revaluation (ARA) — Admin</strong>
-          <div class="muted">ARA = CPI (Sep) + 1.5% while active. Update the decimal factors per scheme year end.</div>
+          <div class="muted">ARA = CPI (Sept) + 1.5% while active. Use the NHS defaults or import JSON.</div>
         </header>
         <div class="controls">
           <button id="araAddYearBtn" class="btn outline">Add Year</button>
-          <button id="araResetBtn" class="btn outline danger">Reset to Defaults</button>
+          <button id="araResetBtn" class="btn outline danger">Reset (current defaults)</button>
+          <button id="araNHSDefaultsBtn" class="btn">Reset to NHS set (2016→2025)</button>
           <button id="araExportBtn" class="btn outline">Export JSON</button>
           <label class="btn file">Import JSON<input id="araImportInput" type="file" accept="application/json" /></label>
           <div class="spacer"></div>
@@ -99,7 +102,7 @@
       <div class="card">
         <header class="card-header">
           <strong>Retirement & Factors</strong>
-          <div class="muted">Calculate VER/AGE/LATE and commutation. Import ERF/LRF tables (months → factor). ERRBO reduces months early.</div>
+          <div class="muted">Compute VER/AGE/LATE & commutation. Import ERF/LRF (months → factor). ERRBO reduces months-early.</div>
         </header>
 
         <div class="controls">
@@ -131,7 +134,7 @@
       <div class="card" style="margin-top:14px;">
         <header class="card-header">
           <strong>ERF & LRF Tables</strong>
-          <div class="muted">Upload NHS 2015 tables as JSON or CSV with <code>months,factor</code>. ERF applies before NPA; LRF after NPA.</div>
+          <div class="muted">Upload NHS 2015 tables as JSON or CSV with <code>months,factor</code>.</div>
         </header>
         <div class="controls">
           <button id="erfExportBtn" class="btn outline">Export ERF JSON</button>
@@ -156,7 +159,7 @@
       <div class="card">
         <header class="card-header">
           <strong>Pot-by-pot audit</strong>
-          <div class="muted">Shows each year’s accrual and the cumulative ARA multiplier to the retirement date in the selected mode.</div>
+          <div class="muted">Each year’s accrual, the ARA multiplier to retirement (per mode), and its revalued amount.</div>
         </header>
         <div class="table-wrap">
           <table id="auditTable">
@@ -213,7 +216,7 @@
   </main>
 
   <footer class="site-footer">
-    <div>For guidance only. Breaks/deferral PI revaluation not yet implemented.</div>
+    <div>For guidance only. Deferred PI revaluation after leaving not yet implemented.</div>
   </footer>
 
   <script src="./assets/app.js"></script>
