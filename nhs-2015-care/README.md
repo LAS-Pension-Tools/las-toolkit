@@ -1,20 +1,24 @@
-# NHS 2015 Pension (CARE) — Prefilled Case (Y/E 2026 = £29,476.78)
+# NHS 2015 Pension (CARE) — v2
 
-This pack is a ready-to-upload snapshot of the web calculator **preloaded** with the final part-year for a member who left on **04-Dec-2025** (scheme year **2025/26**). The 2026 row is set to **ARA 0.0000** and **pay 29,476.78**. Enter prior years from the award to fully reproduce the statement.
+**New in v2**
+- Retirement date + **Estimate/Award** mode (apply/suppress retirement‑year ARA)
+- **Pot-by-pot** revaluation engine + **Audit** trail
+- **VER/AGE/LATE** using imported **ERF/LRF** tables
+- **ERRBO** handling and **12:1** commutation
 
-## What’s inside
-- `index.html` — calculator with **Calculator**, **ARA Admin**, **Early Retirement**, and **Settings** tabs.
-- `assets/styles.css` — light/dark + compact modes.
-- `assets/app.js` — prefilled Y/E 2026 row; ARA defaults 2016→2026.
-- `assets/arer-2015-template.json` — JSON skeleton to import **2015** Early Retirement Factors (months → factor).
-- `assets/arer-2015-sample.csv` — CSV with header to import factors.
+## Use
+1) Enter **pensionable pay** per scheme year (YE 2016 → retirement year). For the final year, enter **pay from 1 April to the last day of membership**.
+2) Set **Retirement date** and choose **Mode**:
+   - **Estimate** = apply ARA at 1 April of the retirement year, then add part‑year accrual.
+   - **Award** = suppress final ARA; add only part‑year accrual.
+3) In **ARA Admin**, edit/import ARA decimals by year end (e.g., 0.116).
+4) In **Retirement & Factors**, add **DOB**, **NPA age**, choose **Age/VER/Late**, import **ERF/LRF**, set **ERRBO** and **commutation**.
+5) **Audit** shows each pot’s accrual, multiplier, and contribution to the total.
 
 ## Deploy
-Upload the folder to your GitHub repo (e.g., `las-toolkit/nhs-2015-care/`) and enable GitHub Pages. Embed in Workvivo with:
+Upload the folder to a static host (GitHub Pages / Netlify / Cloudflare). Embed in Workvivo using the URL:
 ```
-https://<your>.github.io/las-toolkit/nhs-2015-care/?embed=1&compact=1&theme=dark&abs=<your ABS>
+https://<your host>/nhs-2015-care/?embed=1&compact=1&theme=dark
 ```
 
-## Notes
-- Accrual is **pay ÷ 54**; ARA is **CPI (Sep) + 1.5%** while active. Leaving before revaluation ⇒ the last part-year shows ARA **0.0000**; future CPI is added as **Pensions Increase**.
-- Use **Early Retirement** to apply ARER (import factors first), consider **ERRBO**, and adjust **commutation** at **12:1**.
+*Note:* Deferred (PI) revaluation after leaving is not included in v2.
