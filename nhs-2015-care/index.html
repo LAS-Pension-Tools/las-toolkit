@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NHS 2015 Pension (CARE) Calculator — Prefilled Case</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>NHS 2015 Pension (CARE) Calculator — Prefilled (Y/E 2026 = £29,476.78)</h1>
+    <p>Prefilled with the final part-year for a 04-Dec-2025 leaver. Set ARA = 0.0000 for Y/E 2026. Enter earlier years as needed or from your award.</p>
+  </header>
+
+  <main class="wrap">
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="calc" role="tab" aria-selected="true">Calculator</button>
+      <button class="tab" data-tab="ara" role="tab" aria-selected="false">ARA Admin</button>
+      <button class="tab" data-tab="early" role="tab" aria-selected="false">Early Retirement</button>
+      <button class="tab" data-tab="settings" role="tab" aria-selected="false">Settings</button>
+    </nav>
+
+    <section id="panel-calc" class="panel active" role="tabpanel">
+      <div class="card">
+        <header class="card-header">
+          <strong>Year-by-year 2015 CARE build-up</strong>
+          <div class="muted">Enter pensionable pay per year. Accrual = pay ÷ 54. Revaluation uses ARA (editable in ARA Admin). This pack prefills the 2025/26 row to match the part-year example.</div>
+        </header>
+
+        <div class="controls">
+          <button id="recalcBtn" class="btn">Recalculate</button>
+          <button id="addYearBtn" class="btn outline">Add Year</button>
+          <button id="exportBtn" class="btn outline">Export CSV</button>
+          <div class="spacer"></div>
+          <label>ABS Target (£): <input id="absTarget" type="number" step="0.01" placeholder="e.g. 9312.33"/></label>
+        </div>
+
+        <div class="table-wrap">
+          <table id="calcTable">
+            <thead>
+              <tr>
+                <th class="center">Scheme Year</th>
+                <th class="center">Year End<br>(31 Mar)</th>
+                <th class="center">ARA<br>(decimal)</th>
+                <th>Opening Balance (£)</th>
+                <th>Revalued Opening (£)</th>
+                <th>Pensionable Pay (£)</th>
+                <th>Accrual = Pay/54 (£)</th>
+                <th>Closing Balance (£)</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="7" style="text-align:right;">Final Pension at <span id="finalYear"></span>:</td>
+                <td id="finalValue">£0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="summary">
+          <div>Difference (Calc − ABS): <span id="diffPill" class="pill">£0.00</span></div>
+          <div class="muted">Tip: If this doesn’t match the award, check the 2026 row has ARA = 0.0000 and Pay = 29,476.78.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-ara" class="panel" role="tabpanel">
+      <div class="card">
+        <header class="card-header">
+          <strong>Active Revaluation (ARA) — Admin</strong>
+          <div class="muted">ARA = CPI (Sep) + 1.5% while active. These defaults cover 2016→2026; 2026 is 0.0000 for the leaving part-year example. Save to your browser; export/import JSON for audit.</div>
+        </header>
+        <div class="controls">
+          <button id="araAddYearBtn" class="btn outline">Add Year</button>
+          <button id="araResetBtn" class="btn outline danger">Reset to Defaults</button>
+          <button id="araExportBtn" class="btn outline">Export JSON</button>
+          <label class="btn file">Import JSON<input id="araImportInput" type="file" accept="application/json" /></label>
+          <div class="spacer"></div>
+          <button id="araApplyBtn" class="btn">Apply to Calculator</button>
+        </div>
+        <div class="table-wrap">
+          <table id="araTable">
+            <thead>
+              <tr>
+                <th class="center">Scheme Year</th>
+                <th class="center">Year End</th>
+                <th class="center">ARA (decimal)</th>
+                <th class="center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="araBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-early" class="panel" role="tabpanel">
+      <div class="card">
+        <header class="card-header">
+          <strong>Early Retirement (ARER)</strong>
+          <div class="muted">Applies early‑retirement factors to the <em>unreduced</em> 2015 pension. Supports ERRBO up to 3 years and commutation (12:1).</div>
+        </header>
+
+        <div class="controls">
+          <label>NPA age (years): <input id="npaAge" type="number" step="0.1" value="67"/></label>
+          <label>Retirement age (years): <input id="retAge" type="number" step="0.1" value="60"/></label>
+          <label>ERRBO years (0–3): <input id="errboYears" type="number" min="0" max="3" step="0.25" value="0"/></label>
+          <label>Pension to commute (£/yr): <input id="commutePension" type="number" step="0.01" value="0"/></label>
+          <div class="spacer"></div>
+          <button id="earlyRecalcBtn" class="btn">Recalculate</button>
+        </div>
+
+        <div class="results-grid">
+          <div class="result"><span class="k">Unreduced 2015 pension</span><span id="earlyUnreduced">£0.00</span></div>
+          <div class="result"><span class="k">Months early (after ERRBO)</span><span id="earlyMonths">0</span></div>
+          <div class="result"><span class="k">ARER factor applied</span><span id="earlyFactor">1.0000</span></div>
+          <div class="result"><span class="k">Pension after ARER</span><span id="earlyReduced">£0.00</span></div>
+          <div class="result"><span class="k">Lump sum from commutation</span><span id="earlyCommuteLS">£0.00</span></div>
+          <div class="result"><span class="k">Payable annual pension</span><span id="earlyFinalPension">£0.00</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <header class="card-header">
+          <strong>ARER Factors</strong>
+          <div class="muted">Import the official 2015 ERF table (months → factor). We’ve included <code>arer-2015-template.json</code> and <code>arer-2015-sample.csv</code> in this pack.</div>
+        </header>
+
+        <div class="controls">
+          <button id="arerAddRowBtn" class="btn outline">Add Row</button>
+          <button id="arerResetBtn" class="btn outline danger">Reset to 0→1.0000</button>
+          <button id="arerExportBtn" class="btn outline">Export JSON</button>
+          <label class="btn file">Import JSON/CSV<input id="arerImportInput" type="file" accept="application/json,.csv,text/csv" /></label>
+          <div class="spacer"></div>
+          <button id="arerApplyBtn" class="btn">Apply</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="arerTable">
+            <thead>
+              <tr>
+                <th class="center">Months early</th>
+                <th class="center">Factor</th>
+                <th class="center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="arerBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-settings" class="panel" role="tabpanel">
+      <div class="card">
+        <header class="card-header">
+          <strong>Settings & Embeds</strong>
+        </header>
+        <div class="settings-grid">
+          <div class="setting">
+            <label class="label">Theme</label>
+            <div class="row">
+              <select id="themeSelect">
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+              <span class="muted">Dark mode is optimised for narrow iframes (Workvivo).</span>
+            </div>
+          </div>
+          <div class="setting">
+            <label class="label">Compact mode</label>
+            <div class="row">
+              <input id="compactToggle" type="checkbox"/>
+              <span class="muted">Tighter spacing for embeds.</span>
+            </div>
+          </div>
+          <div class="setting">
+            <label class="label">Embed code</label>
+            <div class="row">
+              <input id="embedAbs" type="number" step="0.01" placeholder="e.g. 9312.33"/>
+              <button id="copyEmbedBtn" class="btn outline">Copy iframe</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>For guidance only. Uses CARE 1/54 accrual and active revaluation. Part-year 2025/26 is set to ARA 0.0000 to mirror leaving before revaluation.</div>
+  </footer>
+
+  <script src="./assets/app.js"></script>
+</body>
+</html>
