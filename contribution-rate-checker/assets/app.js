@@ -4,12 +4,12 @@
    - From 1 Oct 2022: band uses actual annualised pensionable pay
    - Estimates employee contributions from actual annual pensionable pay
    - Years: 2015/16 → 2021/22, 2022/23 (Apr–Sep), 2022/23 (Oct–Mar), 2023/24, 2024/25, 2025/26
-   - Admin override: add ?admin=1 and paste JSON (saved locally)
+   - Admin override: ?admin=1 OR #admin=1 OR Alt+A (saved locally)
 */
 
 (function () {
   // Version flag for quick debug in console
-  window.LAS_CRC_VERSION = "v2025-10-20f";
+  window.LAS_CRC_VERSION = "v2025-10-20i";
 
   // ---------- helpers ----------
   function $(sel, root) { return (root || document).querySelector(sel); }
@@ -105,6 +105,25 @@
   }
   var RATE_TABLES = Object.assign({}, RATE_TABLES_BASE, loadRateOverrides());
 
+  // ---------- admin flag ----------
+  var url = new URL(window.location.href);
+  // Admin can be enabled 3 ways:
+  // 1) ?admin=1 in the URL
+  // 2) #admin=1 in the URL
+  // 3) localStorage flag las_admin=1 (press Alt+A to set)
+  var showAdmin =
+    url.searchParams.get("admin") === "1" ||
+    (location.hash && /(?:^|#|&|\?)admin=1(?:&|$)/.test(location.hash)) ||
+    localStorage.getItem("las_admin") === "1";
+
+  // Keyboard shortcut to set admin flag if platform mangles URLs
+  document.addEventListener('keydown', function (e) {
+    if (e.altKey && e.key.toLowerCase() === 'a') {
+      localStorage.setItem('las_admin', '1');
+      alert('Admin mode is now ON for this browser. Reload the page.');
+    }
+  });
+
   // Sorting for split-year labels (handles hyphen or en-dash)
   function yearSortKey(label) {
     var m = label.match(/^(\d{4})\/(\d{2})(?:\s*\((Apr[-–]Sep|Oct[-–]Mar)\))?$/);
@@ -124,9 +143,6 @@
     for (var i = 0; i < years.length; i++) if (years[i].indexOf(currentSY) === 0) return years[i];
     return years[years.length - 1];
   })();
-
-  var url = new URL(window.location.href);
-  var showAdmin = url.searchParams.get("admin") === "1";
 
   var LEGACY_SET = {
     "2015/16":1,"2016/17":1,"2017/18":1,"2018/19":1,"2019/20":1,"2020/21":1,"2021/22":1,
@@ -267,8 +283,7 @@
         + '  </section>'
         ) : '')
 
-      + '  + '  <footer class="foot"><p>LAS Pensions • Uses the official <a href="https://www.nhsbsa.nhs.uk/member-hub/cost-being-scheme" target="_blank" rel="noopener">NHS Pensions (NHSBSA) member contribution rates</a>. Results are an estimate; payroll sets your final rate.</p></footer>'
-'
+      + '  <footer class="foot"><p>LAS Pensions • Uses the official <a href="https://www.nhsbsa.nhs.uk/member-hub/cost-being-scheme" target="_blank" rel="noopener">NHS Pensions (NHSBSA) member contribution rates</a>. Results are an estimate; payroll sets your final rate.</p></footer>'
       + '</div>';
 
     // ---------- behaviour ----------
@@ -331,7 +346,7 @@
       var pay = tieringPayForUI();
 
       var rows = table.map(function (b, idx) {
-        var active = pay >= b.lower && pay <= b.upper;
+        var active = pay >= b.lower && b.upper >= pay;
         return ''
           + '<tr class="' + (active ? 'active' : '') + '">'
           +   '<td class="idx">' + (idx + 1) + '</td>'
@@ -351,8 +366,8 @@
         +     '<th>#</th><th>Pensionable pay range (WTE/Actual)*</th><th>Rate</th><th>Status</th>'
         +   '</tr></thead><tbody>' + rows + '</tbody></table>'
         + '</div>'
-       + '<p class="small muted">* For legacy years (to 30 Sep 2022) bands use <em>WTE</em>. From 1 Oct 2022 onward, bands use <em>actual annualised pensionable pay</em>.</p>'
-+ '<p class="small muted">Source: NHS Pensions (NHSBSA) — <a href="https://www.nhsbsa.nhs.uk/member-hub/cost-being-scheme" target="_blank" rel="noopener">Cost of being in the Scheme</a>.</p>';
+        + '<p class="small muted">* For legacy years (to 30 Sep 2022) bands use <em>WTE</em>. From 1 Oct 2022 onward, bands use <em>actual annualised pensionable pay</em>.</p>'
+        + (showAdmin ? '<p class="small muted">Admin mode is ON (this device). Paste overrides below.</p>' : '');
     }
 
     function calculateAndRender() {
@@ -436,8 +451,8 @@
         try {
           var obj = JSON.parse($("#adminJson").value.trim());
           localStorage.setItem("las_rate_tables_override", JSON.stringify(obj));
-          alert("Imported. Reload the page to apply.");
-        } catch (e) { alert("Invalid JSON."); }
+        } catch (e) { alert("Invalid JSON."); return; }
+        alert("Imported. Reload the page to apply.");
       });
       $("#btnClearJSON").addEventListener("click", function () {
         localStorage.removeItem("las_rate_tables_override");
@@ -470,7 +485,7 @@
 
     // First render
     renderBands();
-    console.log("LAS CRC loaded:", window.LAS_CRC_VERSION);
+    console.log("LAS CRC loaded:", window.LAS_CRC_VERSION, "Admin:", showAdmin);
   }
 
   if (document.readyState === "loading") {
