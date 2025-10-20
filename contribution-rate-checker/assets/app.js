@@ -267,7 +267,8 @@
         + '  </section>'
         ) : '')
 
-      + '  <footer class="foot"><p>LAS Pensions • This tool is an estimate only and does not replace official figures from NHS Pensions.</p></footer>'
+      + '  + '  <footer class="foot"><p>LAS Pensions • Uses the official <a href="https://www.nhsbsa.nhs.uk/member-hub/cost-being-scheme" target="_blank" rel="noopener">NHS Pensions (NHSBSA) member contribution rates</a>. Results are an estimate; payroll sets your final rate.</p></footer>'
+'
       + '</div>';
 
     // ---------- behaviour ----------
@@ -350,7 +351,8 @@
         +     '<th>#</th><th>Pensionable pay range (WTE/Actual)*</th><th>Rate</th><th>Status</th>'
         +   '</tr></thead><tbody>' + rows + '</tbody></table>'
         + '</div>'
-        + '<p class="small muted">* For legacy years (to 30 Sep 2022) bands use <em>WTE</em>. From 1 Oct 2022 onward, bands use <em>actual annualised pensionable pay</em>.</p>';
+       + '<p class="small muted">* For legacy years (to 30 Sep 2022) bands use <em>WTE</em>. From 1 Oct 2022 onward, bands use <em>actual annualised pensionable pay</em>.</p>'
++ '<p class="small muted">Source: NHS Pensions (NHSBSA) — <a href="https://www.nhsbsa.nhs.uk/member-hub/cost-being-scheme" target="_blank" rel="noopener">Cost of being in the Scheme</a>.</p>';
     }
 
     function calculateAndRender() {
