@@ -74,6 +74,26 @@ option{ color:var(--text); background:var(--panel); }
 /* Details blocks */
 .helper{ margin-top:10px; border:1px solid var(--border); border-radius:10px; padding:10px 12px; background:var(--panel); color:var(--text); }
 .helper summary{ cursor:pointer; font-weight:700; }
+/* Button row */
+.form-actions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;           /* wrap on small screens */
+  gap:12px;                 /* space between buttons */
+  margin-block:12px 16px;   /* space above and below the row */
+}
+
+/* Fallback if you don’t trust flex gap everywhere */
+.form-actions > * + *{ margin-inline-start:12px; }
+
+/* Optional: ensure the info banner below never hugs the buttons */
+.info-banner{ margin-top:12px; }
+
+/* Small screens: slightly tighter vertical rhythm */
+@media (max-width:480px){
+  .form-actions{ gap:10px; margin-block:10px 14px; }
+}
+
 
 /* Actions / Buttons */
 .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
