@@ -37,5 +37,27 @@ You have two ways:
 4. (Optional) Bump the cache-buster in `index.html` so pages pick up the new JS:  
    ```html
    <script src="./assets/app.js?v=2025-10-20g" defer></script>
+## Admin mode (local overrides)
+
+The tool can show a hidden **Admin** panel for testing updated bands on *your* device (saves to `localStorage`).
+
+**Open Admin (any one of these):**
+- `https://las-pension-tools.github.io/las-toolkit/contribution-rate-checker/#admin=1`
+- `https://las-pension-tools.github.io/las-toolkit/contribution-rate-checker/?admin=1`
+- Keyboard fallback: open the normal page, press **Alt + A**, then **reload**.
+
+**Use the Admin panel:**
+1. Paste JSON with this shape (no `"bands"` wrapper):
+   ```json
+   {
+     "2024/25": [
+       { "lower": 0, "upper": 13259.99, "rate": 0.052 },
+       { "lower": 13260, "upper": 26831.99, "rate": 0.065 },
+       { "lower": 26832, "upper": 32691.99, "rate": 0.083 },
+       { "lower": 32692, "upper": 49078.99, "rate": 0.098 },
+       { "lower": 49079, "upper": 62924.99, "rate": 0.107 },
+       { "lower": 62925, "upper": 9999999.99, "rate": 0.125 }
+     ]
+   }
 
 - 2023/24–2025/26: extracted from the LAS rate checker spreadsheets (RN references noted in the sheet).
