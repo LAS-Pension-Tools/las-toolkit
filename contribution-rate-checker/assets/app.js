@@ -4,13 +4,13 @@
    - From 1 Oct 2022: band uses actual annualised pensionable pay
    - Estimates employee contributions from actual annual pensionable pay
    - Years: 2015/16 → 2021/22, 2022/23 (Apr–Sep), 2022/23 (Oct–Mar), 2023/24, 2024/25, 2025/26
-   - NHSBSA pensionable-pay info link added under the input
+   - NHSBSA pensionable-pay info link under the input
    - Admin override: add ?admin=1 and paste JSON (saved locally)
 */
 
 (function () {
-  // Expose a tiny version stamp for quick debugging
-  window.LAS_CRC_VERSION = "v2025-10-20c";
+  // Version flag for quick debug in console
+  window.LAS_CRC_VERSION = "v2025-10-20d";
 
   // ---------- helpers ----------
   function $(sel, root) { return (root || document).querySelector(sel); }
@@ -106,7 +106,7 @@
   }
   var RATE_TABLES = Object.assign({}, RATE_TABLES_BASE, loadRateOverrides());
 
-  // Order years (handles "Apr–Sep"/"Oct–Mar" with – or -)
+  // Sorting for split-year labels (handles hyphen or en-dash)
   function yearSortKey(label) {
     var m = label.match(/^(\d{4})\/(\d{2})(?:\s*\((Apr[-–]Sep|Oct[-–]Mar)\))?$/);
     if (!m) return { y: 0, half: 0 };
@@ -129,7 +129,6 @@
   var url = new URL(window.location.href);
   var showAdmin = url.searchParams.get("admin") === "1";
 
-  // legacy detection (support both en-dash and hyphen labels)
   var LEGACY_SET = {
     "2015/16":1,"2016/17":1,"2017/18":1,"2018/19":1,"2019/20":1,"2020/21":1,"2021/22":1,
     "2022/23 (Apr–Sep)":1,"2022/23 (Apr-Sep)":1
@@ -154,17 +153,12 @@
     return null;
   }
 
-  // ---------- main init (runs after DOM is ready) ----------
+  // ---------- main init ----------
   function init() {
-    // Ensure a mount point exists
-    var app = document.getElementById("app");
-    if (!app) {
-      app = document.createElement("div");
-      app.id = "app";
-      (document.body || document.documentElement).appendChild(app);
-    }
+    var mount = document.getElementById("app");
+    if (!mount) { mount = document.createElement("div"); mount.id = "app"; document.body.appendChild(mount); }
 
-    app.innerHTML = ''
+    mount.innerHTML = ''
       + '<div class="las-wrap">'
       + '  <header class="las-header">'
       + '    <div class="title">'
@@ -393,12 +387,10 @@
       renderBands();
     }
 
-    // first paint
     renderBands();
     console.log("LAS CRC loaded:", window.LAS_CRC_VERSION);
   }
 
-  // Run when DOM is ready (prevents crashes if script isn’t deferred)
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init, { once: true });
   } else {
