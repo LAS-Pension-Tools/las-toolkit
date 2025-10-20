@@ -9,7 +9,7 @@
 
 (function () {
   // Version flag for quick debug in console
-  window.LAS_CRC_VERSION = "v2025-10-20e";
+  window.LAS_CRC_VERSION = "v2025-10-20f";
 
   // ---------- helpers ----------
   function $(sel, root) { return (root || document).querySelector(sel); }
@@ -157,7 +157,7 @@
     var mount = document.getElementById("app");
     if (!mount) { mount = document.createElement("div"); mount.id = "app"; document.body.appendChild(mount); }
 
-    // BUILD UI
+    // BUILD UI (Annual/Monthly ABOVE WTE)
     mount.innerHTML = ''
       + '<div class="las-wrap">'
       + '  <header class="las-header">'
@@ -180,11 +180,6 @@
       + '        </select>'
       + '      </label>'
 
-      + '      <label class="form-row" id="legacyWTERow" hidden><span>WTE pensionable pay (legacy years only) (£)</span>'
-      + '        <input id="legacyWTE" type="text" inputmode="decimal" placeholder="e.g. 38,000">'
-      + '        <small class="help">Used to set your contribution <em>band</em> for years before 1 Oct 2022.</small>'
-      + '      </label>'
-
       + '      <label class="form-row"><span>Pay input</span>'
       + '        <select id="payModeSel" aria-label="Pay input mode">'
       + '          <option value="annual" selected>Annual amount</option>'
@@ -201,6 +196,11 @@
       + '        <input id="monthlyPensionable" type="text" inputmode="decimal" placeholder="e.g. 2,350">'
       + '        <small class="help">We’ll multiply by 12 and show the annual figure we used.</small>'
       + '        <div id="annualHint" class="help" hidden></div>'
+      + '      </label>'
+
+      + '      <label class="form-row" id="legacyWTERow" hidden><span>WTE pensionable pay (legacy years only) (£)</span>'
+      + '        <input id="legacyWTE" type="text" inputmode="decimal" placeholder="e.g. 38,000">'
+      + '        <small class="help">Used to set your contribution <em>band</em> for years before 1 Oct 2022.</small>'
       + '      </label>'
 
       + '    </div>'
