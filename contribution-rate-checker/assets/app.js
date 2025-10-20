@@ -4,13 +4,12 @@
    - From 1 Oct 2022: band uses actual annualised pensionable pay
    - Estimates employee contributions from actual annual pensionable pay
    - Years: 2015/16 → 2021/22, 2022/23 (Apr–Sep), 2022/23 (Oct–Mar), 2023/24, 2024/25, 2025/26
-   - NHSBSA pensionable-pay info link under the input
    - Admin override: add ?admin=1 and paste JSON (saved locally)
 */
 
 (function () {
   // Version flag for quick debug in console
-  window.LAS_CRC_VERSION = "v2025-10-20d";
+  window.LAS_CRC_VERSION = "v2025-10-20e";
 
   // ---------- helpers ----------
   function $(sel, root) { return (root || document).querySelector(sel); }
@@ -158,6 +157,7 @@
     var mount = document.getElementById("app");
     if (!mount) { mount = document.createElement("div"); mount.id = "app"; document.body.appendChild(mount); }
 
+    // BUILD UI
     mount.innerHTML = ''
       + '<div class="las-wrap">'
       + '  <header class="las-header">'
@@ -184,23 +184,24 @@
       + '        <input id="legacyWTE" type="text" inputmode="decimal" placeholder="e.g. 38,000">'
       + '        <small class="help">Used to set your contribution <em>band</em> for years before 1 Oct 2022.</small>'
       + '      </label>'
-      <label class="form-row"><span>Pay input</span>
-        <select id="payModeSel" aria-label="Pay input mode">
-          <option value="annual" selected>Annual amount</option>
-          <option value="monthly">Monthly amount</option>
-        </select>
-      </label>
+
+      + '      <label class="form-row"><span>Pay input</span>'
+      + '        <select id="payModeSel" aria-label="Pay input mode">'
+      + '          <option value="annual" selected>Annual amount</option>'
+      + '          <option value="monthly">Monthly amount</option>'
+      + '        </select>'
+      + '      </label>'
 
       + '      <label class="form-row" id="annualRow"><span>Annual pensionable pay (actual/annualised) (£)</span>'
       + '        <input id="annualPensionable" type="text" inputmode="decimal" placeholder="e.g. 28,400">'
       + '        <small class="help">Includes regular pensionable elements such as <strong>basic pay</strong> and <strong>High Cost Area Supplement (HCAS/London weighting)</strong>. Some enhancements may be pensionable; see the guidance below.</small>'
       + '      </label>'
-             <label class="form-row" id="monthlyRow" hidden><span>Monthly pensionable pay (£)</span>
-        <input id="monthlyPensionable" type="text" inputmode="decimal" placeholder="e.g. 2,350">
-        <small class="help">We’ll multiply by 12 and show the annual figure we used.</small>
-        <div id="annualHint" class="help" hidden></div>
-      </label>
 
+      + '      <label class="form-row" id="monthlyRow" hidden><span>Monthly pensionable pay (£)</span>'
+      + '        <input id="monthlyPensionable" type="text" inputmode="decimal" placeholder="e.g. 2,350">'
+      + '        <small class="help">We’ll multiply by 12 and show the annual figure we used.</small>'
+      + '        <div id="annualHint" class="help" hidden></div>'
+      + '      </label>'
 
       + '    </div>'
 
@@ -241,7 +242,7 @@
       + '    <div class="actions"><button class="btn primary" id="btnCalc">Calculate</button>'
       + '      <button class="btn" id="btnReset">Reset</button></div>'
 
-      + '    <div class="note role-change" role="note"><div class="note-icon" aria-hidden="true">ℹ️</div>'
+      + '    <div class="note role-change info-banner" role="note"><div class="note-icon" aria-hidden="true">ℹ️</div>'
       + '      <div><strong>Heads-up:</strong> Employers may set your rate using pay from a previous year if required by the rules. If your payslip shows a different rate, please follow your payroll guidance.</div>'
       + '    </div>'
       + '  </section>'
@@ -258,7 +259,7 @@
           '  <section class="las-panel admin" aria-labelledby="adminTitle">'
         + '    <h2 id="adminTitle" class="panel-title">Admin: import/override year bands</h2>'
         + '    <p class="muted">Paste JSON like: <code>{"2026/27":[{"lower":0,"upper":14000,"rate":0.05}, ...]}</code></p>'
-        + '    <textarea id="adminJson" rows="8" spellcheck="false" placeholder=\'{"2026/27":[...]}' + '\'></textarea>'
+        + '    <textarea id="adminJson" rows="8" spellcheck="false" placeholder="{&quot;2026/27&quot;:[...]}"></textarea>'
         + '    <div class="actions"><button class="btn" id="btnPreviewJSON">Preview</button>'
         + '      <button class="btn primary" id="btnImportJSON">Import (save to this browser)</button>'
         + '      <button class="btn danger" id="btnClearJSON">Clear override</button></div>'
@@ -276,120 +277,52 @@
       $("#legacyWTERow").hidden = !legacy;
       $("#wteHelper").hidden = !legacy;
     }
-    syncLegacyVisibility();
 
-    $("#hcToggle").addEventListener("change", function (e) {
-      document.body.classList.toggle("hc", e.target.checked);
-    });
-
-    $("#yearSel").addEventListener("change", function () {
-      syncLegacyVisibility();
-      renderBands();
-    });
-
-    $("#btnReset").addEventListener("click", function () {
-      ["legacyWTE","annualPensionable","monthlyPensionable","helpAnnualAtYourHours","helpYourHours","helpContractHours"]
-        .forEach(function(id){ var el=$("#"+id); if(el) el.value=""; });
-      $("#wteOut").textContent = "";
-      $("#result").innerHTML = '<p class="muted">Enter values above and click <strong>Calculate</strong>.</p>';
-      renderBands();
-    });
-
-    $("#btnComputeWTE").addEventListener("click", function () {
-      var wte = computeWTEBasic({
-        annualBasicAtYourHours: $("#helpAnnualAtYourHours").value,
-        yourWeeklyHours: $("#helpYourHours").value,
-        contractWeeklyHours: $("#helpContractHours").value || 37.5
-      });
-      $("#wteOut").textContent = wte ? ("WTE basic ≈ " + currency(wte)) : "Please enter valid numbers above.";
-    });
-
-    $("#btnCalc").addEventListener("click", function () { calculateAndRender(); });
-
-    if (showAdmin) {
-      $("#btnPreviewJSON").addEventListener("click", function () {
-        var t = $("#adminJson").value.trim();
-        try { $("#adminPreview").textContent = JSON.stringify(JSON.parse(t), null, 2); }
-        catch (e) { $("#adminPreview").textContent = "Invalid JSON."; }
-      });
-      $("#btnImportJSON").addEventListener("click", function () {
-        try {
-          var obj = JSON.parse($("#adminJson").value.trim());
-          localStorage.setItem("las_rate_tables_override", JSON.stringify(obj));
-          alert("Imported. Reload the page to apply.");
-        } catch (e) { alert("Invalid JSON."); }
-      });
-      $("#btnClearJSON").addEventListener("click", function () {
-        localStorage.removeItem("las_rate_tables_override");
-        alert("Override cleared. Reload to revert to defaults.");
-      });
-    }
-         // Pay mode & monthly field events
-    var payModeEl = $("#payModeSel");
-    if (payModeEl) {
-      payModeEl.addEventListener("change", function () {
-        syncPayModeVisibility();
-        renderBands();
-      });
-    }
-    var mEl = $("#monthlyPensionable");
-    if (mEl) {
-      mEl.addEventListener("input", function () { updateAnnualHint(); renderBands(); });
-      mEl.addEventListener("change", function () { updateAnnualHint(); renderBands(); });
+    // Gets the annual actual/annualised pay based on the selected mode
+    function getAnnualActual() {
+      var modeEl = $("#payModeSel");
+      var mode = modeEl ? modeEl.value : "annual";
+      var annual = num($("#annualPensionable").value);
+      if (mode === "monthly") {
+        var m = num($("#monthlyPensionable").value);
+        return m > 0 ? (m * 12) : annual; // fallback to annual if monthly empty
+      }
+      return annual;
     }
 
-
-    ["legacyWTE","annualPensionable"].forEach(function (id) {
-      var el = $("#"+id);
-      if (el) { el.addEventListener("input", renderBands); el.addEventListener("change", renderBands); }
-    });
-  // Gets the annual actual/annualised pay based on the selected mode
-  function getAnnualActual() {
-    var modeEl = $("#payModeSel");
-    var mode = modeEl ? modeEl.value : "annual";
-    var annual = num($("#annualPensionable").value);
-    if (mode === "monthly") {
+    // Show/hide annual vs monthly inputs and keep the hint in sync
+    function updateAnnualHint() {
+      var hint = $("#annualHint");
+      if (!hint) return;
+      var modeEl = $("#payModeSel");
+      var mode = modeEl ? modeEl.value : "annual";
+      if (mode !== "monthly") { hint.hidden = true; hint.textContent = ""; return; }
       var m = num($("#monthlyPensionable").value);
-      return m > 0 ? (m * 12) : annual; // fallback to annual if monthly empty
+      if (m > 0) {
+        hint.hidden = false;
+        hint.textContent = "Using " + currency(m) + " × 12 = " + currency(m * 12) + " (annualised) for this calculation.";
+      } else {
+        hint.hidden = true;
+        hint.textContent = "";
+      }
     }
-    return annual;
-  }
 
-  // Show/hide annual vs monthly inputs and keep the hint in sync
-  function updateAnnualHint() {
-    var hint = $("#annualHint");
-    if (!hint) return;
-    var modeEl = $("#payModeSel");
-    var mode = modeEl ? modeEl.value : "annual";
-    if (mode !== "monthly") { hint.hidden = true; hint.textContent = ""; return; }
-    var m = num($("#monthlyPensionable").value);
-    if (m > 0) {
-      hint.hidden = false;
-      hint.textContent = "Using " + currency(m) + " × 12 = " + currency(m * 12) + " (annualised) for this calculation.";
-    } else {
-      hint.hidden = true;
-      hint.textContent = "";
+    function syncPayModeVisibility() {
+      var modeEl = $("#payModeSel");
+      if (!modeEl) return;
+      var mode = modeEl.value;
+      $("#annualRow").hidden  = (mode === "monthly");
+      $("#monthlyRow").hidden = (mode !== "monthly");
+      updateAnnualHint();
     }
-  }
 
-  function syncPayModeVisibility() {
-    var modeEl = $("#payModeSel");
-    if (!modeEl) return;
-    var mode = modeEl.value;
-    $("#annualRow").hidden  = (mode === "monthly");
-    $("#monthlyRow").hidden = (mode !== "monthly");
-    updateAnnualHint();
-  }
-
-    // ---------- rendering ----------
-     function tieringPayForUI() {
-    var year = $("#yearSel").value;
-    // Legacy years: bands use WTE only
-    if (isLegacyYear(year)) return num($("#legacyWTE").value);
-    // From 1 Oct 2022 onward: bands use actual annualised pensionable pay
-    return getAnnualActual();
-  }
-
+    function tieringPayForUI() {
+      var year = $("#yearSel").value;
+      // Legacy years: bands use WTE only
+      if (isLegacyYear(year)) return num($("#legacyWTE").value);
+      // From 1 Oct 2022 onward: bands use actual annualised pensionable pay
+      return getAnnualActual();
+    }
 
     function renderBands() {
       var year = $("#yearSel").value;
@@ -434,7 +367,7 @@
         return;
       }
 
-            var annualActual = getAnnualActual();
+      var annualActual = getAnnualActual();
       var usingMonthly = ($("#payModeSel") && $("#payModeSel").value === "monthly");
       var enteredMonthly = num($("#monthlyPensionable") ? $("#monthlyPensionable").value : "");
 
@@ -452,12 +385,88 @@
         +   '<div><div class="kpi-small-label">Est. yearly employee contributions</div><div class="kpi-small-value">' + currency(estYearly) + '</div></div>'
         +   '<div><div class="kpi-small-label">Est. monthly employee contributions</div><div class="kpi-small-value">' + currency(estMonthly) + '</div></div>'
         + '</div>'
-        + '<p class="small muted">Band for ' + year + ': ' + currency(band.lower) + ' – ' + currency(band.upper) + ' at ' + pct(band.rate) + '.</p>'        + (usingMonthly ? '<p class="small muted">You entered monthly ' + currency(enteredMonthly) + '; annualised to ' + currency(annualActual) + ' for this calculation.</p>' : '')
-;
+        + '<p class="small muted">Band for ' + year + ': ' + currency(band.lower) + ' – ' + currency(band.upper) + ' at ' + pct(band.rate) + '.</p>'
+        + (usingMonthly ? '<p class="small muted">You entered monthly ' + currency(enteredMonthly) + '; annualised to ' + currency(annualActual) + ' for this calculation.</p>' : '');
 
       renderBands();
     }
 
+    // ---------- event wiring & initial render ----------
+    syncLegacyVisibility();
+    syncPayModeVisibility();
+
+    $("#hcToggle").addEventListener("change", function (e) {
+      document.body.classList.toggle("hc", e.target.checked);
+    });
+
+    $("#yearSel").addEventListener("change", function () {
+      syncLegacyVisibility();
+      renderBands();
+    });
+
+    $("#btnReset").addEventListener("click", function () {
+      ["legacyWTE","annualPensionable","monthlyPensionable","helpAnnualAtYourHours","helpYourHours","helpContractHours"]
+        .forEach(function(id){ var el=$("#"+id); if(el) el.value=""; });
+      $("#wteOut").textContent = "";
+      updateAnnualHint();
+      $("#result").innerHTML = '<p class="muted">Enter values above and click <strong>Calculate</strong>.</p>';
+      renderBands();
+    });
+
+    $("#btnComputeWTE").addEventListener("click", function () {
+      var wte = computeWTEBasic({
+        annualBasicAtYourHours: $("#helpAnnualAtYourHours").value,
+        yourWeeklyHours: $("#helpYourHours").value,
+        contractWeeklyHours: $("#helpContractHours").value || 37.5
+      });
+      $("#wteOut").textContent = wte ? ("WTE basic ≈ " + currency(wte)) : "Please enter valid numbers above.";
+    });
+
+    $("#btnCalc").addEventListener("click", function () { calculateAndRender(); });
+
+    if (showAdmin) {
+      $("#btnPreviewJSON").addEventListener("click", function () {
+        var t = $("#adminJson").value.trim();
+        try { $("#adminPreview").textContent = JSON.stringify(JSON.parse(t), null, 2); }
+        catch (e) { $("#adminPreview").textContent = "Invalid JSON."; }
+      });
+      $("#btnImportJSON").addEventListener("click", function () {
+        try {
+          var obj = JSON.parse($("#adminJson").value.trim());
+          localStorage.setItem("las_rate_tables_override", JSON.stringify(obj));
+          alert("Imported. Reload the page to apply.");
+        } catch (e) { alert("Invalid JSON."); }
+      });
+      $("#btnClearJSON").addEventListener("click", function () {
+        localStorage.removeItem("las_rate_tables_override");
+        alert("Override cleared. Reload to revert to defaults.");
+      });
+    }
+
+    // Live updates when typing
+    ["legacyWTE","annualPensionable","monthlyPensionable"].forEach(function (id) {
+      var el = $("#"+id);
+      if (el) {
+        el.addEventListener("input", function(){ if(id==="monthlyPensionable") updateAnnualHint(); renderBands(); });
+        el.addEventListener("change", function(){ if(id==="monthlyPensionable") updateAnnualHint(); renderBands(); });
+      }
+    });
+
+    // Pay mode & monthly field events
+    var payModeEl = $("#payModeSel");
+    if (payModeEl) {
+      payModeEl.addEventListener("change", function () {
+        syncPayModeVisibility();
+        renderBands();
+      });
+    }
+    var mEl = $("#monthlyPensionable");
+    if (mEl) {
+      mEl.addEventListener("input", function () { updateAnnualHint(); renderBands(); });
+      mEl.addEventListener("change", function () { updateAnnualHint(); renderBands(); });
+    }
+
+    // First render
     renderBands();
     console.log("LAS CRC loaded:", window.LAS_CRC_VERSION);
   }
