@@ -96,7 +96,27 @@ option{ color:var(--text); background:var(--panel); }
 
 
 /* Actions / Buttons */
-.actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+/* Actions / Buttons — updated spacing */
+.actions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;           /* wrap on small screens */
+  gap:12px;                 /* space between buttons */
+  margin-block:12px 16px;   /* space above and below the row */
+}
+
+/* Fallback if any browser ignores flex gap */
+.actions > * + *{ margin-inline-start:12px; }
+
+/* Small screens: slightly tighter vertical rhythm */
+@media (max-width:480px){
+  .actions{ gap:10px; margin-block:10px 14px; }
+}
+
+/* Ensure the info note doesn't hug the buttons */
+.note.role-change{ margin-top:12px; }
+
+
 .btn{
   appearance:none; background:var(--panel); color:var(--brand);
   border:2px solid var(--brand); padding:10px 14px; border-radius:10px;
