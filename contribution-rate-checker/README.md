@@ -1,8 +1,6 @@
 
 # LAS Contribution Rate Checker
 
-# LAS Contribution Rate Checker
-
 A small client-side tool for estimating NHS Pension **member** contribution rates by scheme year.  
 **Source of truth for rates:** [NHS Pensions (NHSBSA) – Cost of being in the Scheme](https://www.nhsbsa.nhs.uk/member-hub/cost-being-scheme).  
 Results are a guide only; your **employer/payroll** sets the final rate under NHS Pensions rules.
