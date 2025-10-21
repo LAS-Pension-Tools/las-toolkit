@@ -1,1 +1,49 @@
+{
+  "defaultYear": "2025/26",
+  "years": [
+    {
+      "label": "2025/26",
+      "tax": {
+        "personalAllowance": 12570,
+        "higherRateThreshold": 37700,
+        "additionalRateThreshold": 125140,
+        "bands": {
+          "ENG_NI": [
+            { "upper": 37700, "rate": 0.20 },
+            { "upper": 125140, "rate": 0.40 },
+            { "upper": null, "rate": 0.45 }
+          ],
+          "WALES": [
+            { "upper": 37700, "rate": 0.20 },
+            { "upper": 125140, "rate": 0.40 },
+            { "upper": null, "rate": 0.45 }
+          ],
+          "SCOT": [
+            { "upper": 2827, "rate": 0.19 },
+            { "upper": 14921, "rate": 0.20 },
+            { "upper": 31092, "rate": 0.21 },
+            { "upper": 62430, "rate": 0.42 },
+            { "upper": 125140, "rate": 0.45 },
+            { "upper": null, "rate": 0.48 }
+          ]
+        }
+      },
+      "ni": {
+        "monthly": { "LEL": 542, "PT": 1048, "UEL": 4189 },
+        "employeeRates": { "main": 0.08, "upper": 0.02 }
+      },
+      "nhs": {
+        "tiers": [
+          { "min": 0, "max": 13259, "rate": 0.052 },
+          { "min": 13260, "max": 27797, "rate": 0.065 },
+          { "min": 27798, "max": 33868, "rate": 0.083 },
+          { "min": 33869, "max": 50845, "rate": 0.098 },
+          { "min": 50846, "max": 65190, "rate": 0.107 },
+          { "min": 65191, "max": null, "rate": 0.125 }
+        ],
+        "employerRateHint": 0.237
+      }
+    }
+  ]
+}
 
