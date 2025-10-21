@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NHS Pension Opt‑Out Calculator — 2025/26</title>
+  <!-- Tailwind (CDN) for quick styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html,body{background-color:#0b1220;color:#e5e7eb}
+    .card{border:1px solid rgba(255,255,255,0.08);border-radius:1rem;background:rgba(2,6,23,0.65);backdrop-filter:saturate(120%) blur(6px)}
+    .btn{border:1px solid rgba(255,255,255,0.18);padding:.4rem .7rem;border-radius:.6rem}
+    .btn:hover{background:rgba(255,255,255,0.06)}
+    input,select,textarea{background:rgba(255,255,255,0.06)}
+    table th, table td { padding:.55rem .4rem; }
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+  </style>
+  <!-- React 18 + Babel (for inline JSX). Safe for small tools like this. -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="min-h-screen">
+  <div id="app" class="max-w-5xl mx-auto p-4 md:p-8"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    // ---------------- Rates (2025/26 default) ----------------
+    const defaultRates = {
+      defaultYear: "2025/26",
+      years: [
+        {
+          label: "2025/26",
+          tax: {
+            personalAllowance: 12570,
+            higherRateThreshold: 37700,
+            additionalRateThreshold: 125140,
+            bands: {
+              ENG_NI: [ { upper: 37700, rate: 0.20 }, { upper: 125140, rate: 0.40 }, { upper: null, rate: 0.45 } ],
+              WALES:  [ { upper: 37700, rate: 0.20 }, { upper: 125140, rate: 0.40 }, { upper: null, rate: 0.45 } ],
+              SCOT:   [ { upper: 2827, rate: 0.19 }, { upper: 14921, rate: 0.20 }, { upper: 31092, rate: 0.21 }, { upper: 62430, rate: 0.42 }, { upper: 125140, rate: 0.45 }, { upper: null, rate: 0.48 } ],
+            },
+          },
+          ni: {
+            monthly: { LEL: 542, PT: 1048, UEL: 4189 },
+            employeeRates: { main: 0.08, upper: 0.02 },
+          },
+          nhs: {
+            tiers: [
+              { min: 0,     max: 13259, rate: 0.052 },
+              { min: 13260, max: 27797, rate: 0.065 },
+              { min: 27798, max: 33868, rate: 0.083 },
+              { min: 33869, max: 50845, rate: 0.098 },
+              { min: 50846, max: 65190, rate: 0.107 },
+              { min: 65191, max: null,  rate: 0.125 },
+            ],
+            employerRateHint: 0.237,
+          },
+        },
+      ],
+    };
+
+    const fmt = (n) => (n||0).toLocaleString('en-GB',{style:'currency',currency:'GBP'});
+    const pct = (n) => `${(n*100).toFixed(1)}%`;
+    const getQuery = (k) => new URL(location.href).searchParams.get(k);
+
+    // Optional: auto-load a committed rates.json if present in the folder.
+    async function loadCommittedRates() {
+      try {
+        const res = await fetch('./rates.json', { cache: 'no-store' });
+        if (res.ok) return await res.json();
+      } catch {}
+      return null;
+    }
+
+    const loadRates = async () => {
+      try {
+        const raw = localStorage.getItem('las_optout_rates_v1');
+        if (raw) return JSON.parse(raw);
+      } catch {}
+      const committed = await loadCommittedRates();
+      return committed || defaultRates;
+    };
+
+    const saveRates = (r) => localStorage.setItem('las_optout_rates_v1', JSON.stringify(r,null,2));
+
+    const parseTaxCode = (code) => {
+      const c = (code||'').toUpperCase().trim();
+      if(!c) return { mode:'STANDARD', allowance:12570 };
+      if(['BR','D0','D1','NT'].includes(c)) return { mode:c };
+      const m=c.match(/(\d{3,4})[A-Z]*/); if(m){ return { mode:'STANDARD', allowance: parseInt(m[1],10)*10 }; }
+      return { mode:'STANDARD', allowance:12570 };
+    };
+
+    const ageOnDate = (dob, on) => { if(!dob) return null; const d=new Date(dob); if(isNaN(d)) return null; let a=on.getFullYear()-d.getFullYear(); const m=on.getMonth()-d.getMonth(); if(m<0 || (m===0 && on.getDate()<d.getDate())) a--; return a; };
+    const nhsMemberRate = (annual, nhs) => { const t= nhs.tiers.find(t=> annual>=t.min && (t.max==null || annual<=t.max)); return t? t.rate: 0; };
+
+    const calcPAYE = (region, monthlyTaxable, annualAdjustedNet, taxCfg, codeParsed) => {
+      const taperStart=100000;
+      const pa0 = codeParsed.mode==='STANDARD' ? taxCfg.personalAllowance : 0;
+      const pa = codeParsed.mode==='STANDARD' ? Math.max(0, pa0 - Math.max(0, Math.floor((annualAdjustedNet - taperStart)/2))) : 0;
+      if(codeParsed.mode==='NT') return 0;
+      if(codeParsed.mode==='BR') return monthlyTaxable * 0.20;
+      if(codeParsed.mode==='D0') return monthlyTaxable * 0.40;
+      if(codeParsed.mode==='D1') return monthlyTaxable * 0.45;
+      const monthlyPA = pa/12;
+      let remaining = Math.max(0, monthlyTaxable - monthlyPA);
+      const bands = taxCfg.bands[region];
+      let tax=0, lower=0;
+      for(const b of bands){
+        const upper = b.upper ?? Infinity;
+        const bandAnnual = upper - lower;
+        const bandMonthly = bandAnnual/12;
+        const take = Math.max(0, Math.min(remaining, bandMonthly));
+        tax += take * b.rate; remaining -= take; lower = upper; if(remaining<=0) break;
+      }
+      if(remaining>0) tax += remaining * (bands[bands.length-1].rate);
+      return tax;
+    };
+
+    const calcNI = (monthlyGross, niCfg, overSPA) => {
+      if(overSPA) return 0;
+      const { PT, UEL } = niCfg.monthly;
+      if(monthlyGross <= PT) return 0;
+      const between = Math.max(0, Math.min(monthlyGross, UEL) - PT);
+      const above = Math.max(0, monthlyGross - UEL);
+      return between * niCfg.employeeRates.main + above * niCfg.employeeRates.upper;
+    };
+
+    function App(){
+      const [region, setRegion] = React.useState('ENG_NI');
+      const [dob, setDob] = React.useState('');
+      const [payDate, setPayDate] = React.useState(()=> new Date().toISOString().slice(0,10));
+      const [taxCode, setTaxCode] = React.useState('1257L');
+      const [items, setItems] = React.useState([
+        { id: crypto.randomUUID(), label:'Basic', amount:0, useRate:false, rate:0, hours:0 },
+        { id: crypto.randomUUID(), label:'HCA', amount:0, useRate:false, rate:0, hours:0 },
+      ]);
+      const [yearKey, setYearKey] = React.useState(defaultRates.defaultYear);
+      const [rates, setRates] = React.useState(defaultRates);
+      const [openHelp, setOpenHelp] = React.useState(false);
+      const showAdmin = getQuery('admin')==='1';
+
+      React.useEffect(()=>{ (async ()=>{ setRates(await loadRates()); })(); },[]);
+      React.useEffect(()=>{ if(showAdmin) saveRates(rates); },[rates, showAdmin]);
+
+      const activeYear = React.useMemo(()=> rates.years.find(y=>y.label===yearKey) || rates.years[0], [rates, yearKey]);
+      const monthlyGross = React.useMemo(()=> items.reduce((s,it)=> s + (it.useRate? (it.rate||0)*(it.hours||0) : (it.amount||0)), 0), [items]);
+      const annualGross = monthlyGross * 12;
+      const nhsRate = nhsMemberRate(annualGross, activeYear.nhs);
+      const monthlyNhsEE = annualGross * nhsRate / 12;
+
+      const overSPA = React.useMemo(()=>{ const d = payDate? new Date(payDate): new Date(); const a=ageOnDate(dob,d); return a!==null ? a>=66 : false; },[dob,payDate]);
+
+      const annualANI = Math.max(0, annualGross - (annualGross * nhsRate));
+      const monthlyTaxableStayIn = Math.max(0, monthlyGross - monthlyNhsEE);
+
+      const taxParsed = React.useMemo(()=> parseTaxCode(taxCode), [taxCode]);
+      const monthlyTaxStayIn = calcPAYE(region, monthlyTaxableStayIn, annualANI, activeYear.tax, taxParsed);
+      const monthlyNIStayIn  = calcNI(monthlyGross, activeYear.ni, overSPA);
+      const netStayIn = monthlyGross - monthlyNhsEE - monthlyTaxStayIn - monthlyNIStayIn;
+
+      const monthlyTaxOptOut = calcPAYE(region, monthlyGross, annualGross, activeYear.tax, taxParsed);
+      const monthlyNIOptOut  = calcNI(monthlyGross, activeYear.ni, overSPA);
+      const netOptOut = monthlyGross - monthlyTaxOptOut - monthlyNIOptOut;
+      const deltaTakeHome = netOptOut - netStayIn;
+
+      const addItem = ()=> setItems(p=> [...p, { id: crypto.randomUUID(), label:'Other', amount:0, useRate:false, rate:0, hours:0 }]);
+      const updateItem = (id, patch)=> setItems(p=> p.map(x=> x.id===id? ({...x, ...patch}): x));
+      const removeItem = (id)=> setItems(p=> p.filter(x=> x.id!==id));
+
+      // Admin paste/export
+      const [pasteJSON, setPasteJSON] = React.useState('');
+      const importRates = ()=> { try{ const parsed = JSON.parse(pasteJSON); if(!parsed?.years?.length) throw new Error('Malformed JSON'); setRates(parsed); saveRates(parsed); setPasteJSON(''); alert('Rates imported'); }catch(e){ alert('Import failed: '+(e?.message||e)); } };
+      const exportRates = ()=> { const blob = new Blob([JSON.stringify(rates,null,2)], {type:'application/json'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url); };
+
+      return (
+        <div>
+          <header className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-emerald-600/20">🧮</div>
+            <div>
+              <h1 className="text-2xl font-semibold">NHS Pension Opt‑Out Calculator</h1>
+              <p className="text-sm opacity-80">Monthly payslip illustration — <span className="font-semibold">stay in</span> vs <span className="font-semibold">opt out</span>. Rates {yearKey}.</p>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <label className="text-sm">Year</label>
+              <select value={yearKey} onChange={e=>setYearKey(e.target.value)} className="bg-transparent border rounded px-2 py-1">
+                {rates.years.map(y=> <option key={y.label} value={y.label}>{y.label}</option>)}
+              </select>
+              <label className="text-sm ml-3">Region</label>
+              <select value={region} onChange={e=>setRegion(e.target.value)} className="bg-transparent border rounded px-2 py-1">
+                <option value="ENG_NI">England & NI</option>
+                <option value="WALES">Wales</option>
+                <option value="SCOT">Scotland</option>
+              </select>
+            </div>
+          </header>
+
+          <section className="grid md:grid-cols-2 gap-4 mb-6">
+            <div className="card p-4">
+              <h2 className="font-semibold mb-2">Pensionable pay (monthly)</h2>
+              <div className="space-y-3">
+                {items.map(it=> (
+                  <div key={it.id} className="grid grid-cols-12 items-end gap-2">
+                    <input className="col-span-4 border rounded px-2 py-1" value={it.label} onChange={e=>updateItem(it.id,{label:e.target.value})} />
+                    <div className="col-span-3 flex items-center gap-2 text-xs">
+                      <input type="checkbox" checked={!!it.useRate} onChange={e=>updateItem(it.id,{useRate:e.target.checked})} />
+                      <span>rate × hours</span>
+                    </div>
+                    {it.useRate ? (
+                      <>
+                        <input type="number" placeholder="rate" className="col-span-2 border rounded px-2 py-1" value={it.rate ?? ''} onChange={e=>updateItem(it.id,{rate:parseFloat(e.target.value||'0')})} />
+                        <input type="number" placeholder="hours" className="col-span-2 border rounded px-2 py-1" value={it.hours ?? ''} onChange={e=>updateItem(it.id,{hours:parseFloat(e.target.value||'0')})} />
+                        <div className="col-span-1 text-right text-sm opacity-70">{fmt((it.rate||0)*(it.hours||0))}</div>
+                      </>
+                    ) : (
+                      <>
+                        <input type="number" className="col-span-6 border rounded px-2 py-1" value={it.amount} onChange={e=>updateItem(it.id,{amount:parseFloat(e.target.value||'0')})} />
+                        <div className="col-span-1" />
+                      </>
+                    )}
+                    <button className="col-span-1 justify-self-end p-2" title="Remove" onClick={()=>removeItem(it.id)}>✖</button>
+                  </div>
+                ))}
+                <button onClick={addItem} className="inline-flex items-center gap-2 text-emerald-300 btn">＋ Add item</button>
+              </div>
+              <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 text-sm">
+                <span>Total monthly pensionable pay</span>
+                <span className="font-semibold">{fmt(monthlyGross)}</span>
+              </div>
+            </div>
+            <div className="card p-4">
+              <h2 className="font-semibold mb-2">Your details</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-sm">Date of birth
+                  <input type="date" value={dob} onChange={e=>setDob(e.target.value)} className="mt-1 w-full border rounded px-2 py-1" />
+                </label>
+                <label className="text-sm">Pay date (for NI age check)
+                  <input type="date" value={payDate} onChange={e=>setPayDate(e.target.value)} className="mt-1 w-full border rounded px-2 py-1" />
+                </label>
+                <label className="text-sm col-span-2">Tax code (optional)
+                  <input value={taxCode} onChange={e=>setTaxCode(e.target.value)} className="mt-1 w-full border rounded px-2 py-1" placeholder="1257L, BR, D0, D1, NT" />
+                </label>
+              </div>
+              <div className="mt-3 text-xs opacity-70">Assumes standard NHS pension (net pay arrangement). NI stops automatically if aged 66+ on pay date.</div>
+            </div>
+          </section>
+
+          <section className="card p-4 mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="font-semibold">Payslip illustration (monthly)</h2>
+              <button className="ml-auto text-sm btn" onClick={()=>setOpenHelp(s=>!s)}>{openHelp? 'Hide' : 'How this is worked out'}</button>
+            </div>
+            {openHelp && (
+              <div className="text-sm bg-white/5 border border-white/10 rounded p-3 mb-3">
+                <ul className="list-disc ml-5 space-y-1">
+                  <li>Income Tax: region‑specific bands with monthly personal allowance and high‑income taper.</li>
+                  <li>National Insurance: 8% between PT £1,048 and UEL £4,189, then 2% above; £0 at/over State Pension Age.</li>
+                  <li>NHS member contribution: rate determined by <em>annual</em> pensionable pay; applied monthly.</li>
+                </ul>
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left py-2">Item</th>
+                    <th className="text-right">Stay in</th>
+                    <th className="text-right">Opt out</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-white/10">
+                    <td className="py-2">Gross pay (monthly)</td>
+                    <td className="text-right">{fmt(monthlyGross)}</td>
+                    <td className="text-right">{fmt(monthlyGross)}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2">NHS pension (employee) {nhsRate? <span className="opacity-70">({pct(nhsRate)})</span>: null}</td>
+                    <td className="text-right">{fmt(monthlyNhsEE)}</td>
+                    <td className="text-right">{fmt(0)}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2">Taxable pay this month</td>
+                    <td className="text-right">{fmt(Math.max(0, monthlyGross - monthlyNhsEE))}</td>
+                    <td className="text-right">{fmt(monthlyGross)}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2">Income Tax (PAYE)</td>
+                    <td className="text-right">{fmt(monthlyTaxStayIn)}</td>
+                    <td className="text-right">{fmt(monthlyTaxOptOut)}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2">National Insurance (employee)</td>
+                    <td className="text-right">{fmt(monthlyNIStayIn)}</td>
+                    <td className="text-right">{fmt(monthlyNIOptOut)}</td>
+                  </tr>
+                  <tr className="border-t border-white/10 font-semibold">
+                    <td className="py-2">Net take‑home pay</td>
+                    <td className="text-right">{fmt(netStayIn)}</td>
+                    <td className="text-right">{fmt(netOptOut)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-3 grid md:grid-cols-3 gap-3 text-sm">
+              <div className="card p-3">
+                <div className="opacity-70">Difference in take‑home (opt‑out minus stay‑in)</div>
+                <div className={`text-lg font-semibold ${deltaTakeHome>=0? 'text-emerald-300':'text-rose-300'}`}>{fmt(deltaTakeHome)}</div>
+              </div>
+              <div className="card p-3">
+                <div className="opacity-70">Annual pensionable pay</div>
+                <div className="text-lg font-semibold">{fmt(annualGross)}</div>
+              </div>
+              <div className="card p-3">
+                <div className="opacity-70">Employer pension (context)</div>
+                <div className="text-lg font-semibold">≈ {fmt(annualGross * (activeYear.nhs.employerRateHint||0))}/yr</div>
+                <div className="text-xs opacity-70">Not deducted from pay but foregone if you opt out.</div>
+              </div>
+            </div>
+          </section>
+
+          {showAdmin && (
+            <section className="card p-4 space-y-3">
+              <div className="font-semibold">Admin — Rates (paste/edit yearly)</div>
+              <p className="text-sm opacity-80">Paste new JSON to update 2026/27 etc. Your edits save to this browser. Export and commit to the repo if desired.</p>
+              <div className="grid md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm">Current JSON
+                    <textarea className="mt-1 w-full h-64 border rounded p-2 mono text-xs" readOnly value={JSON.stringify(rates,null,2)} />
+                  </label>
+                  <div className="mt-2 flex gap-2">
+                    <button onClick={exportRates} className="btn">Export</button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm">Paste new JSON
+                    <textarea className="mt-1 w-full h-64 border rounded p-2 mono text-xs" value={pasteJSON} onChange={e=>setPasteJSON(e.target.value)} placeholder="{ \"years\": [ ... ] }" />
+                  </label>
+                  <div className="mt-2 flex gap-2">
+                    <button onClick={importRates} className="btn">Import</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          <footer className="mt-6 text-xs opacity-70 space-y-1">
+            <div>For guidance only. This tool does not replace official figures from HMRC or NHS Pensions.</div>
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('app')).render(<App/>);
+  </script>
+</body>
+</html>
