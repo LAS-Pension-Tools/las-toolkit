@@ -14,6 +14,7 @@
     input,select,textarea{background:rgba(255,255,255,0.06)}
     table th, table td { padding:.55rem .4rem; }
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .ok{color:#86efac} .warn{color:#fde047} .fail{color:#fca5a5}
   </style>
   <!-- React 18 + Babel (for inline JSX). Safe for small tools like this. -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -25,6 +26,16 @@
 
   <script type="text/babel">
     const { useState, useMemo, useEffect } = React;
+
+    // --------- ID generator (fix for environments without window.crypto) ---------
+    function generateId(){
+      const g = (typeof globalThis!== 'undefined' ? globalThis : window);
+      const c = g && g.crypto && typeof g.crypto.randomUUID === 'function' ? g.crypto : null;
+      if(c){ try { return c.randomUUID(); } catch(e) { /* fall through */ } }
+      // RFC4122-ish fallback (not cryptographically secure; fine for keys)
+      const rnd = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).slice(1);
+      return `id-${Date.now().toString(16)}-${rnd()}-${rnd()}-${rnd()}-${rnd()}${rnd()}${rnd()}`;
+    }
 
     // ---------------- Rates (2025/26 default) ----------------
     const defaultRates = {
@@ -65,22 +76,55 @@
     const pct = (n) => `${(n*100).toFixed(1)}%`;
     const getQuery = (k) => new URL(location.href).searchParams.get(k);
 
-    // Optional: auto-load a committed rates.json if present in the folder.
-    async function loadCommittedRates() {
-      try {
-        const res = await fetch('./rates.json', { cache: 'no-store' });
-        if (res.ok) return await res.json();
-      } catch {}
-      return null;
+    // ---------- Load rates: localStorage -> repo file -> built-in ----------
+    async function loadCommittedRatesCandidates() {
+      const candidates = [];
+      const path = location.pathname;
+      const baseDir = path.endsWith('/') ? path : path.replace(/[^/]+$/, ''); // directory of current page
+      // 1) Same folder (works for folder deployment)
+      candidates.push(baseDir + 'rates.json');
+      // 2) Relative (works if index.html sits next to rates.json)
+      candidates.push('./rates.json');
+      candidates.push('rates.json');
+      // 3) If this is a single-file page like /repo/opt-out-calculator.html,
+      // also try /repo/opt-out-calculator/rates.json
+      if (/\.html?$/.test(path)) {
+        const parts = path.split('/').filter(Boolean);
+        if (parts.length >= 1) {
+          const repo = '/' + parts[0];
+          candidates.push(`${repo}/opt-out-calculator/rates.json`);
+        }
+      }
+
+      const tried = new Set();
+      for (const url of candidates) {
+        if (tried.has(url)) continue; tried.add(url);
+        try {
+          const res = await fetch(url, { cache: 'no-store' });
+          if (res.ok) {
+            const json = await res.json();
+            console.info('[rates] loaded from', url);
+            return { data: json, source: url };
+          }
+          console.warn('[rates] not found at', url, res.status);
+        } catch (e) {
+          console.warn('[rates] fetch failed for', url, e);
+        }
+      }
+      return null; // not found
     }
 
-    const loadRates = async () => {
+    const loadRatesWithSource = async () => {
+      // 1) localStorage wins (explicit admin paste)
       try {
         const raw = localStorage.getItem('las_optout_rates_v1');
-        if (raw) return JSON.parse(raw);
+        if (raw) return { data: JSON.parse(raw), source: 'localStorage' };
       } catch {}
-      const committed = await loadCommittedRates();
-      return committed || defaultRates;
+      // 2) repo file
+      const committed = await loadCommittedRatesCandidates();
+      if (committed) return committed;
+      // 3) built-in
+      return { data: defaultRates, source: 'built-in' };
     };
 
     const saveRates = (r) => localStorage.setItem('las_optout_rates_v1', JSON.stringify(r,null,2));
@@ -134,15 +178,16 @@
       const [payDate, setPayDate] = React.useState(()=> new Date().toISOString().slice(0,10));
       const [taxCode, setTaxCode] = React.useState('1257L');
       const [items, setItems] = React.useState([
-        { id: crypto.randomUUID(), label:'Basic', amount:0, useRate:false, rate:0, hours:0 },
-        { id: crypto.randomUUID(), label:'HCA', amount:0, useRate:false, rate:0, hours:0 },
+        { id: generateId(), label:'Basic', amount:0, useRate:false, rate:0, hours:0 },
+        { id: generateId(), label:'HCA', amount:0, useRate:false, rate:0, hours:0 },
       ]);
       const [yearKey, setYearKey] = React.useState(defaultRates.defaultYear);
       const [rates, setRates] = React.useState(defaultRates);
+      const [ratesSource, setRatesSource] = React.useState('built-in');
       const [openHelp, setOpenHelp] = React.useState(false);
       const showAdmin = getQuery('admin')==='1';
 
-      React.useEffect(()=>{ (async ()=>{ setRates(await loadRates()); })(); },[]);
+      React.useEffect(()=>{ (async ()=>{ const { data, source } = await loadRatesWithSource(); setRates(data); setRatesSource(source); })(); },[]);
       React.useEffect(()=>{ if(showAdmin) saveRates(rates); },[rates, showAdmin]);
 
       const activeYear = React.useMemo(()=> rates.years.find(y=>y.label===yearKey) || rates.years[0], [rates, yearKey]);
@@ -166,7 +211,7 @@
       const netOptOut = monthlyGross - monthlyTaxOptOut - monthlyNIOptOut;
       const deltaTakeHome = netOptOut - netStayIn;
 
-      const addItem = ()=> setItems(p=> [...p, { id: crypto.randomUUID(), label:'Other', amount:0, useRate:false, rate:0, hours:0 }]);
+      const addItem = ()=> setItems(p=> [...p, { id: generateId(), label:'Other', amount:0, useRate:false, rate:0, hours:0 }]);
       const updateItem = (id, patch)=> setItems(p=> p.map(x=> x.id===id? ({...x, ...patch}): x));
       const removeItem = (id)=> setItems(p=> p.filter(x=> x.id!==id));
 
@@ -174,6 +219,35 @@
       const [pasteJSON, setPasteJSON] = React.useState('');
       const importRates = ()=> { try{ const parsed = JSON.parse(pasteJSON); if(!parsed?.years?.length) throw new Error('Malformed JSON'); setRates(parsed); saveRates(parsed); setPasteJSON(''); alert('Rates imported'); }catch(e){ alert('Import failed: '+(e?.message||e)); } };
       const exportRates = ()=> { const blob = new Blob([JSON.stringify(rates,null,2)], {type:'application/json'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url); };
+
+      // ---------- Optional test harness (open with ?test=1) ----------
+      const runTests = getQuery('test')==='1';
+      const [tests, setTests] = React.useState([]);
+      useEffect(()=>{
+        if(!runTests) return;
+        const out = [];
+        const ok = (name, cond) => out.push({name, status: cond? 'ok':'fail'});
+        try{
+          // Existing tests
+          const ids = new Set(); let unique=true; for(let i=0;i<500;i++){ const id=generateId(); if(ids.has(id)) unique=false; ids.add(id);} ok('IDs are unique across 500 calls', unique);
+          const p1 = parseTaxCode('1257L'); ok('Tax code 1257L -> STANDARD', p1.mode==='STANDARD' && p1.allowance===12570);
+          ok('Tax code BR -> BR', parseTaxCode('BR').mode==='BR');
+          ok('Tax code D0 -> D0', parseTaxCode('D0').mode==='D0');
+          ok('Tax code NT -> NT', parseTaxCode('NT').mode==='NT');
+          ok('NI below PT is 0', calcNI(900, defaultRates.years[0].ni, false)===0);
+          const niSample = calcNI(5000, defaultRates.years[0].ni, false);
+          const expect = (4189-1048)*0.08 + (5000-4189)*0.02; ok('NI above UEL uses 8% then 2%', Math.abs(niSample - expect) < 0.01);
+          const r = nhsMemberRate(52000, defaultRates.years[0].nhs); ok('NHS member rate lookup (52k) = 10.7%', Math.abs(r-0.107)<1e-9);
+
+          // Additional tests
+          const p2 = parseTaxCode('1100L'); ok('Tax code 1100L -> allowance £11,000', p2.mode==='STANDARD' && p2.allowance===11000);
+          const brTax = calcPAYE('ENG_NI', 3000, 3000*12, defaultRates.years[0].tax, {mode:'BR'}); ok('BR code: 20% of monthly taxable', Math.abs(brTax - 600) < 0.01);
+          const niOverSPA = calcNI(5000, defaultRates.years[0].ni, true); ok('NI stops at/over SPA', niOverSPA===0);
+          const rEdge1 = nhsMemberRate(65190, defaultRates.years[0].nhs); ok('NHS tier boundary 65190 = 10.7%', Math.abs(rEdge1-0.107)<1e-9);
+          const rEdge2 = nhsMemberRate(65191, defaultRates.years[0].nhs); ok('NHS tier just above = 12.5%', Math.abs(rEdge2-0.125)<1e-9);
+        }catch(e){ out.push({name:'Harness threw', status:'fail'}); console.error(e); }
+        setTests(out);
+      },[runTests]);
 
       return (
         <div>
@@ -194,6 +268,7 @@
                 <option value="WALES">Wales</option>
                 <option value="SCOT">Scotland</option>
               </select>
+              <span className="text-xs opacity-70 ml-3" title={ratesSource==='built-in' ? 'Using defaults embedded in the page' : ratesSource}>src: {ratesSource}</span>
             </div>
           </header>
 
@@ -338,13 +413,23 @@
                 </div>
                 <div>
                   <label className="text-sm">Paste new JSON
-                    <textarea className="mt-1 w-full h-64 border rounded p-2 mono text-xs" value={pasteJSON} onChange={e=>setPasteJSON(e.target.value)} placeholder="{ \"years\": [ ... ] }" />
+                    <textarea className="mt-1 w-full h-64 border rounded p-2 mono text-xs" value={pasteJSON} onChange={e=>setPasteJSON(e.target.value)} placeholder='{"years": [ ... ] }' />
                   </label>
                   <div className="mt-2 flex gap-2">
                     <button onClick={importRates} className="btn">Import</button>
                   </div>
                 </div>
               </div>
+            </section>
+          )}
+
+          {runTests && (
+            <section className="card p-4 mt-6">
+              <div className="font-semibold mb-2">Self‑tests</div>
+              <ul className="text-sm list-disc ml-5">
+                {tests.map((t,i)=> <li key={i} className={t.status==='ok'?'ok':(t.status==='warn'?'warn':'fail')}>{t.status.toUpperCase()} — {t.name}</li>)}
+              </ul>
+              <div className="text-xs opacity-70 mt-2">Open with <code className="mono">?test=1</code> to see these results. They also log to the console.</div>
             </section>
           )}
 
