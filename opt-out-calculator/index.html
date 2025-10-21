@@ -3,8 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NHS Pension Opt‑Out Calculator — 2025/26</title>
-  <!-- Tailwind (CDN) for quick styling -->
+  <title>NHS Pension Opt‑Out Calculator — 2025/26 (England only)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     html,body{background-color:#0b1220;color:#e5e7eb}
@@ -16,7 +15,6 @@
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
     .ok{color:#86efac} .warn{color:#fde047} .fail{color:#fca5a5}
   </style>
-  <!-- React 18 + Babel (for inline JSX). Safe for small tools like this. -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -27,12 +25,11 @@
   <script type="text/babel">
     const { useState, useMemo, useEffect } = React;
 
-    // --------- ID generator (fix for environments without window.crypto) ---------
+    // --------- ID generator (no crypto dependency) ---------
     function generateId(){
       const g = (typeof globalThis!== 'undefined' ? globalThis : window);
       const c = g && g.crypto && typeof g.crypto.randomUUID === 'function' ? g.crypto : null;
-      if(c){ try { return c.randomUUID(); } catch(e) { /* fall through */ } }
-      // RFC4122-ish fallback (not cryptographically secure; fine for keys)
+      if(c){ try { return c.randomUUID(); } catch(e) {} }
       const rnd = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).slice(1);
       return `id-${Date.now().toString(16)}-${rnd()}-${rnd()}-${rnd()}-${rnd()}${rnd()}${rnd()}`;
     }
@@ -49,8 +46,6 @@
             additionalRateThreshold: 125140,
             bands: {
               ENG_NI: [ { upper: 37700, rate: 0.20 }, { upper: 125140, rate: 0.40 }, { upper: null, rate: 0.45 } ],
-              WALES:  [ { upper: 37700, rate: 0.20 }, { upper: 125140, rate: 0.40 }, { upper: null, rate: 0.45 } ],
-              SCOT:   [ { upper: 2827, rate: 0.19 }, { upper: 14921, rate: 0.20 }, { upper: 31092, rate: 0.21 }, { upper: 62430, rate: 0.42 }, { upper: 125140, rate: 0.45 }, { upper: null, rate: 0.48 } ],
             },
           },
           ni: {
@@ -67,6 +62,7 @@
               { min: 65191, max: null,  rate: 0.125 },
             ],
             employerRateHint: 0.237,
+            valueIllustrationPerYear: 21300
           },
         },
       ],
@@ -80,14 +76,10 @@
     async function loadCommittedRatesCandidates() {
       const candidates = [];
       const path = location.pathname;
-      const baseDir = path.endsWith('/') ? path : path.replace(/[^/]+$/, ''); // directory of current page
-      // 1) Same folder (works for folder deployment)
+      const baseDir = path.endsWith('/') ? path : path.replace(/[^/]+$/, '');
       candidates.push(baseDir + 'rates.json');
-      // 2) Relative (works if index.html sits next to rates.json)
       candidates.push('./rates.json');
       candidates.push('rates.json');
-      // 3) If this is a single-file page like /repo/opt-out-calculator.html,
-      // also try /repo/opt-out-calculator/rates.json
       if (/\.html?$/.test(path)) {
         const parts = path.split('/').filter(Boolean);
         if (parts.length >= 1) {
@@ -95,40 +87,27 @@
           candidates.push(`${repo}/opt-out-calculator/rates.json`);
         }
       }
-
       const tried = new Set();
       for (const url of candidates) {
         if (tried.has(url)) continue; tried.add(url);
         try {
           const res = await fetch(url, { cache: 'no-store' });
-          if (res.ok) {
-            const json = await res.json();
-            console.info('[rates] loaded from', url);
-            return { data: json, source: url };
-          }
-          console.warn('[rates] not found at', url, res.status);
-        } catch (e) {
-          console.warn('[rates] fetch failed for', url, e);
-        }
+          if (res.ok) { const json = await res.json(); return { data: json, source: url }; }
+        } catch(e) {}
       }
-      return null; // not found
+      return null;
     }
 
     const loadRatesWithSource = async () => {
-      // 1) localStorage wins (explicit admin paste)
-      try {
-        const raw = localStorage.getItem('las_optout_rates_v1');
-        if (raw) return { data: JSON.parse(raw), source: 'localStorage' };
-      } catch {}
-      // 2) repo file
+      try { const raw = localStorage.getItem('las_optout_rates_v1'); if (raw) return { data: JSON.parse(raw), source: 'localStorage' }; } catch {}
       const committed = await loadCommittedRatesCandidates();
       if (committed) return committed;
-      // 3) built-in
       return { data: defaultRates, source: 'built-in' };
     };
 
     const saveRates = (r) => localStorage.setItem('las_optout_rates_v1', JSON.stringify(r,null,2));
 
+    // ---------------- Helpers ----------------
     const parseTaxCode = (code) => {
       const c = (code||'').toUpperCase().trim();
       if(!c) return { mode:'STANDARD', allowance:12570 };
@@ -140,7 +119,15 @@
     const ageOnDate = (dob, on) => { if(!dob) return null; const d=new Date(dob); if(isNaN(d)) return null; let a=on.getFullYear()-d.getFullYear(); const m=on.getMonth()-d.getMonth(); if(m<0 || (m===0 && on.getDate()<d.getDate())) a--; return a; };
     const nhsMemberRate = (annual, nhs) => { const t= nhs.tiers.find(t=> annual>=t.min && (t.max==null || annual<=t.max)); return t? t.rate: 0; };
 
-    const calcPAYE = (region, monthlyTaxable, annualAdjustedNet, taxCfg, codeParsed) => {
+    const clamp = (v,min,max)=> Math.min(max,Math.max(min,v));
+    const parsePercentMaybe = (val) => {
+      if(val==null) return null; const s = String(val).trim(); if(!s) return null;
+      let x = parseFloat(s); if(Number.isNaN(x)) return null; if(x>1) x = x/100; return clamp(x,0,0.5);
+    };
+
+    // ---------------- PAYE & NI ----------------
+    const calcPAYE = (monthlyTaxable, annualAdjustedNet, taxCfg, codeParsed) => {
+      const bands = taxCfg.bands.ENG_NI; // England only
       const taperStart=100000;
       const pa0 = codeParsed.mode==='STANDARD' ? taxCfg.personalAllowance : 0;
       const pa = codeParsed.mode==='STANDARD' ? Math.max(0, pa0 - Math.max(0, Math.floor((annualAdjustedNet - taperStart)/2))) : 0;
@@ -150,7 +137,6 @@
       if(codeParsed.mode==='D1') return monthlyTaxable * 0.45;
       const monthlyPA = pa/12;
       let remaining = Math.max(0, monthlyTaxable - monthlyPA);
-      const bands = taxCfg.bands[region];
       let tax=0, lower=0;
       for(const b of bands){
         const upper = b.upper ?? Infinity;
@@ -173,10 +159,11 @@
     };
 
     function App(){
-      const [region, setRegion] = React.useState('ENG_NI');
+      // --- STATE ---
       const [dob, setDob] = React.useState('');
       const [payDate, setPayDate] = React.useState(()=> new Date().toISOString().slice(0,10));
       const [taxCode, setTaxCode] = React.useState('1257L');
+      const [manualRateStr, setManualRateStr] = React.useState(''); // optional override (%)
       const [items, setItems] = React.useState([
         { id: generateId(), label:'Basic', amount:0, useRate:false, rate:0, hours:0 },
         { id: generateId(), label:'HCA', amount:0, useRate:false, rate:0, hours:0 },
@@ -186,65 +173,71 @@
       const [ratesSource, setRatesSource] = React.useState('built-in');
       const [openHelp, setOpenHelp] = React.useState(false);
       const showAdmin = getQuery('admin')==='1';
+      const runTests = getQuery('test')==='1';
 
-      React.useEffect(()=>{ (async ()=>{ const { data, source } = await loadRatesWithSource(); setRates(data); setRatesSource(source); })(); },[]);
-      React.useEffect(()=>{ if(showAdmin) saveRates(rates); },[rates, showAdmin]);
+      // --- LOAD RATES ---
+      useEffect(()=>{ (async ()=>{ const { data, source } = await loadRatesWithSource(); setRates(data); setRatesSource(source); })(); },[]);
+      useEffect(()=>{ if(showAdmin) saveRates(rates); },[rates, showAdmin]);
 
-      const activeYear = React.useMemo(()=> rates.years.find(y=>y.label===yearKey) || rates.years[0], [rates, yearKey]);
-      const monthlyGross = React.useMemo(()=> items.reduce((s,it)=> s + (it.useRate? (it.rate||0)*(it.hours||0) : (it.amount||0)), 0), [items]);
+      const activeYear = useMemo(()=> rates.years.find(y=>y.label===yearKey) || rates.years[0], [rates, yearKey]);
+
+      // --- CALCS ---
+      const monthlyGross = useMemo(()=> items.reduce((s,it)=> s + (it.useRate? (it.rate||0)*(it.hours||0) : (it.amount||0)), 0), [items]);
       const annualGross = monthlyGross * 12;
-      const nhsRate = nhsMemberRate(annualGross, activeYear.nhs);
-      const monthlyNhsEE = annualGross * nhsRate / 12;
 
-      const overSPA = React.useMemo(()=>{ const d = payDate? new Date(payDate): new Date(); const a=ageOnDate(dob,d); return a!==null ? a>=66 : false; },[dob,payDate]);
+      const manualRate = useMemo(()=> parsePercentMaybe(manualRateStr), [manualRateStr]);
+      const nhsRateAuto = nhsMemberRate(annualGross, activeYear.nhs);
+      const nhsRateApplied = (manualRate ?? nhsRateAuto);
+      const monthlyNhsEE = annualGross * nhsRateApplied / 12;
 
-      const annualANI = Math.max(0, annualGross - (annualGross * nhsRate));
+      const overSPA = useMemo(()=>{ const d = payDate? new Date(payDate): new Date(); const a=ageOnDate(dob,d); return a!==null ? a>=66 : false; },[dob,payDate]);
+
+      const annualANI = Math.max(0, annualGross - (annualGross * nhsRateApplied));
       const monthlyTaxableStayIn = Math.max(0, monthlyGross - monthlyNhsEE);
 
-      const taxParsed = React.useMemo(()=> parseTaxCode(taxCode), [taxCode]);
-      const monthlyTaxStayIn = calcPAYE(region, monthlyTaxableStayIn, annualANI, activeYear.tax, taxParsed);
+      const taxParsed = useMemo(()=> parseTaxCode(taxCode), [taxCode]);
+      const monthlyTaxStayIn = calcPAYE(monthlyTaxableStayIn, annualANI, activeYear.tax, taxParsed);
       const monthlyNIStayIn  = calcNI(monthlyGross, activeYear.ni, overSPA);
       const netStayIn = monthlyGross - monthlyNhsEE - monthlyTaxStayIn - monthlyNIStayIn;
 
-      const monthlyTaxOptOut = calcPAYE(region, monthlyGross, annualGross, activeYear.tax, taxParsed);
+      const monthlyTaxOptOut = calcPAYE(monthlyGross, annualGross, activeYear.tax, taxParsed);
       const monthlyNIOptOut  = calcNI(monthlyGross, activeYear.ni, overSPA);
       const netOptOut = monthlyGross - monthlyTaxOptOut - monthlyNIOptOut;
       const deltaTakeHome = netOptOut - netStayIn;
 
+      // --- CRUD helpers ---
       const addItem = ()=> setItems(p=> [...p, { id: generateId(), label:'Other', amount:0, useRate:false, rate:0, hours:0 }]);
       const updateItem = (id, patch)=> setItems(p=> p.map(x=> x.id===id? ({...x, ...patch}): x));
       const removeItem = (id)=> setItems(p=> p.filter(x=> x.id!==id));
 
-      // Admin paste/export
+      // --- Admin paste/export ---
       const [pasteJSON, setPasteJSON] = React.useState('');
       const importRates = ()=> { try{ const parsed = JSON.parse(pasteJSON); if(!parsed?.years?.length) throw new Error('Malformed JSON'); setRates(parsed); saveRates(parsed); setPasteJSON(''); alert('Rates imported'); }catch(e){ alert('Import failed: '+(e?.message||e)); } };
       const exportRates = ()=> { const blob = new Blob([JSON.stringify(rates,null,2)], {type:'application/json'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url); };
 
-      // ---------- Optional test harness (open with ?test=1) ----------
-      const runTests = getQuery('test')==='1';
-      const [tests, setTests] = React.useState([]);
+      // --- Notes strings ---
+      const noteActEarnings = fmt(annualGross);
+      const notePensionRate = (manualRate==null)
+        ? `Not completed - calculation uses ${(nhsRateApplied*100).toFixed(1)}%`
+        : `${(manualRate*100).toFixed(1)}%`;
+      const noteTaxCode = (taxCode||'').trim()? (taxCode.toUpperCase()) : 'Not completed';
+
+      // ---------- Optional test harness ----------
+      const [tests, setTests] = useState([]);
       useEffect(()=>{
         if(!runTests) return;
         const out = [];
         const ok = (name, cond) => out.push({name, status: cond? 'ok':'fail'});
         try{
-          // Existing tests
+          // Uniqueness of IDs
           const ids = new Set(); let unique=true; for(let i=0;i<500;i++){ const id=generateId(); if(ids.has(id)) unique=false; ids.add(id);} ok('IDs are unique across 500 calls', unique);
-          const p1 = parseTaxCode('1257L'); ok('Tax code 1257L -> STANDARD', p1.mode==='STANDARD' && p1.allowance===12570);
-          ok('Tax code BR -> BR', parseTaxCode('BR').mode==='BR');
-          ok('Tax code D0 -> D0', parseTaxCode('D0').mode==='D0');
-          ok('Tax code NT -> NT', parseTaxCode('NT').mode==='NT');
+          // Percent parser
+          ok('parsePercentMaybe("12.5") = 0.125', Math.abs(parsePercentMaybe('12.5')-0.125) < 1e-9);
+          ok('parsePercentMaybe("0.125") = 0.125', Math.abs(parsePercentMaybe('0.125')-0.125) < 1e-9);
+          // NI below PT
           ok('NI below PT is 0', calcNI(900, defaultRates.years[0].ni, false)===0);
-          const niSample = calcNI(5000, defaultRates.years[0].ni, false);
-          const expect = (4189-1048)*0.08 + (5000-4189)*0.02; ok('NI above UEL uses 8% then 2%', Math.abs(niSample - expect) < 0.01);
-          const r = nhsMemberRate(52000, defaultRates.years[0].nhs); ok('NHS member rate lookup (52k) = 10.7%', Math.abs(r-0.107)<1e-9);
-
-          // Additional tests
-          const p2 = parseTaxCode('1100L'); ok('Tax code 1100L -> allowance £11,000', p2.mode==='STANDARD' && p2.allowance===11000);
-          const brTax = calcPAYE('ENG_NI', 3000, 3000*12, defaultRates.years[0].tax, {mode:'BR'}); ok('BR code: 20% of monthly taxable', Math.abs(brTax - 600) < 0.01);
-          const niOverSPA = calcNI(5000, defaultRates.years[0].ni, true); ok('NI stops at/over SPA', niOverSPA===0);
-          const rEdge1 = nhsMemberRate(65190, defaultRates.years[0].nhs); ok('NHS tier boundary 65190 = 10.7%', Math.abs(rEdge1-0.107)<1e-9);
-          const rEdge2 = nhsMemberRate(65191, defaultRates.years[0].nhs); ok('NHS tier just above = 12.5%', Math.abs(rEdge2-0.125)<1e-9);
+          // NHS tier lookup
+          const r = nhsMemberRate(52000, defaultRates.years[0].nhs); ok('NHS rate (52k) = 10.7%', Math.abs(r-0.107)<1e-9);
         }catch(e){ out.push({name:'Harness threw', status:'fail'}); console.error(e); }
         setTests(out);
       },[runTests]);
@@ -254,23 +247,30 @@
           <header className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-emerald-600/20">🧮</div>
             <div>
-              <h1 className="text-2xl font-semibold">NHS Pension Opt‑Out Calculator</h1>
-              <p className="text-sm opacity-80">Monthly payslip illustration — <span className="font-semibold">stay in</span> vs <span className="font-semibold">opt out</span>. Rates {yearKey}.</p>
+              <h1 className="text-2xl font-semibold">NHS Pension Opt‑Out Calculator (England only)</h1>
+              <p className="text-sm opacity-80">Monthly payslip illustration — <span className="font-semibold">stay in</span> vs <span className="font-semibold">opt out</span>. Rates {yearKey}. <span className="opacity-60">src: {ratesSource}</span></p>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <label className="text-sm">Year</label>
               <select value={yearKey} onChange={e=>setYearKey(e.target.value)} className="bg-transparent border rounded px-2 py-1">
                 {rates.years.map(y=> <option key={y.label} value={y.label}>{y.label}</option>)}
               </select>
-              <label className="text-sm ml-3">Region</label>
-              <select value={region} onChange={e=>setRegion(e.target.value)} className="bg-transparent border rounded px-2 py-1">
-                <option value="ENG_NI">England & NI</option>
-                <option value="WALES">Wales</option>
-                <option value="SCOT">Scotland</option>
-              </select>
-              <span className="text-xs opacity-70 ml-3" title={ratesSource==='built-in' ? 'Using defaults embedded in the page' : ratesSource}>src: {ratesSource}</span>
             </div>
           </header>
+
+          {/* Benefits / explanation */}
+          <section className="card p-4 mb-6 text-sm">
+            <h2 className="font-semibold mb-2">Benefits you would be giving up by opting out of the 2015 NHS Pension Scheme</h2>
+            <ul className="list-disc ml-5 space-y-1">
+              <li>An annual pension payable for life after retirement.</li>
+              <li>Tax‑free cash lump sum on retirement (for 1995 Section members; optional for other members).</li>
+              <li>Death‑in‑service life assurance lump sum to a nominated person or organisation.</li>
+              <li>Pension benefits payable to dependants, including children.</li>
+              <li>Ill‑health retirement benefits.</li>
+              <li>Tax relief on pension contributions.</li>
+            </ul>
+            <p className="mt-3 opacity-90">To help illustrate the value of the NHS pension you would be giving up, a hypothetical comparison to buy similar benefits on the “open market” might cost around <span className="font-semibold">{fmt(activeYear.nhs.valueIllustrationPerYear || 21300)}</span> for each year you give up accruing benefits in the NHS Pension Scheme.</p>
+          </section>
 
           <section className="grid md:grid-cols-2 gap-4 mb-6">
             <div className="card p-4">
@@ -317,8 +317,11 @@
                 <label className="text-sm col-span-2">Tax code (optional)
                   <input value={taxCode} onChange={e=>setTaxCode(e.target.value)} className="mt-1 w-full border rounded px-2 py-1" placeholder="1257L, BR, D0, D1, NT" />
                 </label>
+                <label className="text-sm col-span-2">Override NHS contribution rate (optional, %)
+                  <input value={manualRateStr} onChange={e=>setManualRateStr(e.target.value)} className="mt-1 w-full border rounded px-2 py-1" placeholder="12.5" />
+                </label>
               </div>
-              <div className="mt-3 text-xs opacity-70">Assumes standard NHS pension (net pay arrangement). NI stops automatically if aged 66+ on pay date.</div>
+              <div className="mt-3 text-xs opacity-70">This tool is for <span className="font-semibold">employees</span>. It applies England PAYE & NI rules. NI stops automatically if the employee is at or above State Pension Age on the pay date.</div>
             </div>
           </section>
 
@@ -330,9 +333,9 @@
             {openHelp && (
               <div className="text-sm bg-white/5 border border-white/10 rounded p-3 mb-3">
                 <ul className="list-disc ml-5 space-y-1">
-                  <li>Income Tax: region‑specific bands with monthly personal allowance and high‑income taper.</li>
+                  <li>Income Tax: England bands with monthly personal allowance and high‑income taper.</li>
                   <li>National Insurance: 8% between PT £1,048 and UEL £4,189, then 2% above; £0 at/over State Pension Age.</li>
-                  <li>NHS member contribution: rate determined by <em>annual</em> pensionable pay; applied monthly.</li>
+                  <li>NHS member contribution: either your override, or the tier determined by <em>annual</em> pensionable pay.</li>
                 </ul>
               </div>
             )}
@@ -353,7 +356,7 @@
                     <td className="text-right">{fmt(monthlyGross)}</td>
                   </tr>
                   <tr>
-                    <td className="py-2">NHS pension (employee) {nhsRate? <span className="opacity-70">({pct(nhsRate)})</span>: null}</td>
+                    <td className="py-2">NHS pension (employee) <span className="opacity-70">({pct(nhsRateApplied)})</span></td>
                     <td className="text-right">{fmt(monthlyNhsEE)}</td>
                     <td className="text-right">{fmt(0)}</td>
                   </tr>
@@ -387,8 +390,8 @@
                 <div className={`text-lg font-semibold ${deltaTakeHome>=0? 'text-emerald-300':'text-rose-300'}`}>{fmt(deltaTakeHome)}</div>
               </div>
               <div className="card p-3">
-                <div className="opacity-70">Annual pensionable pay</div>
-                <div className="text-lg font-semibold">{fmt(annualGross)}</div>
+                <div className="opacity-70">Net annual pay — stay in / opt out</div>
+                <div className="text-lg font-semibold">{fmt(netStayIn*12)} / {fmt(netOptOut*12)}</div>
               </div>
               <div className="card p-3">
                 <div className="opacity-70">Employer pension (context)</div>
@@ -398,8 +401,34 @@
             </div>
           </section>
 
+          {/* Notes block */}
+          <section className="card p-4 text-sm">
+            <div className="font-semibold mb-2">Notes</div>
+            <ul className="list-disc ml-5 space-y-1">
+              <li>The calculator is for illustrative purposes only.</li>
+              <li>Net annual pay is calculated as 12 × net monthly pay (using current NI rates).</li>
+              <li>The calculator above is based on the following inputs:</li>
+            </ul>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div>‑ Actual pensionable earnings</div><div className="text-right">{noteActEarnings}</div>
+              <div>‑ Pension contribution rate</div><div className="text-right">{notePensionRate}</div>
+              <div>‑ Tax code</div><div className="text-right">{noteTaxCode}</div>
+            </div>
+            <div className="mt-2 text-xs opacity-70">The illustrative value of the benefits is for general comparison purposes only and is not payable from the pension scheme. Market conditions vary.</div>
+          </section>
+
+          {runTests && (
+            <section className="card p-4 mt-6">
+              <div className="font-semibold mb-2">Self‑tests</div>
+              <ul className="text-sm list-disc ml-5">
+                {tests.map((t,i)=> <li key={i} className={t.status==='ok'?'ok':(t.status==='warn'?'warn':'fail')}>{t.status.toUpperCase()} — {t.name}</li>)}
+              </ul>
+              <div className="text-xs opacity-70 mt-2">Open with <code className="mono">?test=1</code> to see these results.</div>
+            </section>
+          )}
+
           {showAdmin && (
-            <section className="card p-4 space-y-3">
+            <section className="card p-4 space-y-3 mt-6">
               <div className="font-semibold">Admin — Rates (paste/edit yearly)</div>
               <p className="text-sm opacity-80">Paste new JSON to update 2026/27 etc. Your edits save to this browser. Export and commit to the repo if desired.</p>
               <div className="grid md:grid-cols-2 gap-3">
@@ -420,16 +449,6 @@
                   </div>
                 </div>
               </div>
-            </section>
-          )}
-
-          {runTests && (
-            <section className="card p-4 mt-6">
-              <div className="font-semibold mb-2">Self‑tests</div>
-              <ul className="text-sm list-disc ml-5">
-                {tests.map((t,i)=> <li key={i} className={t.status==='ok'?'ok':(t.status==='warn'?'warn':'fail')}>{t.status.toUpperCase()} — {t.name}</li>)}
-              </ul>
-              <div className="text-xs opacity-70 mt-2">Open with <code className="mono">?test=1</code> to see these results. They also log to the console.</div>
             </section>
           )}
 
