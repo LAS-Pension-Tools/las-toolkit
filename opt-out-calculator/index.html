@@ -62,8 +62,11 @@
               { min: 65191, max: null,  rate: 0.125 },
             ],
             employerRateHint: 0.237,
-            valueIllustrationPerYear: 21300
-          },
+            valueIllustrationPerYear: 21300,
+            annuityFactors2015: {
+              asAt: "2024-03-31",
+              table: { 16:16.5,17:16.6,18:16.7,19:16.7,20:16.7,21:16.8,22:16.8,23:16.9,24:16.9,25:16.9,26:17.0,27:17.0,28:17.0,29:17.1,30:17.1,31:17.1,32:17.2,33:17.2,34:17.2,35:17.3,36:17.3,37:17.3,38:17.4,39:17.4,40:17.4,41:17.5,42:17.5,43:17.6,44:17.6,45:17.6,46:17.7,47:17.7,48:17.8,49:17.8,50:17.8,51:17.9,52:17.9,53:18.0,54:18.0,55:18.1,56:18.1,57:18.2,58:18.2,59:18.3,60:18.4,61:18.4,62:18.5,63:18.6,64:18.6,65:18.7,66:18.2,67:17.7,68:17.2,69:16.7,70:16.2,71:15.7,72:15.2,73:14.7,74:14.2,75:13.7 }
+            }},
         },
       ],
     };
@@ -72,7 +75,10 @@
     const pct = (n) => `${(n*100).toFixed(1)}%`;
     const getQuery = (k) => new URL(location.href).searchParams.get(k);
 
-    // ---------- Load rates: localStorage -> repo file -> built-in ----------
+    // ---------- Load rates with precedence control ----------
+    const LOCAL_PREF_KEY = 'las_optout_prefer_local_v1';
+    const preferLocalQuery = (new URL(location.href)).searchParams.get('prefer') === 'local';
+
     async function loadCommittedRatesCandidates() {
       const candidates = [];
       const path = location.pathname;
@@ -99,10 +105,23 @@
     }
 
     const loadRatesWithSource = async () => {
-      try { const raw = localStorage.getItem('las_optout_rates_v1'); if (raw) return { data: JSON.parse(raw), source: 'localStorage' }; } catch {}
-      const committed = await loadCommittedRatesCandidates();
-      if (committed) return committed;
-      return { data: defaultRates, source: 'built-in' };
+      // Decide precedence: default to FILE first; allow local override via query or stored preference
+      let preferLocal = preferLocalQuery;
+      try { if (!preferLocal) preferLocal = localStorage.getItem(LOCAL_PREF_KEY) === '1'; } catch {}
+
+      if (!preferLocal) {
+        // FILE -> LOCAL -> BUILT-IN
+        const committed = await loadCommittedRatesCandidates();
+        if (committed) return committed;
+        try { const raw = localStorage.getItem('las_optout_rates_v1'); if (raw) return { data: JSON.parse(raw), source: 'localStorage' }; } catch {}
+        return { data: defaultRates, source: 'built-in' };
+      } else {
+        // LOCAL -> FILE -> BUILT-IN
+        try { const raw = localStorage.getItem('las_optout_rates_v1'); if (raw) return { data: JSON.parse(raw), source: 'localStorage' }; } catch {}
+        const committed = await loadCommittedRatesCandidates();
+        if (committed) return committed;
+        return { data: defaultRates, source: 'built-in' };
+      }
     };
 
     const saveRates = (r) => localStorage.setItem('las_optout_rates_v1', JSON.stringify(r,null,2));
@@ -123,6 +142,16 @@
     const parsePercentMaybe = (val) => {
       if(val==null) return null; const s = String(val).trim(); if(!s) return null;
       let x = parseFloat(s); if(Number.isNaN(x)) return null; if(x>1) x = x/100; return clamp(x,0,0.5);
+    };
+
+    // Get annuity factor for a given age (NHSPS 2015) – clamps to table range
+    const getAnnuityFactor = (age, factors) => {
+      if(age==null || !factors || !factors.table) return null;
+      const ages = Object.keys(factors.table).map(n=>parseInt(n,10)).sort((a,b)=>a-b);
+      if(ages.length===0) return null;
+      const minA = ages[0], maxA = ages[ages.length-1];
+      const a = Math.max(minA, Math.min(maxA, age));
+      return factors.table[a] ?? factors.table[minA];
     };
 
     // ---------------- PAYE & NI ----------------
@@ -205,6 +234,16 @@
       const netOptOut = monthlyGross - monthlyTaxOptOut - monthlyNIOptOut;
       const deltaTakeHome = netOptOut - netStayIn;
 
+      // --- Summary (annuity factors & illustration) ---
+      const memberAge = useMemo(()=> ageOnDate(dob, payDate?new Date(payDate):new Date()), [dob, payDate]);
+      const annuityFactor = useMemo(()=> getAnnuityFactor(memberAge, activeYear.nhs.annuityFactors2015), [memberAge, activeYear]);
+      const annualPension = annualGross / 54; // NHSPS 2015 accrual rate
+      const annualPensionRounded10 = Math.round(annualPension / 10) * 10; // display like £560, £1,230 etc.
+      const hypotheticalCostRaw = annuityFactor ? (annualPension * annuityFactor) : (activeYear.nhs.valueIllustrationPerYear ?? 21300);
+      const hypotheticalCostRounded = annuityFactor ? Math.round(hypotheticalCostRaw / 100) * 100 : hypotheticalCostRaw;
+      const increaseInTakeHomeRaw = deltaTakeHome * 12;
+      const increaseInTakeHomeRounded = Math.round(increaseInTakeHomeRaw);
+
       // --- CRUD helpers ---
       const addItem = ()=> setItems(p=> [...p, { id: generateId(), label:'Other', amount:0, useRate:false, rate:0, hours:0 }]);
       const updateItem = (id, patch)=> setItems(p=> p.map(x=> x.id===id? ({...x, ...patch}): x));
@@ -230,15 +269,18 @@
         const ok = (name, cond) => out.push({name, status: cond? 'ok':'fail'});
         try{
           // Uniqueness of IDs
-          const ids = new Set(); let unique=true; for(let i=0;i<500;i++){ const id=generateId(); if(ids.has(id)) unique=false; ids.add(id);} ok('IDs are unique across 500 calls', unique);
-          // Percent parser
-          ok('parsePercentMaybe("12.5") = 0.125', Math.abs(parsePercentMaybe('12.5')-0.125) < 1e-9);
-          ok('parsePercentMaybe("0.125") = 0.125', Math.abs(parsePercentMaybe('0.125')-0.125) < 1e-9);
-          // NI below PT
-          ok('NI below PT is 0', calcNI(900, defaultRates.years[0].ni, false)===0);
-          // NHS tier lookup
-          const r = nhsMemberRate(52000, defaultRates.years[0].nhs); ok('NHS rate (52k) = 10.7%', Math.abs(r-0.107)<1e-9);
-        }catch(e){ out.push({name:'Harness threw', status:'fail'}); console.error(e); }
+        const ids = new Set(); let unique=true; for(let i=0;i<500;i++){ const id=generateId(); if(ids.has(id)) unique=false; ids.add(id);} ok('IDs are unique across 500 calls', unique);
+        // Percent parser
+        ok('parsePercentMaybe("12.5") = 0.125', Math.abs(parsePercentMaybe('12.5')-0.125) < 1e-9);
+        ok('parsePercentMaybe("0.125") = 0.125', Math.abs(parsePercentMaybe('0.125')-0.125) < 1e-9);
+        // NI below PT
+        ok('NI below PT is 0', calcNI(900, defaultRates.years[0].ni, false)===0);
+        // NHS tier lookup
+        const r = nhsMemberRate(52000, defaultRates.years[0].nhs); ok('NHS rate (52k) = 10.7%', Math.abs(r-0.107)<1e-9);
+        // Annuity factor table
+        ok('Annuity factor age 51 = 17.9', Math.abs(getAnnuityFactor(51, defaultRates.years[0].nhs.annuityFactors2015) - 17.9) < 1e-9);
+        // Annual pension accrual 1/54 of £64,155.96 ≈ £1,188.07
+        const ap = (5346.33*12)/54; ok('Annual pension 1/54 calc', Math.abs(ap - 1188.073333) < 0.02);
         setTests(out);
       },[runTests]);
 
@@ -257,6 +299,30 @@
               </select>
             </div>
           </header>
+
+          <section className="card p-4 mb-6 text-sm">
+            <h2 className="font-semibold mb-2">Summary information</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>Member age last birthday</div><div className="text-right">{memberAge ?? '—'}</div>
+              <div>Annuity cost (factor)</div><div className="text-right">{annuityFactor ?? '—'}</div>
+              <div>Annual pension (1/54 of earnings)</div><div className="text-right">{fmt(annualPensionRounded10)} <span className="opacity-60 text-xs ml-1">raw {annualPension.toFixed(6)}</span></div>
+              <div>Hypothetical cost</div><div className="text-right">{fmt(hypotheticalCostRounded)} {annuityFactor ? (<span className="opacity-60 text-xs ml-1">raw {hypotheticalCostRaw.toFixed(5)}</span>) : null}</div>
+              <div>Increase in take home (per year)</div><div className="text-right">{fmt(increaseInTakeHomeRounded)} <span className="opacity-60 text-xs ml-1">raw {increaseInTakeHomeRaw.toFixed(3)}</span></div>
+            </div>
+            <details className="mt-3">
+              <summary className="cursor-pointer">Show annuity cost factors (2015) — as at {activeYear.nhs.annuityFactors2015?.asAt || '31 Mar 2024'}</summary>
+              <div className="overflow-x-auto mt-2">
+                <table className="w-full text-sm">
+                  <thead><tr><th className="text-left">Age last birthday</th><th className="text-right">Factor (2015)</th></tr></thead>
+                  <tbody>
+                    {Object.entries(activeYear.nhs.annuityFactors2015?.table || {}).sort((a,b)=>parseInt(a[0])-parseInt(b[0])).map(([a,f])=> (
+                      <tr key={a}><td>{a}</td><td className="text-right">{f}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          </section>
 
           {/* Benefits / explanation */}
           <section className="card p-4 mb-6 text-sm">
@@ -430,25 +496,31 @@
           {showAdmin && (
             <section className="card p-4 space-y-3 mt-6">
               <div className="font-semibold">Admin — Rates (paste/edit yearly)</div>
-              <p className="text-sm opacity-80">Paste new JSON to update 2026/27 etc. Your edits save to this browser. Export and commit to the repo if desired.</p>
+              <p className="text-sm opacity-80">Paste new JSON to update 2026/27 etc. Your edits save to <strong>this browser</strong>. You can choose whether local edits override the repo file.</p>
               <div className="grid md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-sm">Current JSON
                     <textarea className="mt-1 w-full h-64 border rounded p-2 mono text-xs" readOnly value={JSON.stringify(rates,null,2)} />
                   </label>
-                  <div className="mt-2 flex gap-2">
+                  <div className="mt-2 flex gap-2 items-center">
                     <button onClick={exportRates} className="btn">Export</button>
+                    <label className="text-xs flex items-center gap-2">
+                      <input type="checkbox" defaultChecked={(localStorage.getItem(LOCAL_PREF_KEY)||'')==='1'} onChange={e=>{ try { localStorage.setItem(LOCAL_PREF_KEY, e.target.checked?'1':'0'); location.reload(); } catch {} }} />
+                      Prefer local edits on this browser (override repo rates)
+                    </label>
                   </div>
+                  <div className="text-xs opacity-70 mt-1">Tip: Hold <code className="mono">Shift</code> and click refresh to bypass cache when testing the repo <code className="mono">rates.json</code>.</div>
                 </div>
                 <div>
                   <label className="text-sm">Paste new JSON
-                    <textarea className="mt-1 w-full h-64 border rounded p-2 mono text-xs" value={pasteJSON} onChange={e=>setPasteJSON(e.target.value)} placeholder='{"years": [ ... ] }' />
+                    <textarea className="mt-1 w-full h-64 border rounded p-2 mono text-xs" value={pasteJSON} onChange={e=>setPasteJSON(e.target.value)} placeholder='{"years": [ ... ], "years[0].nhs.valueIllustrationPerYear": 21300 }' />
                   </label>
                   <div className="mt-2 flex gap-2">
                     <button onClick={importRates} className="btn">Import</button>
                   </div>
                 </div>
               </div>
+              <div className="text-xs opacity-70">The “open market” cost is the field <code className="mono">nhs.valueIllustrationPerYear</code> and should be updated each year in <code className="mono">rates.json</code>.</div>
             </section>
           )}
 
