@@ -6,14 +6,16 @@
   <title>NHS Pension Opt‑Out Calculator — 2025/26 (England only)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html,body{background-color:#ffffff;color:#0f172a}
-    .card{border:1px solid rgba(15,23,42,0.08);border-radius:1rem;background:#ffffff}
-    .btn{border:1px solid rgba(15,23,42,0.18);padding:.4rem .7rem;border-radius:.6rem}
-    .btn:hover{background:rgba(15,23,42,0.06)}
-    input,select,textarea{background:#f8fafc}
-    table th, table td { padding:.55rem .4rem; }
+    /* Dark, higher-contrast theme for neurodiverse accessibility */
+    html,body{background-color:#0f172a;color:#e5e7eb}
+    .card{border:1px solid rgba(255,255,255,0.08);border-radius:1rem;background:#0b1220}
+    .btn{border:1px solid rgba(255,255,255,0.18);padding:.5rem .8rem;border-radius:.6rem}
+    .btn:hover{background:rgba(255,255,255,0.06)}
+    input,select,textarea{background:#0b1220;border:1px solid rgba(255,255,255,0.15);color:#e5e7eb}
+    table th, table td { padding:.65rem .5rem; }
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-    .ok{color:#16a34a} .warn{color:#ca8a04} .fail{color:#dc2626}
+    .ok{color:#86efac} .warn{color:#fde047} .fail{color:#fca5a5}
+    .muted{opacity:.75}
   </style>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -239,8 +241,9 @@
       const annuityFactor = useMemo(()=> getAnnuityFactor(memberAge, activeYear.nhs.annuityFactors2015), [memberAge, activeYear]);
       const annualPension = annualGross / 54; // NHSPS 2015 accrual rate
       const annualPensionRounded10 = Math.round(annualPension / 10) * 10; // display like £560, £1,230 etc.
-      const hypotheticalCostRaw = annuityFactor ? (annualPension * annuityFactor) : (activeYear.nhs.valueIllustrationPerYear ?? 21300);
-      const hypotheticalCostRounded = annuityFactor ? Math.round(hypotheticalCostRaw / 100) * 100 : hypotheticalCostRaw;
+      // Hypothetical cost must vary with age factor; if no DOB -> not completed (no fallback constant)
+      const hypotheticalCostRaw = annuityFactor ? (annualPension * annuityFactor) : null;
+      const hypotheticalCostRounded = hypotheticalCostRaw!=null ? Math.round(hypotheticalCostRaw / 100) * 100 : null;
       const increaseInTakeHomeRaw = deltaTakeHome * 12;
       const increaseInTakeHomeRounded = Math.round(increaseInTakeHomeRaw);
 
@@ -291,7 +294,7 @@
       return (
         <div>
           <header className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-emerald-600/20">🧮</div>
+            <div className="p-2 rounded-xl bg-emerald-700/30">🧮</div>
             <div>
               <h1 className="text-2xl font-semibold">NHS Pension Opt‑Out Calculator (England only)</h1>
               <p className="text-sm opacity-80">Monthly payslip illustration — <span className="font-semibold">stay in</span> vs <span className="font-semibold">opt out</span>. Rates {yearKey}. <span className="opacity-60">src: {ratesSource}</span></p>
@@ -307,12 +310,12 @@
           <section className="card p-4 mb-6 text-sm">
             <h2 className="font-semibold mb-2">Summary information</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div>Member age last birthday</div><div className="text-right">{memberAge ?? '—'}</div>
-              <div>Annuity cost (factor)</div><div className="text-right">{annuityFactor ?? '—'}</div>
-              <div>Annual pension (1/54 of earnings)</div><div className="text-right">{fmt(annualPensionRounded10)} <span className="opacity-60 text-xs ml-1">raw {annualPension.toFixed(6)}</span></div>
-              <div>Annual pension to SPA (assumes pay unchanged)</div><div className="text-right">{memberAge!=null ? fmt(Math.max(0, (66 - memberAge)) * annualPensionRounded10) : '—'}</div>
-              <div>Hypothetical cost</div><div className="text-right">{fmt(hypotheticalCostRounded)} {annuityFactor ? (<span className="opacity-60 text-xs ml-1">raw {hypotheticalCostRaw.toFixed(5)}</span>) : null}</div>
-              <div>Increase in take home (per year)</div><div className="text-right">{fmt(increaseInTakeHomeRounded)} <span className="opacity-60 text-xs ml-1">raw {increaseInTakeHomeRaw.toFixed(3)}</span></div>
+              <div>Member age last birthday</div><div className="text-right">{memberAge ?? 'Not completed'}</div>
+              <div>Annuity cost (factor)</div><div className="text-right">{annuityFactor ?? 'Not completed'}</div>
+              <div>Annual pension (1/54 of earnings)</div><div className="text-right">{fmt(annualPensionRounded10)}</div>
+              <div>Annual pension to SPA (assumes pay unchanged)</div><div className="text-right">{memberAge!=null ? fmt(Math.max(0, (66 - memberAge)) * annualPensionRounded10) : 'Not completed'}</div>
+              <div>Hypothetical cost</div><div className="text-right">{hypotheticalCostRounded!=null ? fmt(hypotheticalCostRounded) : 'Not completed'}</div>
+              <div>Increase in take home (per year)</div><div className="text-right">{fmt(increaseInTakeHomeRounded)}</div>
             </div>
           </section>
 
@@ -327,7 +330,7 @@
               <li>Ill‑health retirement benefits.</li>
               <li>Tax relief on pension contributions.</li>
             </ul>
-            <p className="mt-3 opacity-90">To help illustrate the value of the NHS pension you would be giving up, a hypothetical comparison to buy similar benefits on the “open market” might cost around <span className="font-semibold">{fmt(hypotheticalCostRounded)}</span> for each year you give up accruing benefits in the NHS Pension Scheme.</p>
+            <p className="mt-3 opacity-90">To help illustrate the value of the NHS pension you would be giving up, a hypothetical comparison to buy similar benefits on the “open market” might cost around <span className="font-semibold">{hypotheticalCostRounded!=null ? fmt(hypotheticalCostRounded) : '—'}</span> for each year you give up accruing benefits in the NHS Pension Scheme.</p>
           </section>
 
           <section className="grid md:grid-cols-2 gap-4 mb-6">
@@ -444,7 +447,19 @@
 
             <div className="mt-3 grid md:grid-cols-3 gap-3 text-sm">
               <div className="card p-3">
-                <div className="opacity-70">Difference in take‑home (opt‑out minus stay‑in)</div>
+                <div className="muted">Difference in take‑home (opt‑out minus stay‑in)</div>
+                <div className={`text-lg font-semibold ${deltaTakeHome>=0? 'text-emerald-300':'text-rose-300'}`}>{fmt(deltaTakeHome)}</div>
+              </div>
+              <div className="card p-3">
+                <div className="muted">Net annual pay — stay in / opt out</div>
+                <div className="text-lg font-semibold">{fmt(netStayIn*12)} / {fmt(netOptOut*12)}</div>
+              </div>
+              <div className="card p-3">
+                <div className="muted">Employer pension (context)</div>
+                <div className="text-lg font-semibold">≈ {fmt(annualGross * (activeYear.nhs.employerRateHint||0))}/yr</div>
+                <div className="text-xs muted">Not deducted from pay but foregone if you opt out.</div>
+              </div>
+            </div>
                 <div className={`text-lg font-semibold ${deltaTakeHome>=0? 'text-emerald-300':'text-rose-300'}`}>{fmt(deltaTakeHome)}</div>
               </div>
               <div className="card p-3">
@@ -488,7 +503,7 @@
           {showAdmin && (
             <section className="card p-4 space-y-3 mt-6">
               <div className="font-semibold">Admin — Rates (paste/edit yearly)</div>
-              <p className="text-sm opacity-80">Paste new JSON to update 2026/27 etc. Your edits save to <strong>this browser</strong>. You can choose whether local edits override the repo file.</p>
+              <p className="text-sm muted">Paste new JSON to update 2026/27 etc. Your edits save to <strong>this browser</strong>. You can choose whether local edits override the repo file.</p>
               <div className="grid md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-sm">Current JSON
@@ -501,7 +516,7 @@
                       Prefer local edits on this browser (override repo rates)
                     </label>
                   </div>
-                  <div className="text-xs opacity-70 mt-1">Tip: Hold <code className="mono">Shift</code> and click refresh to bypass cache when testing the repo <code className="mono">rates.json</code>.</div>
+                  <div className="text-xs muted mt-1">Tip: Hold <code className="mono">Shift</code> and click refresh to bypass cache when testing the repo <code className="mono">rates.json</code>.</div>
                 </div>
                 <div>
                   <label className="text-sm">Paste new JSON
@@ -512,7 +527,21 @@
                   </div>
                 </div>
               </div>
-              <div className="text-xs opacity-70">The “open market” cost is the field <code className="mono">nhs.valueIllustrationPerYear</code> and should be updated each year in <code className="mono">rates.json</code>.</div>
+
+              {/* Admin-only: annuity factor table for reference */}
+              <details className="mt-4">
+                <summary className="cursor-pointer">Show annuity cost factors (2015) — as at {activeYear.nhs.annuityFactors2015?.asAt || '31 Mar 2024'}</summary>
+                <div className="overflow-x-auto mt-2">
+                  <table className="w-full text-sm">
+                    <thead><tr><th className="text-left">Age last birthday</th><th className="text-right">Factor (2015)</th></tr></thead>
+                    <tbody>
+                      {Object.entries(activeYear.nhs.annuityFactors2015?.table || {}).sort((a,b)=>parseInt(a[0])-parseInt(b[0])).map(([a,f])=> (
+                        <tr key={a}><td>{a}</td><td className="text-right">{f}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
             </section>
           )}
 
