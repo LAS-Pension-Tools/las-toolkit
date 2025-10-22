@@ -15,21 +15,38 @@
   :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
 }
 *{ box-sizing:border-box }
-body{ margin:0; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
-.wrap{ max-width: 1000px; margin: 0 auto; padding: 20px; }
+body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
+.wrap{ max-width:1000px; margin:0 auto; padding:20px }
 h1{ margin:0 0 4px 0; font-size:22px }
 h2{ margin:0 0 10px 0; font-size:18px; color:var(--brand) }
-.panel{ background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; }
+.panel{ background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px }
 .grid{ display:grid; gap:14px }
-@media (min-width:860px){ .cols-2{ grid-template-columns: 1fr 1fr } }
+@media (min-width:860px){ .cols-2{ grid-template-columns:1fr 1fr } }
 label{ font-size:14px; display:block }
-input,select,textarea{ width:100%; border:1px solid var(--border); border-radius:8px; background:var(--panel); color:var(--text); padding:8px 10px }
+input,select,textarea{ width:100%; border:1px solid var(--border); border-radius:8px; background:var(--panel); color:var(--text); padding:8px 10px; min-width:0 }
 :focus-visible{ outline:3px solid var(--focus); outline-offset:2px; border-radius:6px }
 .btn{ appearance:none; border:2px solid var(--brand); color:var(--brand); background:transparent; padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer }
 .btn:hover{ background:#F0F7F4 }
 .btn.primary{ background:var(--brand); color:#fff }
 .btn.primary:hover{ filter:brightness(.95) }
-.row{ display:grid; grid-template-columns: repeat(12,1fr); gap:8px; align-items:end }
+.row{ display:grid; grid-template-columns:repeat(12,1fr); gap:8px; align-items:end }
+
+/* >>> Added: Tailwind-like col-span utilities (we’re not loading Tailwind) */
+.col-span-1{ grid-column:span 1 / span 1 }
+.col-span-2{ grid-column:span 2 / span 2 }
+.col-span-3{ grid-column:span 3 / span 3 }
+.col-span-4{ grid-column:span 4 / span 4 }
+.col-span-5{ grid-column:span 5 / span 5 }
+.col-span-6{ grid-column:span 6 / span 6 }
+.col-span-7{ grid-column:span 7 / span 7 }
+.col-span-8{ grid-column:span 8 / span 8 }
+.col-span-9{ grid-column:span 9 / span 9 }
+.col-span-10{ grid-column:span 10 / span 10 }
+.col-span-11{ grid-column:span 11 / span 11 }
+.col-span-12{ grid-column:span 12 / span 12 }
+/* Ensure text fields don’t collapse on tiny screens */
+@media (max-width:520px){ .col-span-4,.col-span-6{ grid-column:span 12 / span 12 } }
+
 .small{ font-size:12px; opacity:.8 }
 .muted{ color:var(--muted) }
 .table{ width:100%; border-collapse:collapse }
@@ -198,75 +215,16 @@ const defaultRates = {
 
 const fmt = n => (n||0).toLocaleString("en-GB",{style:"currency",currency:"GBP"});
 const pct = n => (n*100).toFixed(1)+"%";
-function loadRates(){
-  try{ const raw = localStorage.getItem("las_optout_rates_v1");
-       if(!raw) return defaultRates;
-       const parsed = JSON.parse(raw); return parsed?.years?.length ? parsed : defaultRates;
-  }catch{ return defaultRates }
-}
+function loadRates(){ try{ const raw=localStorage.getItem("las_optout_rates_v1"); if(!raw) return defaultRates; const p=JSON.parse(raw); return p?.years?.length?p:defaultRates; }catch{ return defaultRates } }
 function saveRates(r){ localStorage.setItem("las_optout_rates_v1", JSON.stringify(r,null,2)); }
 function lastDayOfThisMonth(ref=new Date()){ return new Date(ref.getFullYear(), ref.getMonth()+1, 0); }
-function ageOnDate(dob, on){
-  if(!dob) return null; const d=new Date(dob); if(isNaN(d)) return null;
-  let a=on.getFullYear()-d.getFullYear(); const m=on.getMonth()-d.getMonth();
-  if(m<0 || (m===0 && on.getDate()<d.getDate())) a--; return a;
-}
-function inferNICat(dob){
-  const a=ageOnDate(dob, lastDayOfThisMonth());
-  if(a==null) return "A";
-  if(a>=66) return "C";
-  if(a<21) return "M";
-  return "A";
-}
-function parseTaxCode(code){
-  const c=(code||"").toUpperCase().trim();
-  if(!c) return { mode:"STANDARD", allowance:12570 };
-  if(["BR","D0","D1","NT"].includes(c)) return { mode:c };
-  const m=c.match(/(\d{3,4})[A-Z]*/); if(m) return { mode:"STANDARD", allowance: parseInt(m[1],10)*10 };
-  return { mode:"STANDARD", allowance:12570 };
-}
-function nhsMemberRate(annual, nhs){
-  const t = nhs.tiers.find(t=> annual>=t.min && (t.max==null || annual<=t.max));
-  return t ? t.rate : 0;
-}
-function calcPAYE(monthlyTaxable, annualANI, taxCfg, codeParsed){
-  const taperStart=100000;
-  const pa0 = codeParsed.mode==="STANDARD" ? taxCfg.personalAllowance : 0;
-  const pa  = codeParsed.mode==="STANDARD" ? Math.max(0, pa0 - Math.max(0, Math.floor((annualANI - taperStart)/2))) : 0;
-
-  if(codeParsed.mode==="NT") return 0;
-  if(codeParsed.mode==="BR") return monthlyTaxable * 0.20;
-  if(codeParsed.mode==="D0") return monthlyTaxable * 0.40;
-  if(codeParsed.mode==="D1") return monthlyTaxable * 0.45;
-
-  const monthlyPA = pa/12;
-  let remaining = Math.max(0, monthlyTaxable - monthlyPA);
-  const bands = taxCfg.bands.ENG_NI;
-  let tax=0, lower=0;
-  for(const b of bands){
-    const upper = b.upper ?? Infinity;
-    const bandMonthly = (upper - lower)/12;
-    const take = Math.max(0, Math.min(remaining, bandMonthly));
-    tax += take * b.rate;
-    remaining -= take;
-    lower = upper;
-    if(remaining<=0) break;
-  }
-  if(remaining>0) tax += remaining * (bands[bands.length-1].rate);
-  return tax;
-}
-function calcNI(monthlyGross, niCfg, niCat){
-  if(niCat==="C") return 0;
-  const { PT, UEL } = niCfg.monthly;
-  if(monthlyGross<=PT) return 0;
-  const between = Math.max(0, Math.min(monthlyGross, UEL) - PT);
-  const above = Math.max(0, monthlyGross - UEL);
-  return between*niCfg.employeeRates.main + above*niCfg.employeeRates.upper;
-}
-function safeId(){
-  const r=()=>Math.floor((1+Math.random())*0x10000).toString(16).slice(1);
-  return `id-${Date.now().toString(16)}-${r()}${r()}-${r()}`;
-}
+function ageOnDate(dob,on){ if(!dob) return null; const d=new Date(dob); if(isNaN(d)) return null; let a=on.getFullYear()-d.getFullYear(); const m=on.getMonth()-d.getMonth(); if(m<0||(m===0 && on.getDate()<d.getDate())) a--; return a; }
+function inferNICat(dob){ const a=ageOnDate(dob,lastDayOfThisMonth()); if(a==null) return "A"; if(a>=66) return "C"; if(a<21) return "M"; return "A"; }
+function parseTaxCode(code){ const c=(code||"").toUpperCase().trim(); if(!c) return {mode:"STANDARD",allowance:12570}; if(["BR","D0","D1","NT"].includes(c)) return {mode:c}; const m=c.match(/(\d{3,4})[A-Z]*/); if(m) return {mode:"STANDARD",allowance:parseInt(m[1],10)*10}; return {mode:"STANDARD",allowance:12570}; }
+function nhsMemberRate(annual, nhs){ const t=nhs.tiers.find(t=>annual>=t.min && (t.max==null || annual<=t.max)); return t? t.rate:0; }
+function calcPAYE(monthlyTaxable, annualANI, taxCfg, code){ const taperStart=100000; const pa0=code.mode==="STANDARD"?taxCfg.personalAllowance:0; const pa=code.mode==="STANDARD"?Math.max(0, pa0 - Math.max(0, Math.floor((annualANI - taperStart)/2))):0; if(code.mode==="NT")return 0; if(code.mode==="BR")return monthlyTaxable*0.20; if(code.mode==="D0")return monthlyTaxable*0.40; if(code.mode==="D1")return monthlyTaxable*0.45; const mPA=pa/12; let remaining=Math.max(0, monthlyTaxable - mPA); const bands=taxCfg.bands.ENG_NI; let tax=0, lower=0; for(const b of bands){ const upper=b.upper??Infinity; const monthly=(upper-lower)/12; const take=Math.max(0, Math.min(remaining, monthly)); tax+=take*b.rate; remaining-=take; lower=upper; if(remaining<=0) break; } if(remaining>0) tax+=remaining*bands[bands.length-1].rate; return tax; }
+function calcNI(monthlyGross, niCfg, niCat){ if(niCat==="C") return 0; const {PT,UEL}=niCfg.monthly; if(monthlyGross<=PT) return 0; const between=Math.max(0, Math.min(monthlyGross, UEL)-PT); const above=Math.max(0, monthlyGross-UEL); return between*niCfg.employeeRates.main + above*niCfg.employeeRates.upper; }
+function safeId(){ const r=()=>Math.floor((1+Math.random())*0x10000).toString(16).slice(1); return `id-${Date.now().toString(16)}-${r()}${r()}-${r()}`; }
 
 /*** ===== State ===== ***/
 let RATES = loadRates();
@@ -320,17 +278,17 @@ function renderItems(){
     const row = document.createElement("div");
     row.className = "row";
     row.innerHTML = `
-      <input class="col-span-4" value="${it.label.replace(/"/g,"&quot;")}" data-id="${it.id}" data-k="label">
+      <input class="col-span-4" value="${(it.label||"").replace(/"/g,"&quot;")}" data-id="${it.id}" data-k="label">
       <div class="col-span-3 flex">
         <input type="checkbox" ${it.useRate?"checked":""} data-id="${it.id}" data-k="useRate">
         <span class="small muted">rate × hours</span>
       </div>
       ${it.useRate ? `
-        <input type="number" class="col-span-2" placeholder="rate" value="${it.rate??""}" data-id="${it.id}" data-k="rate">
+        <input type="number" class="col-span-2" placeholder="rate"  value="${it.rate??""}"  data-id="${it.id}" data-k="rate">
         <input type="number" class="col-span-2" placeholder="hours" value="${it.hours??""}" data-id="${it.id}" data-k="hours">
         <div class="col-span-1 right small muted" data-id="${it.id}" data-k="calcCell"></div>
       ` : `
-        <input type="number" class="col-span-6" value="${it.amount}" data-id="${it.id}" data-k="amount">
+        <input type="number" class="col-span-6" value="${it.amount??0}" data-id="${it.id}" data-k="amount">
         <div class="col-span-1"></div>
       `}
       <button class="col-span-1 btn" data-id="${it.id}" data-k="remove">Remove</button>
@@ -405,34 +363,32 @@ function recalc(){
   const delta   = netOut - netStay;
 
   // outputs
-  out.gross.textContent    = fmt(monthlyGross);
-  out.grossStay.textContent= fmt(monthlyGross);
-  out.grossOut2.textContent= fmt(monthlyGross);
+  out.gross.textContent     = fmt(monthlyGross);
+  out.grossStay.textContent = fmt(monthlyGross);
+  out.grossOut2.textContent = fmt(monthlyGross);
 
   if(nhsRate){ out.nhsPct.classList.remove("hidden"); out.nhsPct.textContent = pct(nhsRate); }
   else       { out.nhsPct.classList.add("hidden"); out.nhsPct.textContent = ""; }
 
-  out.nhsStay.textContent  = fmt(nhsEE);
+  out.nhsStay.textContent   = fmt(nhsEE);
   out.taxableStay.textContent = fmt(monthlyTaxableStay);
   out.taxableOut.textContent  = fmt(monthlyGross);
-  out.taxStay.textContent  = fmt(taxStay);
-  out.taxOut.textContent   = fmt(taxOut);
-  out.niStay.textContent   = fmt(niStay);
-  out.niOut.textContent    = fmt(niOut);
-  out.niCat.textContent    = niCategory;
-  out.netStay.textContent  = fmt(netStay);
-  out.netOut.textContent   = fmt(netOut);
-  out.delta.textContent    = fmt(delta);
-  out.delta.style.color    = delta >= 0 ? "#1b8555" : "#9F3131";
+  out.taxStay.textContent   = fmt(taxStay);
+  out.taxOut.textContent    = fmt(taxOut);
+  out.niStay.textContent    = fmt(niStay);
+  out.niOut.textContent     = fmt(niOut);
+  out.niCat.textContent     = niCategory;
+  out.netStay.textContent   = fmt(netStay);
+  out.netOut.textContent    = fmt(netOut);
+  out.delta.textContent     = fmt(delta);
+  out.delta.style.color     = delta >= 0 ? "#1b8555" : "#9F3131";
 
-  out.annual.textContent   = fmt(annualGross);
-  out.er.textContent       = "≈ " + fmt(annualGross*(year.nhs.employerRateHint||0)) + "/yr";
+  out.annual.textContent    = fmt(annualGross);
+  out.er.textContent        = "≈ " + fmt(annualGross*(year.nhs.employerRateHint||0)) + "/yr";
 }
 
 /*** ===== Admin panel ===== ***/
-function renderAdmin(){
-  out.currentJson.value = JSON.stringify(RATES, null, 2);
-}
+function renderAdmin(){ out.currentJson.value = JSON.stringify(RATES, null, 2); }
 document.getElementById("importBtn").addEventListener("click", ()=>{
   try{
     const parsed = JSON.parse(out.pasteJson.value);
@@ -452,16 +408,17 @@ document.getElementById("resetBtn").addEventListener("click", ()=>{
 });
 
 /*** ===== Wire up ===== ***/
-elAdd.addEventListener("click", ()=>{ state.items.push({id:safeId(), label:"Other", amount:0, useRate:false}); renderItems(); recalc(); });
-elClear.addEventListener("click", ()=>{ state.items = []; renderItems(); recalc(); });
-elDob.addEventListener("input", e=>{ state.dob = e.target.value; recalc(); });
-elTax.addEventListener("input", e=>{ state.taxCode = e.target.value; recalc(); });
+document.getElementById("addItem").addEventListener("click", ()=>{ state.items.push({id:safeId(), label:"Other", amount:0, useRate:false}); renderItems(); recalc(); });
+document.getElementById("clearItems").addEventListener("click", ()=>{ state.items = []; renderItems(); recalc(); });
+document.getElementById("dob").addEventListener("input", e=>{ state.dob = e.target.value; recalc(); });
+document.getElementById("taxCode").addEventListener("input", e=>{ state.taxCode = e.target.value; recalc(); });
 
-elAdminToggle.addEventListener("click", ()=>{
-  elAdmin.classList.toggle("hidden");
-  if(!elAdmin.classList.contains("hidden")) renderAdmin();
+document.getElementById("adminToggle").addEventListener("click", ()=>{
+  const el = document.getElementById("admin");
+  el.classList.toggle("hidden");
+  if(!el.classList.contains("hidden")) renderAdmin();
 });
-elHelpToggle.addEventListener("click", ()=> elHelp.classList.toggle("hidden"));
+document.getElementById("helpToggle").addEventListener("click", ()=> document.getElementById("help").classList.toggle("hidden"));
 
 renderItems();
 renderAdmin();
