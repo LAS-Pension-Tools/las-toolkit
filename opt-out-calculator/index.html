@@ -6,14 +6,14 @@
   <title>NHS Pension Opt‑Out Calculator — 2025/26 (England only)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html,body{background-color:#0b1220;color:#e5e7eb}
-    .card{border:1px solid rgba(255,255,255,0.08);border-radius:1rem;background:rgba(2,6,23,0.65);backdrop-filter:saturate(120%) blur(6px)}
-    .btn{border:1px solid rgba(255,255,255,0.18);padding:.4rem .7rem;border-radius:.6rem}
-    .btn:hover{background:rgba(255,255,255,0.06)}
-    input,select,textarea{background:rgba(255,255,255,0.06)}
+    html,body{background-color:#ffffff;color:#0f172a}
+    .card{border:1px solid rgba(15,23,42,0.08);border-radius:1rem;background:#ffffff}
+    .btn{border:1px solid rgba(15,23,42,0.18);padding:.4rem .7rem;border-radius:.6rem}
+    .btn:hover{background:rgba(15,23,42,0.06)}
+    input,select,textarea{background:#f8fafc}
     table th, table td { padding:.55rem .4rem; }
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-    .ok{color:#86efac} .warn{color:#fde047} .fail{color:#fca5a5}
+    .ok{color:#16a34a} .warn{color:#ca8a04} .fail{color:#dc2626}
   </style>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -267,22 +267,26 @@
         if(!runTests) return;
         const out = [];
         const ok = (name, cond) => out.push({name, status: cond? 'ok':'fail'});
-        try{
+        try {
           // Uniqueness of IDs
-        const ids = new Set(); let unique=true; for(let i=0;i<500;i++){ const id=generateId(); if(ids.has(id)) unique=false; ids.add(id);} ok('IDs are unique across 500 calls', unique);
-        // Percent parser
-        ok('parsePercentMaybe("12.5") = 0.125', Math.abs(parsePercentMaybe('12.5')-0.125) < 1e-9);
-        ok('parsePercentMaybe("0.125") = 0.125', Math.abs(parsePercentMaybe('0.125')-0.125) < 1e-9);
-        // NI below PT
-        ok('NI below PT is 0', calcNI(900, defaultRates.years[0].ni, false)===0);
-        // NHS tier lookup
-        const r = nhsMemberRate(52000, defaultRates.years[0].nhs); ok('NHS rate (52k) = 10.7%', Math.abs(r-0.107)<1e-9);
-        // Annuity factor table
-        ok('Annuity factor age 51 = 17.9', Math.abs(getAnnuityFactor(51, defaultRates.years[0].nhs.annuityFactors2015) - 17.9) < 1e-9);
-        // Annual pension accrual 1/54 of £64,155.96 ≈ £1,188.07
-        const ap = (5346.33*12)/54; ok('Annual pension 1/54 calc', Math.abs(ap - 1188.073333) < 0.02);
+          const ids = new Set(); let unique=true; for(let i=0;i<500;i++){ const id=generateId(); if(ids.has(id)) unique=false; ids.add(id);} ok('IDs are unique across 500 calls', unique);
+          // Percent parser
+          ok('parsePercentMaybe("12.5") = 0.125', Math.abs(parsePercentMaybe('12.5')-0.125) < 1e-9);
+          ok('parsePercentMaybe("0.125") = 0.125', Math.abs(parsePercentMaybe('0.125')-0.125) < 1e-9);
+          // NI below PT
+          ok('NI below PT is 0', calcNI(900, defaultRates.years[0].ni, false)===0);
+          // NHS tier lookup
+          const r = nhsMemberRate(52000, defaultRates.years[0].nhs); ok('NHS rate (52k) = 10.7%', Math.abs(r-0.107)<1e-9);
+          // Annuity factor table
+          ok('Annuity factor age 51 = 17.9', Math.abs(getAnnuityFactor(51, defaultRates.years[0].nhs.annuityFactors2015) - 17.9) < 1e-9);
+          // Annual pension accrual 1/54 of £64,155.96 ≈ £1,188.07
+          const ap = (5346.33*12)/54; ok('Annual pension 1/54 calc', Math.abs(ap - 1188.073333) < 0.02);
+        } catch (e) {
+          out.push({name:'Harness threw', status:'fail'});
+          console.error(e);
+        }
         setTests(out);
-      },[runTests]);
+      }, [runTests]);
 
       return (
         <div>
@@ -306,22 +310,10 @@
               <div>Member age last birthday</div><div className="text-right">{memberAge ?? '—'}</div>
               <div>Annuity cost (factor)</div><div className="text-right">{annuityFactor ?? '—'}</div>
               <div>Annual pension (1/54 of earnings)</div><div className="text-right">{fmt(annualPensionRounded10)} <span className="opacity-60 text-xs ml-1">raw {annualPension.toFixed(6)}</span></div>
+              <div>Annual pension to SPA (assumes pay unchanged)</div><div className="text-right">{memberAge!=null ? fmt(Math.max(0, (66 - memberAge)) * annualPensionRounded10) : '—'}</div>
               <div>Hypothetical cost</div><div className="text-right">{fmt(hypotheticalCostRounded)} {annuityFactor ? (<span className="opacity-60 text-xs ml-1">raw {hypotheticalCostRaw.toFixed(5)}</span>) : null}</div>
               <div>Increase in take home (per year)</div><div className="text-right">{fmt(increaseInTakeHomeRounded)} <span className="opacity-60 text-xs ml-1">raw {increaseInTakeHomeRaw.toFixed(3)}</span></div>
             </div>
-            <details className="mt-3">
-              <summary className="cursor-pointer">Show annuity cost factors (2015) — as at {activeYear.nhs.annuityFactors2015?.asAt || '31 Mar 2024'}</summary>
-              <div className="overflow-x-auto mt-2">
-                <table className="w-full text-sm">
-                  <thead><tr><th className="text-left">Age last birthday</th><th className="text-right">Factor (2015)</th></tr></thead>
-                  <tbody>
-                    {Object.entries(activeYear.nhs.annuityFactors2015?.table || {}).sort((a,b)=>parseInt(a[0])-parseInt(b[0])).map(([a,f])=> (
-                      <tr key={a}><td>{a}</td><td className="text-right">{f}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </details>
           </section>
 
           {/* Benefits / explanation */}
@@ -335,7 +327,7 @@
               <li>Ill‑health retirement benefits.</li>
               <li>Tax relief on pension contributions.</li>
             </ul>
-            <p className="mt-3 opacity-90">To help illustrate the value of the NHS pension you would be giving up, a hypothetical comparison to buy similar benefits on the “open market” might cost around <span className="font-semibold">{fmt(activeYear.nhs.valueIllustrationPerYear || 21300)}</span> for each year you give up accruing benefits in the NHS Pension Scheme.</p>
+            <p className="mt-3 opacity-90">To help illustrate the value of the NHS pension you would be giving up, a hypothetical comparison to buy similar benefits on the “open market” might cost around <span className="font-semibold">{fmt(hypotheticalCostRounded)}</span> for each year you give up accruing benefits in the NHS Pension Scheme.</p>
           </section>
 
           <section className="grid md:grid-cols-2 gap-4 mb-6">
