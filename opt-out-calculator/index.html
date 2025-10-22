@@ -460,18 +460,6 @@
                 <div className="text-xs muted">Not deducted from pay but foregone if you opt out.</div>
               </div>
             </div>
-                <div className={`text-lg font-semibold ${deltaTakeHome>=0? 'text-emerald-300':'text-rose-300'}`}>{fmt(deltaTakeHome)}</div>
-              </div>
-              <div className="card p-3">
-                <div className="opacity-70">Net annual pay — stay in / opt out</div>
-                <div className="text-lg font-semibold">{fmt(netStayIn*12)} / {fmt(netOptOut*12)}</div>
-              </div>
-              <div className="card p-3">
-                <div className="opacity-70">Employer pension (context)</div>
-                <div className="text-lg font-semibold">≈ {fmt(annualGross * (activeYear.nhs.employerRateHint||0))}/yr</div>
-                <div className="text-xs opacity-70">Not deducted from pay but foregone if you opt out.</div>
-              </div>
-            </div>
           </section>
 
           {/* Notes block */}
