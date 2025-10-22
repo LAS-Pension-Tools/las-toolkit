@@ -6,16 +6,38 @@
   <title>NHS Pension Opt‑Out Calculator — 2025/26 (England only)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Dark, higher-contrast theme for neurodiverse accessibility */
-    html,body{background-color:#0f172a;color:#e5e7eb}
-    .card{border:1px solid rgba(255,255,255,0.08);border-radius:1rem;background:#0b1220}
-    .btn{border:1px solid rgba(255,255,255,0.18);padding:.5rem .8rem;border-radius:.6rem}
+    /* Theme tokens for accessibility */
+    :root {
+      --bg: #0f172a;       /* dark navy */
+      --fg: #e5e7eb;       /* slate-100 */
+      --card: #0b1220;     /* slightly darker */
+      --border: rgba(255,255,255,0.12);
+      --muted: #cbd5e1;
+    }
+    [data-theme='light'] {
+      --bg: #ffffff;
+      --fg: #0f172a;
+      --card: #ffffff;
+      --border: rgba(15,23,42,0.15);
+      --muted: #475569;
+    }
+    [data-theme='hc'] { /* high-contrast dark */
+      --bg: #000000;
+      --fg: #ffffff;
+      --card: #000000;
+      --border: #ffffff33;
+      --muted: #e2e8f0;
+    }
+
+    html,body{background-color:var(--bg);color:var(--fg)}
+    .card{border:1px solid var(--border);border-radius:1rem;background:var(--card)}
+    .btn{border:1px solid var(--border);padding:.5rem .8rem;border-radius:.6rem}
     .btn:hover{background:rgba(255,255,255,0.06)}
-    input,select,textarea{background:#0b1220;border:1px solid rgba(255,255,255,0.15);color:#e5e7eb}
+    input,select,textarea{background:var(--card);border:1px solid var(--border);color:var(--fg)}
     table th, table td { padding:.65rem .5rem; }
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
     .ok{color:#86efac} .warn{color:#fde047} .fail{color:#fca5a5}
-    .muted{opacity:.75}
+    .muted{color:var(--muted)}
   </style>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -24,7 +46,8 @@
 <body class="min-h-screen">
   <div id="app" class="max-w-5xl mx-auto p-4 md:p-8"></div>
 
-  <script type="text/babel">
+  <!-- Use Babel to transform JSX in the browser -->
+  <script type="text/babel" data-presets="react,env">
     const { useState, useMemo, useEffect } = React;
 
     // --------- ID generator (no crypto dependency) ---------
@@ -200,6 +223,10 @@
         { id: generateId(), label:'HCA', amount:0, useRate:false, rate:0, hours:0 },
       ]);
       const [yearKey, setYearKey] = React.useState(defaultRates.defaultYear);
+      const initialTheme = (typeof localStorage!=='undefined' && localStorage.getItem('las_theme')) || 'dark';
+      const [theme, setTheme] = React.useState(initialTheme);
+      useEffect(()=>{ try{ document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('las_theme', theme);}catch{} }, [theme]);
+      const scrollToId = (id)=>{ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); };
       const [rates, setRates] = React.useState(defaultRates);
       const [ratesSource, setRatesSource] = React.useState('built-in');
       const [openHelp, setOpenHelp] = React.useState(false);
@@ -207,7 +234,7 @@
       const runTests = getQuery('test')==='1';
 
       // --- LOAD RATES ---
-      useEffect(()=>{ (async ()=>{ const { data, source } = await loadRatesWithSource(); setRates(data); setRatesSource(source); })(); },[]);
+      useEffect(()=>{ (async ()=>{ const loaded = await loadRatesWithSource(); if(loaded){ const { data, source } = loaded; setRates(data); setRatesSource(source);} })(); },[]);
       useEffect(()=>{ if(showAdmin) saveRates(rates); },[rates, showAdmin]);
 
       const activeYear = useMemo(()=> rates.years.find(y=>y.label===yearKey) || rates.years[0], [rates, yearKey]);
@@ -284,6 +311,12 @@
           ok('Annuity factor age 51 = 17.9', Math.abs(getAnnuityFactor(51, defaultRates.years[0].nhs.annuityFactors2015) - 17.9) < 1e-9);
           // Annual pension accrual 1/54 of £64,155.96 ≈ £1,188.07
           const ap = (5346.33*12)/54; ok('Annual pension 1/54 calc', Math.abs(ap - 1188.073333) < 0.02);
+          // PAYE BR test
+          ok('PAYE BR on £2000 = £400', Math.abs(calcPAYE(2000, 24000, defaultRates.years[0].tax, {mode:'BR'}) - 400) < 0.01);
+          // Tax code parsing
+          const p = parseTaxCode('1257L'); ok('Tax code 1257L allowance £12,570', p.allowance===12570);
+          // NI stops over SPA
+          ok('NI over SPA is 0', calcNI(3000, defaultRates.years[0].ni, true)===0);
         } catch (e) {
           out.push({name:'Harness threw', status:'fail'});
           console.error(e);
@@ -299,41 +332,23 @@
               <h1 className="text-2xl font-semibold">NHS Pension Opt‑Out Calculator (England only)</h1>
               <p className="text-sm opacity-80">Monthly payslip illustration — <span className="font-semibold">stay in</span> vs <span className="font-semibold">opt out</span>. Rates {yearKey}. <span className="opacity-60">src: {ratesSource}</span></p>
             </div>
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-3">
               <label className="text-sm">Year</label>
               <select value={yearKey} onChange={e=>setYearKey(e.target.value)} className="bg-transparent border rounded px-2 py-1">
                 {rates.years.map(y=> <option key={y.label} value={y.label}>{y.label}</option>)}
               </select>
+              <label className="text-sm">Theme</label>
+              <select value={theme} onChange={e=>setTheme(e.target.value)} className="bg-transparent border rounded px-2 py-1">
+                <option value="dark">Dark</option>
+                <option value="hc">High‑contrast</option>
+                <option value="light">Light</option>
+              </select>
+              <button className="btn text-sm" onClick={()=>scrollToId('inputs')}>Start here</button>
             </div>
           </header>
 
-          <section className="card p-4 mb-6 text-sm">
-            <h2 className="font-semibold mb-2">Summary information</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div>Member age last birthday</div><div className="text-right">{memberAge ?? 'Not completed'}</div>
-              <div>Annuity cost (factor)</div><div className="text-right">{annuityFactor ?? 'Not completed'}</div>
-              <div>Annual pension (1/54 of earnings)</div><div className="text-right">{fmt(annualPensionRounded10)}</div>
-              <div>Annual pension to SPA (assumes pay unchanged)</div><div className="text-right">{memberAge!=null ? fmt(Math.max(0, (66 - memberAge)) * annualPensionRounded10) : 'Not completed'}</div>
-              <div>Hypothetical cost</div><div className="text-right">{hypotheticalCostRounded!=null ? fmt(hypotheticalCostRounded) : 'Not completed'}</div>
-              <div>Increase in take home (per year)</div><div className="text-right">{fmt(increaseInTakeHomeRounded)}</div>
-            </div>
-          </section>
-
-          {/* Benefits / explanation */}
-          <section className="card p-4 mb-6 text-sm">
-            <h2 className="font-semibold mb-2">Benefits you would be giving up by opting out of the 2015 NHS Pension Scheme</h2>
-            <ul className="list-disc ml-5 space-y-1">
-              <li>An annual pension payable for life after retirement.</li>
-              <li>Tax‑free cash lump sum on retirement (for 1995 Section members; optional for other members).</li>
-              <li>Death‑in‑service life assurance lump sum to a nominated person or organisation.</li>
-              <li>Pension benefits payable to dependants, including children.</li>
-              <li>Ill‑health retirement benefits.</li>
-              <li>Tax relief on pension contributions.</li>
-            </ul>
-            <p className="mt-3 opacity-90">To help illustrate the value of the NHS pension you would be giving up, a hypothetical comparison to buy similar benefits on the “open market” might cost around <span className="font-semibold">{hypotheticalCostRounded!=null ? fmt(hypotheticalCostRounded) : '—'}</span> for each year you give up accruing benefits in the NHS Pension Scheme.</p>
-          </section>
-
-          <section className="grid md:grid-cols-2 gap-4 mb-6">
+          {/* Inputs moved to the top for mobile discoverability */}
+          <section id="inputs" className="grid md:grid-cols-2 gap-4 mb-6">
             <div className="card p-4">
               <h2 className="font-semibold mb-2">Pensionable pay (monthly)</h2>
               <div className="space-y-3">
@@ -383,10 +398,37 @@
                 </label>
               </div>
               <div className="mt-3 text-xs opacity-70">This tool is for <span className="font-semibold">employees</span>. It applies England PAYE & NI rules. NI stops automatically if the employee is at or above State Pension Age on the pay date.</div>
+              <div className="mt-4"><button className="btn" onClick={()=>scrollToId('results')}>View results</button></div>
             </div>
           </section>
 
-          <section className="card p-4 mb-6">
+          <section className="card p-4 mb-6 text-sm">
+            <h2 className="font-semibold mb-2">Summary information</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>Member age last birthday</div><div className="text-right">{memberAge ?? 'Not completed'}</div>
+              <div>Annuity cost (factor)</div><div className="text-right">{annuityFactor ?? 'Not completed'}</div>
+              <div>Annual pension (1/54 of earnings)</div><div className="text-right">{fmt(annualPensionRounded10)}</div>
+              <div>Annual pension to SPA (assumes pay unchanged)</div><div className="text-right">{memberAge!=null ? fmt(Math.max(0, (66 - memberAge)) * annualPensionRounded10) : 'Not completed'}</div>
+              <div>Hypothetical cost</div><div className="text-right">{hypotheticalCostRounded!=null ? fmt(hypotheticalCostRounded) : 'Not completed'}</div>
+              <div>Increase in take home (per year)</div><div className="text-right">{fmt(increaseInTakeHomeRounded)}</div>
+            </div>
+          </section>
+
+          {/* Benefits / explanation */}
+          <section className="card p-4 mb-6 text-sm">
+            <h2 className="font-semibold mb-2">Benefits you would be giving up by opting out of the 2015 NHS Pension Scheme</h2>
+            <ul className="list-disc ml-5 space-y-1">
+              <li>An annual pension payable for life after retirement.</li>
+              <li>Tax‑free cash lump sum on retirement (for 1995 Section members; optional for other members).</li>
+              <li>Death‑in‑service life assurance lump sum to a nominated person or organisation.</li>
+              <li>Pension benefits payable to dependants, including children.</li>
+              <li>Ill‑health retirement benefits.</li>
+              <li>Tax relief on pension contributions.</li>
+            </ul>
+            <p className="mt-3 opacity-90">To help illustrate the value of the NHS pension you would be giving up, a hypothetical comparison to buy similar benefits on the “open market” might cost around <span className="font-semibold">{hypotheticalCostRounded!=null ? fmt(hypotheticalCostRounded) : '—'}</span> for each year you give up accruing benefits in the NHS Pension Scheme.</p>
+          </section>
+
+          <section id="results" className="card p-4 mb-6">
             <div className="flex items-center gap-2 mb-2">
               <h2 className="font-semibold">Payslip illustration (monthly)</h2>
               <button className="ml-auto text-sm btn" onClick={()=>setOpenHelp(s=>!s)}>{openHelp? 'Hide' : 'How this is worked out'}</button>
@@ -540,7 +582,12 @@
       );
     }
 
-    ReactDOM.createRoot(document.getElementById('app')).render(<App/>);
+    // Guard: make sure React is present before rendering to avoid generic "Script error"
+    if (window.React && window.ReactDOM) {
+      ReactDOM.createRoot(document.getElementById('app')).render(<App/>);
+    } else {
+      document.getElementById('app').innerHTML = '<div style="padding:1rem;border:1px solid #fca5a5;border-radius:.5rem">Unable to load required scripts. Please check your connection or try again later.</div>';
+    }
   </script>
 </body>
 </html>
