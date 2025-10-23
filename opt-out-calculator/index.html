@@ -1,471 +1,498 @@
 <!doctype html>
 <html lang="en-GB">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NHS Pension Opt-Out Calculator (England only)</title>
-<link rel="icon" href="../favicon.ico">
-<style>
-/* Accessible, high-contrast, no external CSS */
-:root{
-  --brand:#023020; --text:#111; --muted:#4A5568;
-  --bg:#FAFAFA; --panel:#FFF; --border:#D6D9DC; --focus:#0B69A3;
-}
-@media (prefers-color-scheme: dark){
-  :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
-}
-*{ box-sizing:border-box }
-body{ margin:0; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
-.wrap{ max-width: 1000px; margin: 0 auto; padding: 20px; }
-h1{ margin:0 0 4px 0; font-size:22px }
-h2{ margin:0 0 10px 0; font-size:18px; color:var(--brand) }
-.panel{ background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; }
-.grid{ display:grid; gap:14px }
-@media (min-width:860px){ .cols-2{ grid-template-columns: 1fr 1fr } }
-label{ font-size:14px; display:block }
-input,select,textarea{ width:100%; border:1px solid var(--border); border-radius:8px; background:var(--panel); color:var(--text); padding:8px 10px }
-:focus-visible{ outline:3px solid var(--focus); outline-offset:2px; border-radius:6px }
-.btn{ appearance:none; border:2px solid var(--brand); color:var(--brand); background:transparent; padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer }
-.btn:hover{ background:#F0F7F4 }
-.btn.primary{ background:var(--brand); color:#fff }
-.btn.primary:hover{ filter:brightness(.95) }
-.row{ display:grid; grid-template-columns: repeat(12,1fr); gap:8px; align-items:end }
-.small{ font-size:12px; opacity:.8 }
-.muted{ color:var(--muted) }
-.table{ width:100%; border-collapse:collapse }
-th,td{ padding:10px; border-bottom:1px solid var(--border); text-align:left }
-.right{ text-align:right }
-.pill{ display:inline-block; padding:2px 8px; border:1px solid var(--border); border-radius:999px; font-size:12px }
-.kpi{ border:1px solid var(--border); border-radius:12px; padding:12px }
-.flex{ display:flex; gap:8px; align-items:center }
-.space{ display:flex; justify-content:space-between; align-items:center }
-.hidden{ display:none !important }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NHS Pension Opt-Out Calculator (England only)</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>">
+
+  <style>
+    /* ---------- LAS-inspired, contrast-safe styles (no external CSS) ---------- */
+    :root{
+      --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
+      --thead-bg:#F2F5F3; --thead-text:#0B3A2D; --row-active-bg:#E8F4F0; --row-active-text:#111;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; --thead-bg:#1A2420; --thead-text:#D6EFE6; --row-active-bg:#0F2F26; --row-active-text:#EDEFF1; }
+    }
+    *{ box-sizing:border-box }
+    html,body{ margin:0; padding:0 }
+    body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
+    .wrap{ max-width:980px; margin:0 auto; padding:20px; }
+    .header{ background:var(--brand); color:#fff; padding:22px 20px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+    .header h1{ margin:0 0 4px 0; font-size:22px }
+    .panel{ background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; }
+    .grid2{ display:grid; grid-template-columns:1fr; gap:14px } @media(min-width:860px){ .grid2{ grid-template-columns:1fr 1fr } }
+    .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:8px; align-items:end }
+    .cs1{grid-column:span 1}.cs2{span:2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}.cs7{grid-column:span 7}.cs8{grid-column:span 8}.cs12{grid-column:span 12}
+    label>span.small{ display:block; font-size:12px; opacity:.85; margin-bottom:4px }
+    input,select,textarea{ width:100%; border:1px solid var(--border); background:var(--panel); color:var(--text); border-radius:8px; padding:8px 10px }
+    input:focus,select:focus,textarea:focus{ outline:3px solid var(--focus); outline-offset:2px }
+    .btn{ appearance:none; background:var(--panel); color:var(--brand); border:2px solid var(--brand); padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer }
+    .btn:hover{ background:#F0F7F4 }
+    .btn.primary{ background:var(--brand); color:#fff }
+    .small{ font-size:12px } .muted{ color:var(--muted) }
+    .space{ display:flex; justify-content:space-between; align-items:center }
+    .payslip{ display:grid; grid-template-columns:1fr; gap:12px } @media(min-width:860px){ .payslip{ grid-template-columns:1fr 1fr } }
+    .card{ border:1px solid var(--border); border-radius:12px; padding:12px }
+    .tot{ border-top:1px solid var(--border); padding-top:8px; margin-top:8px; font-weight:700 }
+    .kpi{ border:1px solid var(--border); border-radius:12px; padding:12px }
+    .note{ border:2px solid var(--border); border-left:6px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel); color:var(--text); }
+    .actions{ display:flex; gap:8px; flex-wrap:wrap }
+    .text-green{ color:#1b8555 } .text-red{ color:#9F3131 }
+    .hide{ display:none }
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="panel flex" style="justify-content:space-between">
-    <div>
-      <h1>NHS Pension Opt-Out Calculator</h1>
-      <div class="small muted">England & NI — monthly payslip illustration (stay in vs opt out). NI inferred from your DOB.</div>
-    </div>
-    <div class="flex">
-      <button id="adminToggle" class="btn" type="button">Admin</button>
-    </div>
-  </header>
+  <div class="wrap">
+    <header class="header">
+      <div>
+        <h1>NHS Pension Opt-Out Calculator (England only)</h1>
+        <p class="small" style="margin:0">Monthly payslip illustration — <b>stay in</b> vs <b>opt out</b>. NI is inferred from your <b>DOB</b> (Cat A by default; Cat C at/over SPA (66); Cat M under 21 uses same employee rates as A).</p>
+      </div>
+      <div class="actions">
+        <button id="btnAdmin" class="btn">Admin</button>
+      </div>
+    </header>
 
-  <section class="grid cols-2" style="margin-top:16px">
-    <div class="panel">
-      <h2>Pensionable pay (monthly)</h2>
-      <div id="items"></div>
-      <div class="space" style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px">
-        <div class="muted">Total monthly pensionable pay</div>
-        <div id="grossOut"><b>£0.00</b></div>
+    <!-- Inputs -->
+    <section class="panel grid2" aria-label="Inputs">
+      <div>
+        <h2 style="margin-top:0">Pensionable pay (monthly)</h2>
+        <div id="items"></div>
+        <div class="actions" style="margin-top:8px">
+          <button id="addItem" class="btn">+ Add item</button>
+          <button id="clearItems" class="btn">Clear</button>
+        </div>
+        <div class="space" style="border-top:1px solid var(--border); padding-top:10px; margin-top:10px">
+          <div class="muted">Total monthly pensionable pay</div>
+          <div id="totalPay" style="font-weight:800">£0.00</div>
+        </div>
       </div>
-      <div class="flex" style="margin-top:8px">
-        <button id="addItem" class="btn" type="button">+ Add item</button>
-        <button id="clearItems" class="btn" type="button">Clear</button>
-      </div>
-    </div>
 
-    <div class="panel">
-      <h2>Your details</h2>
-      <div class="grid">
-        <label>Date of birth
-          <input id="dob" type="date" placeholder="YYYY-MM-DD">
-        </label>
-        <label>Tax code (optional)
-          <input id="taxCode" placeholder="1257L, BR, D0, D1, NT" value="1257L">
-        </label>
+      <div>
+        <h2 style="margin-top:0">Your details</h2>
+        <div class="row">
+          <label class="cs6"><span class="small">Date of birth</span>
+            <input id="dob" type="date" />
+          </label>
+          <label class="cs6"><span class="small">Tax code (optional)</span>
+            <input id="taxCode" type="text" placeholder="1257L, BR, D0, D1, NT" value="1257L"/>
+          </label>
+        </div>
+        <p class="small muted" style="margin-top:8px">We assume the standard NHS “net pay arrangement”.</p>
       </div>
-      <div class="small muted" style="margin-top:8px">
-        If your age at the end of this month is <b>66+</b>, employee NI is <b>£0</b> (Category C).
-        If you’re <b>&lt;21</b>, NI category is <b>M</b> (same employee rates as A; employer relief not shown).
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="panel" style="margin-top:16px">
-    <div class="space">
-      <h2>Payslip illustration (monthly)</h2>
-      <button id="helpToggle" type="button" class="btn">How this is worked out</button>
-    </div>
-    <div id="help" class="hidden" style="margin:10px 0">
-      <ul class="small muted">
-        <li>Income Tax: rUK (England & NI) bands monthly-ised with personal allowance; taper above £100k adjusted net income.</li>
-        <li>National Insurance: A/M 8% between PT £1,048 and UEL £4,189, 2% above; C (66+) £0 employee NI.</li>
-        <li>NHS pension (employee): tier picked from <em>annual</em> pensionable pay; applied monthly.</li>
-      </ul>
-    </div>
-    <div style="overflow-x:auto">
-      <table class="table">
-        <thead>
-          <tr><th>Item</th><th class="right">Stay in</th><th class="right">Opt out</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Gross pay (monthly)</td><td class="right" id="grossStay">£0.00</td><td class="right" id="grossOut2">£0.00</td></tr>
-          <tr><td>NHS pension (employee) <span id="nhsPct" class="pill hidden"></span></td><td class="right" id="nhsStay">£0.00</td><td class="right">£0.00</td></tr>
-          <tr><td>Taxable pay this month</td><td class="right" id="taxableStay">£0.00</td><td class="right" id="taxableOut">£0.00</td></tr>
-          <tr><td>Income Tax (PAYE)</td><td class="right" id="taxStay">£0.00</td><td class="right" id="taxOut">£0.00</td></tr>
-          <tr><td>National Insurance (employee) <span class="muted small">(NI cat: <span id="niCat">A</span>)</span></td><td class="right" id="niStay">£0.00</td><td class="right" id="niOut">£0.00</td></tr>
-          <tr style="font-weight:700; border-top:1px solid var(--border)"><td>Net take-home pay</td><td class="right" id="netStay">£0.00</td><td class="right" id="netOut">£0.00</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="grid" style="margin-top:10px">
-      <div class="kpi">
-        <div class="muted small">Difference in take-home (opt-out minus stay-in)</div>
-        <div id="delta" style="font-weight:800; font-size:20px">£0.00</div>
+    <!-- Payslip -->
+    <section class="panel" aria-label="Payslip illustration">
+      <h2 style="margin-top:0">Payslip illustration (monthly)</h2>
+      <div class="note small" style="margin-bottom:10px">
+        <ul style="margin:0 0 0 16px">
+          <li><b>Payments</b> lists each pensionable item (Basic, HCA, etc.) you entered.</li>
+          <li><b>Deductions</b> lists NHS Pension, PAYE and NI. The PAYE line shows a note with the taxable pay used.</li>
+        </ul>
       </div>
-    </div>
 
-    <details style="margin-top:10px">
-      <summary class="small">Additional information</summary>
-      <div class="grid" style="margin-top:8px">
+      <div class="payslip">
+        <!-- Stay in -->
+        <div class="card">
+          <div style="font-weight:800; margin-bottom:6px">Stay in</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+            <div>
+              <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
+              <div id="stayPayments"></div>
+              <div class="space tot"><div>Total payments</div><div id="stayTotalPayments">£0.00</div></div>
+            </div>
+            <div>
+              <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
+              <div class="space"><div>NHS Pension <span id="nhsRate">(0.0%)</span></div><div id="stayNhs">£0.00</div></div>
+              <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="stayTaxable">£0.00</span>)</span></div><div id="stayTax">£0.00</div></div>
+              <div class="space"><div>National Insurance</div><div id="stayNi">£0.00</div></div>
+              <div class="space tot"><div>Total deductions</div><div id="stayTotalDeds">£0.00</div></div>
+            </div>
+          </div>
+          <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="stayNet">£0.00</div></div>
+        </div>
+
+        <!-- Opt out -->
+        <div class="card">
+          <div style="font-weight:800; margin-bottom:6px">Opt out</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+            <div>
+              <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
+              <div id="outPayments"></div>
+              <div class="space tot"><div>Total payments</div><div id="outTotalPayments">£0.00</div></div>
+            </div>
+            <div>
+              <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
+              <div class="space"><div>NHS Pension</div><div>£0.00</div></div>
+              <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="outTaxable">£0.00</span>)</span></div><div id="outTax">£0.00</div></div>
+              <div class="space"><div>National Insurance</div><div id="outNi">£0.00</div></div>
+              <div class="space tot"><div>Total deductions</div><div id="outTotalDeds">£0.00</div></div>
+            </div>
+          </div>
+          <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="outNet">£0.00</div></div>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div style="display:grid; gap:12px; grid-template-columns:1fr; margin-top:12px">
         <div class="kpi">
-          <div class="muted small">Annual pensionable pay</div>
-          <div id="annualOut" style="font-weight:800; font-size:18px">£0.00</div>
+          <div class="small muted">Difference in take-home (opt-out minus stay-in)</div>
+          <div id="delta" style="font-size:20px; font-weight:800">£0.00</div>
         </div>
         <div class="kpi">
-          <div class="muted small">Employer pension (context)</div>
-          <div id="erOut" style="font-weight:800; font-size:18px">£0.00/yr</div>
+          <div class="small muted">Net annual pay — stay in / opt out</div>
+          <div id="netAnnual" style="font-size:18px; font-weight:800">£0.00 / £0.00</div>
+        </div>
+        <div class="kpi">
+          <div class="small muted">Employer pension (context)</div>
+          <div id="employerPension" style="font-size:18px; font-weight:800">≈ £0.00/yr</div>
           <div class="small muted">Not deducted from pay but foregone if you opt out.</div>
         </div>
       </div>
-    </details>
-  </section>
+    </section>
 
-  <section id="admin" class="panel hidden" style="margin-top:16px">
-    <h2>Admin — Rates (paste/edit yearly)</h2>
-    <p class="small muted">Changes save to this browser (localStorage). You can Export to a JSON file and commit it to your repo later.</p>
-    <div class="grid cols-2">
-      <label>Current JSON
-        <textarea id="currentJson" rows="16" readonly></textarea>
-      </label>
-      <div>
-        <label>Paste new JSON
-          <textarea id="pasteJson" rows="16" placeholder='{"years":[ ... ]}'></textarea>
-        </label>
-        <div class="flex" style="margin-top:8px">
-          <button id="importBtn" class="btn" type="button">Import</button>
-          <button id="exportBtn" class="btn" type="button">Export</button>
-          <button id="resetBtn" class="btn" type="button">Reset to defaults</button>
+    <!-- Admin -->
+    <section id="admin" class="panel hide" aria-label="Admin">
+      <h2 style="margin-top:0">Admin — Rates (paste/edit yearly)</h2>
+      <p class="small muted">Edits save to this browser (localStorage). Export and commit to your repo when ready.</p>
+      <div class="grid2">
+        <div>
+          <label class="small">Current JSON</label>
+          <textarea id="ratesCurrent" rows="16" readonly style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:8px"></textarea>
+          <div class="actions" style="margin-top:8px">
+            <button id="exportRates" class="btn">Export</button>
+          </div>
+        </div>
+        <div>
+          <label class="small">Paste new JSON</label>
+          <textarea id="ratesPaste" rows="16" placeholder='{ "years":[ ... ], "defaultYear":"2025/26" }' style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:8px"></textarea>
+          <div class="actions" style="margin-top:8px">
+            <button id="importRates" class="btn">Import</button>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <footer class="small muted" style="margin:14px 0">
-    HMRC PAYE & NI 2025/26; NHSBSA member tiers 2025/26. For guidance only.
-  </footer>
-</div>
+    <footer class="small muted" style="margin:12px 0 24px">
+      HMRC PAYE & NI 2025/26; NHSBSA member tiers 2025/26. For guidance only.
+    </footer>
+  </div>
 
-<script>
-/*** ===== Data & Utils ===== ***/
-const defaultRates = {
-  defaultYear: "2025/26",
-  years: [{
-    label: "2025/26",
-    tax: {
-      personalAllowance: 12570,
-      higherRateThreshold: 37700,
-      additionalRateThreshold: 125140,
-      bands: {
-        ENG_NI: [
-          { upper: 37700, rate: 0.20 },
-          { upper: 125140, rate: 0.40 },
-          { upper: null,   rate: 0.45 }
-        ]
+  <script>
+  // ---------- Data (England & NI only) ----------
+  const defaultRates = {
+    defaultYear: "2025/26",
+    years: [{
+      label: "2025/26",
+      tax: {
+        personalAllowance: 12570,
+        higherRateThreshold: 37700,
+        additionalRateThreshold: 125140,
+        bands: {
+          ENG_NI: [
+            { upper: 37700, rate: 0.20 },
+            { upper: 125140, rate: 0.40 },
+            { upper: null, rate: 0.45 }
+          ]
+        }
+      },
+      ni: {
+        monthly: { LEL: 542, PT: 1048, UEL: 4189 },
+        employeeRates: { main: 0.08, upper: 0.02 }
+      },
+      nhs: {
+        tiers: [
+          { min: 0, max: 13259, rate: 0.052 },
+          { min: 13260, max: 27797, rate: 0.065 },
+          { min: 27798, max: 33868, rate: 0.083 },
+          { min: 33869, max: 50845, rate: 0.098 },
+          { min: 50846, max: 65190, rate: 0.107 },
+          { min: 65191, max: null,  rate: 0.125 }
+        ],
+        employerRateHint: 0.237
       }
-    },
-    ni: {
-      monthly: { LEL: 542, PT: 1048, UEL: 4189 },
-      employeeRates: { main: 0.08, upper: 0.02 }
-    },
-    nhs: {
-      tiers: [
-        { min:     0, max: 13259, rate: 0.052 },
-        { min: 13260, max: 27797, rate: 0.065 },
-        { min: 27798, max: 33868, rate: 0.083 },
-        { min: 33869, max: 50845, rate: 0.098 },
-        { min: 50846, max: 65190, rate: 0.107 },
-        { min: 65191, max: null,  rate: 0.125 }
-      ],
-      employerRateHint: 0.237
+    }]
+  };
+
+  // ---------- Storage helpers ----------
+  function loadRates(){
+    try { const raw = localStorage.getItem('las_optout_rates_v1'); if(!raw) return defaultRates;
+      const parsed = JSON.parse(raw); return parsed?.years?.length ? parsed : defaultRates;
+    } catch { return defaultRates; }
+  }
+  function saveRates(r){ localStorage.setItem('las_optout_rates_v1', JSON.stringify(r, null, 2)); }
+
+  // ---------- Formatting ----------
+  const GBP = new Intl.NumberFormat('en-GB',{style:'currency', currency:'GBP'});
+  const fmt = n => GBP.format((+n)||0);
+  const pct = n => `${(n*100).toFixed(1)}%`;
+
+  // ---------- Tax helpers ----------
+  function parseTaxCode(code){
+    const c = (code||'').toUpperCase().trim();
+    if(!c) return {mode:'STANDARD', allowance:12570};
+    if(['BR','D0','D1','NT'].includes(c)) return {mode:c};
+    const m = c.match(/(\\d{3,4})[A-Z]*/);
+    if(m) return {mode:'STANDARD', allowance: parseInt(m[1],10)*10};
+    return {mode:'STANDARD', allowance:12570};
+  }
+  function ageOnDate(dob, on){
+    if(!dob) return null;
+    const b = new Date(dob); if(isNaN(b)) return null;
+    let a = on.getFullYear()-b.getFullYear(); const m = on.getMonth()-b.getMonth();
+    if(m<0 || (m===0 && on.getDate()<b.getDate())) a--; return a;
+  }
+  function nhsRateFor(annualPay, nhs){
+    const t = nhs.tiers.find(x => annualPay >= x.min && (x.max===null || annualPay <= x.max));
+    return t ? t.rate : 0;
+  }
+  function calcPAYE(monthlyTaxable, annualAdjustedNet, tcfg, parsedCode){
+    // Taper: reduce £1 per £2 ANI over £100k
+    const pa0 = parsedCode.mode==='STANDARD' ? parsedCode.allowance : 0;
+    const taper = Math.max(0, Math.floor((Math.max(annualAdjustedNet,0) - 100000)/2));
+    const pa = parsedCode.mode==='STANDARD' ? Math.max(0, pa0 - taper) : 0;
+    if(parsedCode.mode==='NT') return 0;
+    if(parsedCode.mode==='BR') return monthlyTaxable * 0.20;
+    if(parsedCode.mode==='D0') return monthlyTaxable * 0.40;
+    if(parsedCode.mode==='D1') return monthlyTaxable * 0.45;
+
+    let remaining = Math.max(0, monthlyTaxable - pa/12);
+    let tax = 0, lowerA = 0;
+    const bands = tcfg.bands.ENG_NI;
+    for(const b of bands){
+      const upperA = (b.upper==null?Infinity:b.upper);
+      const sizeM = (upperA - lowerA)/12;
+      const take = Math.max(0, Math.min(remaining, sizeM));
+      tax += take * b.rate;
+      remaining -= take;
+      lowerA = upperA;
+      if(remaining<=0) break;
     }
-  }]
-};
-
-const fmt = n => (n||0).toLocaleString("en-GB",{style:"currency",currency:"GBP"});
-const pct = n => (n*100).toFixed(1)+"%";
-function loadRates(){
-  try{ const raw = localStorage.getItem("las_optout_rates_v1");
-       if(!raw) return defaultRates;
-       const parsed = JSON.parse(raw); return parsed?.years?.length ? parsed : defaultRates;
-  }catch{ return defaultRates }
-}
-function saveRates(r){ localStorage.setItem("las_optout_rates_v1", JSON.stringify(r,null,2)); }
-function lastDayOfThisMonth(ref=new Date()){ return new Date(ref.getFullYear(), ref.getMonth()+1, 0); }
-function ageOnDate(dob, on){
-  if(!dob) return null; const d=new Date(dob); if(isNaN(d)) return null;
-  let a=on.getFullYear()-d.getFullYear(); const m=on.getMonth()-d.getMonth();
-  if(m<0 || (m===0 && on.getDate()<d.getDate())) a--; return a;
-}
-function inferNICat(dob){
-  const a=ageOnDate(dob, lastDayOfThisMonth());
-  if(a==null) return "A";
-  if(a>=66) return "C";
-  if(a<21) return "M";
-  return "A";
-}
-function parseTaxCode(code){
-  const c=(code||"").toUpperCase().trim();
-  if(!c) return { mode:"STANDARD", allowance:12570 };
-  if(["BR","D0","D1","NT"].includes(c)) return { mode:c };
-  const m=c.match(/(\d{3,4})[A-Z]*/); if(m) return { mode:"STANDARD", allowance: parseInt(m[1],10)*10 };
-  return { mode:"STANDARD", allowance:12570 };
-}
-function nhsMemberRate(annual, nhs){
-  const t = nhs.tiers.find(t=> annual>=t.min && (t.max==null || annual<=t.max));
-  return t ? t.rate : 0;
-}
-function calcPAYE(monthlyTaxable, annualANI, taxCfg, codeParsed){
-  const taperStart=100000;
-  const pa0 = codeParsed.mode==="STANDARD" ? taxCfg.personalAllowance : 0;
-  const pa  = codeParsed.mode==="STANDARD" ? Math.max(0, pa0 - Math.max(0, Math.floor((annualANI - taperStart)/2))) : 0;
-
-  if(codeParsed.mode==="NT") return 0;
-  if(codeParsed.mode==="BR") return monthlyTaxable * 0.20;
-  if(codeParsed.mode==="D0") return monthlyTaxable * 0.40;
-  if(codeParsed.mode==="D1") return monthlyTaxable * 0.45;
-
-  const monthlyPA = pa/12;
-  let remaining = Math.max(0, monthlyTaxable - monthlyPA);
-  const bands = taxCfg.bands.ENG_NI;
-  let tax=0, lower=0;
-  for(const b of bands){
-    const upper = b.upper ?? Infinity;
-    const bandMonthly = (upper - lower)/12;
-    const take = Math.max(0, Math.min(remaining, bandMonthly));
-    tax += take * b.rate;
-    remaining -= take;
-    lower = upper;
-    if(remaining<=0) break;
+    if(remaining>0) tax += remaining * bands[bands.length-1].rate;
+    return tax;
   }
-  if(remaining>0) tax += remaining * (bands[bands.length-1].rate);
-  return tax;
-}
-function calcNI(monthlyGross, niCfg, niCat){
-  if(niCat==="C") return 0;
-  const { PT, UEL } = niCfg.monthly;
-  if(monthlyGross<=PT) return 0;
-  const between = Math.max(0, Math.min(monthlyGross, UEL) - PT);
-  const above = Math.max(0, monthlyGross - UEL);
-  return between*niCfg.employeeRates.main + above*niCfg.employeeRates.upper;
-}
-function safeId(){
-  const r=()=>Math.floor((1+Math.random())*0x10000).toString(16).slice(1);
-  return `id-${Date.now().toString(16)}-${r()}${r()}-${r()}`;
-}
-
-/*** ===== State ===== ***/
-let RATES = loadRates();
-let state = {
-  items: [
-    { id:safeId(), label:"Basic", amount:0, useRate:false },
-    { id:safeId(), label:"HCA",   amount:0, useRate:false }
-  ],
-  dob: "",
-  taxCode: "1257L"
-};
-
-/*** ===== DOM refs ===== ***/
-const elItems = document.getElementById("items");
-const elAdd   = document.getElementById("addItem");
-const elClear = document.getElementById("clearItems");
-const elDob   = document.getElementById("dob");
-const elTax   = document.getElementById("taxCode");
-const elAdmin = document.getElementById("admin");
-const elAdminToggle = document.getElementById("adminToggle");
-const elHelpToggle = document.getElementById("helpToggle");
-const elHelp = document.getElementById("help");
-
-// Outputs
-const out = {
-  gross: document.getElementById("grossOut"),
-  grossStay: document.getElementById("grossStay"),
-  grossOut2: document.getElementById("grossOut2"),
-  nhsPct: document.getElementById("nhsPct"),
-  nhsStay: document.getElementById("nhsStay"),
-  taxableStay: document.getElementById("taxableStay"),
-  taxableOut: document.getElementById("taxableOut"),
-  taxStay: document.getElementById("taxStay"),
-  taxOut: document.getElementById("taxOut"),
-  niStay: document.getElementById("niStay"),
-  niOut: document.getElementById("niOut"),
-  niCat: document.getElementById("niCat"),
-  netStay: document.getElementById("netStay"),
-  netOut: document.getElementById("netOut"),
-  delta: document.getElementById("delta"),
-  annual: document.getElementById("annualOut"),
-  er: document.getElementById("erOut"),
-  currentJson: document.getElementById("currentJson"),
-  pasteJson: document.getElementById("pasteJson")
-};
-
-/*** ===== UI builders ===== ***/
-function renderItems(){
-  elItems.innerHTML = "";
-  state.items.forEach(it=>{
-    const row = document.createElement("div");
-    row.className = "row";
-    row.innerHTML = `
-      <input class="col-span-4" value="${it.label.replace(/"/g,"&quot;")}" data-id="${it.id}" data-k="label">
-      <div class="col-span-3 flex">
-        <input type="checkbox" ${it.useRate?"checked":""} data-id="${it.id}" data-k="useRate">
-        <span class="small muted">rate × hours</span>
-      </div>
-      ${it.useRate ? `
-        <input type="number" class="col-span-2" placeholder="rate" value="${it.rate??""}" data-id="${it.id}" data-k="rate">
-        <input type="number" class="col-span-2" placeholder="hours" value="${it.hours??""}" data-id="${it.id}" data-k="hours">
-        <div class="col-span-1 right small muted" data-id="${it.id}" data-k="calcCell"></div>
-      ` : `
-        <input type="number" class="col-span-6" value="${it.amount}" data-id="${it.id}" data-k="amount">
-        <div class="col-span-1"></div>
-      `}
-      <button class="col-span-1 btn" data-id="${it.id}" data-k="remove">Remove</button>
-    `;
-    elItems.appendChild(row);
-  });
-
-  // wire events
-  elItems.querySelectorAll("input,button").forEach(el=>{
-    el.addEventListener("input", onItemChange);
-    el.addEventListener("click", onItemChange);
-  });
-
-  updateCalcCells();
-}
-function onItemChange(e){
-  const id = e.target.getAttribute("data-id");
-  const k  = e.target.getAttribute("data-k");
-  if(!id || !k) return;
-
-  const idx = state.items.findIndex(x=>x.id===id);
-  if(idx<0) return;
-
-  if(k==="remove"){
-    state.items.splice(idx,1);
-  }else if(k==="useRate"){
-    state.items[idx].useRate = e.target.checked;
-  }else if(k==="label"){
-    state.items[idx].label = e.target.value;
-  }else if(k==="rate"){
-    state.items[idx].rate = parseFloat(e.target.value || "0");
-  }else if(k==="hours"){
-    state.items[idx].hours = parseFloat(e.target.value || "0");
-  }else if(k==="amount"){
-    state.items[idx].amount = parseFloat(e.target.value || "0");
+  function calcNI(monthlyGross, ncfg, overSPA){
+    if(overSPA) return 0;
+    const {PT, UEL} = ncfg.monthly;
+    if(monthlyGross <= PT) return 0;
+    const between = Math.max(0, Math.min(monthlyGross, UEL)-PT);
+    const above = Math.max(0, monthlyGross - UEL);
+    return between*ncfg.employeeRates.main + above*ncfg.employeeRates.upper;
   }
-  renderItems();
-  recalc();
-}
-function updateCalcCells(){
-  elItems.querySelectorAll('[data-k="calcCell"]').forEach(cell=>{
-    const id = cell.getAttribute("data-id");
-    const it = state.items.find(x=>x.id===id);
-    if(!it) return;
-    const val = (it.rate||0)*(it.hours||0);
-    cell.textContent = fmt(val);
+
+  // ---------- UI state ----------
+  const state = {
+    items: [],
+    rates: loadRates(),
+    year: null
+  };
+  state.year = state.rates.years[0];
+
+  // ---------- DOM ----------
+  const elItems = document.getElementById('items');
+  const elAdd = document.getElementById('addItem');
+  const elClear = document.getElementById('clearItems');
+  const elTotalPay = document.getElementById('totalPay');
+  const elDob = document.getElementById('dob');
+  const elTaxCode = document.getElementById('taxCode');
+
+  const elStayPayments = document.getElementById('stayPayments');
+  const elOutPayments = document.getElementById('outPayments');
+  const elStayTP = document.getElementById('stayTotalPayments');
+  const elOutTP = document.getElementById('outTotalPayments');
+
+  const elNhsRate = document.getElementById('nhsRate');
+  const elStayNhs = document.getElementById('stayNhs');
+  const elStayTax = document.getElementById('stayTax');
+  const elStayNi  = document.getElementById('stayNi');
+  const elStayTD  = document.getElementById('stayTotalDeds');
+  const elStayNet = document.getElementById('stayNet');
+  const elStayTaxable = document.getElementById('stayTaxable');
+
+  const elOutTax   = document.getElementById('outTax');
+  const elOutNi    = document.getElementById('outNi');
+  const elOutTD    = document.getElementById('outTotalDeds');
+  const elOutNet   = document.getElementById('outNet');
+  const elOutTaxable = document.getElementById('outTaxable');
+
+  const elDelta = document.getElementById('delta');
+  const elNetAnnual = document.getElementById('netAnnual');
+  const elEmployer = document.getElementById('employerPension');
+
+  // Admin
+  const btnAdmin = document.getElementById('btnAdmin');
+  const adminSec = document.getElementById('admin');
+  const ratesCurrent = document.getElementById('ratesCurrent');
+  const ratesPaste = document.getElementById('ratesPaste');
+  const btnImport = document.getElementById('importRates');
+  const btnExport = document.getElementById('exportRates');
+
+  // ---------- Items UI ----------
+  let idSeq = 0;
+  function itemRow(it){
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.dataset.id = it.id;
+
+    const name = document.createElement('input');
+    name.className = 'cs4'; name.value = it.label;
+    name.addEventListener('input', ()=>{ it.label=name.value; render(); });
+
+    const chkWrap = document.createElement('div');
+    chkWrap.className = 'cs3'; chkWrap.style.display='flex'; chkWrap.style.alignItems='center'; chkWrap.style.gap='8px';
+    const chk = document.createElement('input'); chk.type='checkbox'; chk.checked=!!it.useRate;
+    const chkLbl = document.createElement('span'); chkLbl.className='small'; chkLbl.textContent='rate × hours';
+    chkWrap.append(chk, chkLbl);
+
+    const rate = document.createElement('input'); rate.type='number'; rate.placeholder='rate'; rate.className='cs2';
+    rate.value = it.rate ?? ''; rate.addEventListener('input', ()=>{ it.rate=parseFloat(rate.value||'0'); render(); });
+
+    const hours = document.createElement('input'); hours.type='number'; hours.placeholder='hours'; hours.className='cs2';
+    hours.value = it.hours ?? ''; hours.addEventListener('input', ()=>{ it.hours=parseFloat(hours.value||'0'); render(); });
+
+    const amount = document.createElement('input'); amount.type='number'; amount.className='cs6'; amount.value = it.amount;
+    amount.addEventListener('input', ()=>{ it.amount=parseFloat(amount.value||'0'); render(); });
+
+    const preview = document.createElement('div'); preview.className='cs1 small'; preview.style.textAlign='right'; preview.style.opacity='.7';
+    const remove = document.createElement('button'); remove.className='cs1 btn'; remove.textContent='×'; remove.title='Remove';
+    remove.addEventListener('click', ()=>{ state.items = state.items.filter(x=>x.id!==it.id); render(); });
+
+    function toggleMode(){
+      if(chk.checked){ // use rate
+        rate.classList.remove('hide'); hours.classList.remove('hide'); amount.classList.add('hide'); preview.textContent = fmt((it.rate||0)*(it.hours||0));
+        it.useRate = true;
+      }else{
+        rate.classList.add('hide'); hours.classList.add('hide'); amount.classList.remove('hide'); preview.textContent = '';
+        it.useRate = false;
+      }
+    }
+    chk.addEventListener('change', ()=>{ toggleMode(); render(); });
+    toggleMode();
+
+    row.append(name, chkWrap, rate, hours, amount, preview, remove);
+    return row;
+  }
+
+  function addItem(label='Basic', amount=0){
+    const it = { id: 'it-' + (idSeq++), label, amount, useRate:false, rate:null, hours:null };
+    state.items.push(it);
+    elItems.appendChild(itemRow(it));
+    render();
+  }
+
+  function rebuildItems(){
+    elItems.innerHTML = '';
+    state.items.forEach(it => elItems.appendChild(itemRow(it)));
+  }
+
+  elAdd.addEventListener('click', ()=> addItem('Other', 0));
+  elClear.addEventListener('click', ()=> { state.items=[]; rebuildItems(); render(); });
+
+  // Initial two rows like your sheet
+  addItem('Basic', 0);
+  addItem('HCA', 0);
+
+  // ---------- Admin ----------
+  function refreshAdminText(){ ratesCurrent.value = JSON.stringify(state.rates, null, 2); }
+  btnAdmin.addEventListener('click', ()=>{ adminSec.classList.toggle('hide'); refreshAdminText(); });
+  btnImport.addEventListener('click', ()=>{
+    try{
+      const parsed = JSON.parse(ratesPaste.value);
+      if(!parsed?.years?.length) throw new Error('Malformed JSON');
+      state.rates = parsed; state.year = parsed.years[0]; saveRates(parsed);
+      ratesPaste.value = ''; refreshAdminText(); render();
+      alert('Rates imported.');
+    }catch(e){ alert('Import failed: ' + e.message); }
   });
-}
+  btnExport.addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify(state.rates,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url);
+  });
 
-/*** ===== Calculation ===== ***/
-function recalc(){
-  const year = RATES.years[0]; // England & NI by default
-  const monthlyGross = state.items.reduce((s,it)=> s + (it.useRate ? (it.rate||0)*(it.hours||0) : (it.amount||0)), 0);
-  const annualGross  = monthlyGross*12;
+  // ---------- Recalc & render ----------
+  function render(){
+    // totals
+    const monthlyGross = state.items.reduce((s,it)=> s + (it.useRate ? (it.rate||0)*(it.hours||0) : (+it.amount||0)), 0);
+    elTotalPay.textContent = fmt(monthlyGross);
 
-  const nhsRate = nhsMemberRate(annualGross, year.nhs);
-  const nhsEE   = annualGross*nhsRate/12;
+    // annual
+    const annualGross = monthlyGross * 12;
+    const nhsRate = nhsRateFor(annualGross, state.year.nhs);
+    elNhsRate.textContent = '(' + pct(nhsRate) + ')';
 
-  const niCategory = inferNICat(state.dob);
-  const niStay = calcNI(monthlyGross, year.ni, niCategory);
-  const niOut  = calcNI(monthlyGross, year.ni, niCategory);
+    const monthlyNhs = (annualGross * nhsRate) / 12;
 
-  const annualANI           = Math.max(0, annualGross - (annualGross*nhsRate)); // net pay arrangement
-  const monthlyTaxableStay  = Math.max(0, monthlyGross - nhsEE);
+    // NI category: over SPA at month end => C (EE NI £0). Under 21 => M (same EE rate as A).
+    const monthEnd = new Date(); monthEnd.setMonth(monthEnd.getMonth()+1, 0);
+    const age = ageOnDate(elDob.value, monthEnd);
+    const overSPA = age!==null ? age>=66 : false;
 
-  const codeParsed = parseTaxCode(state.taxCode);
-  const taxStay = calcPAYE(monthlyTaxableStay, annualANI, year.tax, codeParsed);
-  const taxOut  = calcPAYE(monthlyGross,       annualGross, year.tax, codeParsed);
+    // PAYE
+    const parsedCode = parseTaxCode(elTaxCode.value);
+    const aniStay = Math.max(0, annualGross - annualGross*nhsRate);
+    const taxableStay = Math.max(0, monthlyGross - monthlyNhs);
 
-  const netStay = monthlyGross - nhsEE - taxStay - niStay;
-  const netOut  = monthlyGross - taxOut  - niOut;
-  const delta   = netOut - netStay;
+    const taxStay = calcPAYE(taxableStay, aniStay, state.year.tax, parsedCode);
+    const taxOut  = calcPAYE(monthlyGross, annualGross, state.year.tax, parsedCode);
 
-  // outputs
-  out.gross.textContent    = fmt(monthlyGross);
-  out.grossStay.textContent= fmt(monthlyGross);
-  out.grossOut2.textContent= fmt(monthlyGross);
+    // NI
+    const niStay = calcNI(monthlyGross, state.year.ni, overSPA);
+    const niOut  = calcNI(monthlyGross, state.year.ni, overSPA);
 
-  if(nhsRate){ out.nhsPct.classList.remove("hidden"); out.nhsPct.textContent = pct(nhsRate); }
-  else       { out.nhsPct.classList.add("hidden"); out.nhsPct.textContent = ""; }
+    // Net
+    const netStay = monthlyGross - monthlyNhs - taxStay - niStay;
+    const netOut  = monthlyGross - taxOut - niOut;
+    const delta   = netOut - netStay;
 
-  out.nhsStay.textContent  = fmt(nhsEE);
-  out.taxableStay.textContent = fmt(monthlyTaxableStay);
-  out.taxableOut.textContent  = fmt(monthlyGross);
-  out.taxStay.textContent  = fmt(taxStay);
-  out.taxOut.textContent   = fmt(taxOut);
-  out.niStay.textContent   = fmt(niStay);
-  out.niOut.textContent    = fmt(niOut);
-  out.niCat.textContent    = niCategory;
-  out.netStay.textContent  = fmt(netStay);
-  out.netOut.textContent   = fmt(netOut);
-  out.delta.textContent    = fmt(delta);
-  out.delta.style.color    = delta >= 0 ? "#1b8555" : "#9F3131";
+    // Payments lists (hide £0 rows)
+    function fillPayments(container){
+      container.innerHTML='';
+      state.items.forEach(it=>{
+        const val = it.useRate ? (it.rate||0)*(it.hours||0) : (+it.amount||0);
+        if(!val) return;
+        const row=document.createElement('div'); row.className='space';
+        row.innerHTML=`<div>${it.label}</div><div>${fmt(val)}</div>`;
+        container.appendChild(row);
+      });
+    }
+    fillPayments(elStayPayments); fillPayments(elOutPayments);
 
-  out.annual.textContent   = fmt(annualGross);
-  out.er.textContent       = "≈ " + fmt(annualGross*(year.nhs.employerRateHint||0)) + "/yr";
-}
+    // Fill deductions & totals
+    elStayTP.textContent = fmt(monthlyGross);
+    elOutTP.textContent  = fmt(monthlyGross);
 
-/*** ===== Admin panel ===== ***/
-function renderAdmin(){
-  out.currentJson.value = JSON.stringify(RATES, null, 2);
-}
-document.getElementById("importBtn").addEventListener("click", ()=>{
-  try{
-    const parsed = JSON.parse(out.pasteJson.value);
-    if(!parsed?.years?.length) throw new Error("Malformed JSON");
-    RATES = parsed; saveRates(parsed); out.pasteJson.value = "";
-    renderAdmin(); recalc(); alert("Rates imported.");
-  }catch(e){ alert("Import failed: " + (e.message||e)); }
-});
-document.getElementById("exportBtn").addEventListener("click", ()=>{
-  const blob = new Blob([JSON.stringify(RATES,null,2)],{type:"application/json"});
-  const url  = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href=url; a.download=`las-optout-rates-${Date.now()}.json`; a.click();
-  URL.revokeObjectURL(url);
-});
-document.getElementById("resetBtn").addEventListener("click", ()=>{
-  RATES = defaultRates; saveRates(RATES); renderAdmin(); recalc(); alert("Reset to defaults.");
-});
+    elStayNhs.textContent = fmt(monthlyNhs);
+    elStayTax.textContent = fmt(taxStay);
+    elStayNi.textContent  = fmt(niStay);
+    elStayTD.textContent  = fmt(monthlyNhs + taxStay + niStay);
+    elStayNet.textContent = fmt(netStay);
+    elStayTaxable.textContent = fmt(taxableStay);
 
-/*** ===== Wire up ===== ***/
-elAdd.addEventListener("click", ()=>{ state.items.push({id:safeId(), label:"Other", amount:0, useRate:false}); renderItems(); recalc(); });
-elClear.addEventListener("click", ()=>{ state.items = []; renderItems(); recalc(); });
-elDob.addEventListener("input", e=>{ state.dob = e.target.value; recalc(); });
-elTax.addEventListener("input", e=>{ state.taxCode = e.target.value; recalc(); });
+    elOutTax.textContent   = fmt(taxOut);
+    elOutNi.textContent    = fmt(niOut);
+    elOutTD.textContent    = fmt(taxOut + niOut);
+    elOutNet.textContent   = fmt(netOut);
+    elOutTaxable.textContent = fmt(monthlyGross);
 
-elAdminToggle.addEventListener("click", ()=>{
-  elAdmin.classList.toggle("hidden");
-  if(!elAdmin.classList.contains("hidden")) renderAdmin();
-});
-elHelpToggle.addEventListener("click", ()=> elHelp.classList.toggle("hidden"));
+    // KPIs
+    elDelta.textContent = fmt(delta);
+    elDelta.className = 'text-'+(delta>=0?'green':'red');
+    elNetAnnual.textContent = fmt(netStay*12) + ' / ' + fmt(netOut*12);
+    elEmployer.textContent  = '≈ ' + fmt(annualGross * (state.year.nhs.employerRateHint||0)) + '/yr';
 
-renderItems();
-renderAdmin();
-recalc();
-</script>
+    // Admin JSON (keep fresh)
+    refreshAdminText();
+  }
+
+  elDob.addEventListener('input', render);
+  elTaxCode.addEventListener('input', render);
+
+  // initial
+  render();
+  </script>
 </body>
 </html>
