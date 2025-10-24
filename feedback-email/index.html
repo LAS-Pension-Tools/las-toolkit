@@ -15,11 +15,11 @@
     --las-green:#023020;
     --nhs-blue:#005EB8;
     --ink:#111827;        /* main text */
-    --muted:#4B5563;      /* hints */
+    --muted:#4B5563;      /* hints / muted copy */
     --bg:#F7FAFC;
     --card:#FFFFFF;
     --border:#D1D5DB;
-    --focus:#FFB81C;      /* NHS yellow for strong focus */
+    --focus:#FFB81C;      /* NHS yellow for strong focus and HC primary button */
   }
   *{box-sizing:border-box}
   html:focus-within{scroll-behavior:smooth}
@@ -39,7 +39,7 @@
 
   header{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px}
   .brand{border-left:8px solid var(--nhs-blue); background:#F4F8FF; padding:14px; border-radius:12px; flex:1 1 520px}
-  h1{margin:0 0 6px; color:var(--las-green); font-size:1.75rem; line-height:1.2}
+  h1{margin:0 0 6px; color:var(--las-green); font-size:1.9rem; line-height:1.2}
   p.lead{margin:0; color:var(--ink)}
 
   .a11y{display:flex; gap:8px; flex-wrap:wrap}
@@ -56,33 +56,39 @@
   input::placeholder, textarea::placeholder{color:#6B7280}
   textarea{min-height:120px; resize:vertical}
   .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px}
-  .hint{font-size:0.9rem; color:var(--muted)}
+  .hint{font-size:0.95rem; color:var(--muted)}
   .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
   button,.btn{display:inline-block; border:1px solid var(--nhs-blue); background:var(--nhs-blue); color:#fff; padding:12px 16px; border-radius:10px; font-weight:700; text-decoration:none; cursor:pointer}
   button.secondary,.btn.secondary{background:#fff; color:var(--nhs-blue)}
-  .note{margin-top:10px; font-size:0.9rem; color:#374151}
-  .footer{margin-top:12px; font-size:0.85rem; color:#6B7280}
+  .note{margin-top:10px; font-size:0.95rem; color:var(--ink)}
+  .note ul{margin:8px 0 0 18px}
+  .footer{margin-top:12px; font-size:0.9rem; color:var(--muted)}
 
   /* High-contrast mode */
   body.hc{
-    --bg:#000; --card:#111; --border:#FFFFFF; --ink:#FFFFFF; --muted:#E5E7EB; --nhs-blue:#9BCBFF; --focus:#FFB81C;
+    --bg:#000; --card:#111; --border:#FFFFFF; --ink:#FFFFFF; --muted:#E5E7EB; --nhs-blue:#9BCBFF;
     color:var(--ink);
   }
   body.hc .brand{background:#111; border-left-color:#9BCBFF}
-  body.hc h1{color:#FFFFFF}               /* ensure the title is readable */
-  body.hc p.lead{color:var(--ink)}        /* readable intro text */
-  body.hc legend{color:#FFFFFF}           /* section titles */
+  body.hc h1{color:#FFFFFF}
+  body.hc p.lead{color:var(--ink)}
+  body.hc legend{color:#FFFFFF}
+  body.hc label{color:var(--ink)}
   body.hc input, body.hc select, body.hc textarea{
     background:#000; color:#FFFFFF; border-color:#FFFFFF;
   }
   body.hc input::placeholder, body.hc textarea::placeholder{color:#D1D5DB}
+  /* Buttons in HC: very distinct */
+  body.hc button{background:var(--focus); color:#000; border-color:var(--focus)}
+  body.hc button.secondary{background:#000; color:var(--focus); border:2px solid var(--focus)}
+  body.hc .note{color:var(--ink)}
+  body.hc .footer{color:var(--muted)}
 
   /* Large-text mode (bumps everything, including controls) */
   body.lg{font-size:18px}
-  body.lg h1{font-size:2rem}
-  body.lg .hint{font-size:1rem}
+  body.lg h1{font-size:2.2rem}
+  body.lg .hint{font-size:1.05rem}
   body.lg button{padding:14px 18px}
-
 </style>
 </head>
 <body>
@@ -245,7 +251,7 @@
       </div>
     </form>
 
-    <div class="footer">LAS Pensions • This page generates an email to londamb.Pensions@nhs.net • v1.2</div>
+    <div class="footer">LAS Pensions • This page generates an email to londamb.Pensions@nhs.net • v1.3</div>
   </main>
 </div>
 
