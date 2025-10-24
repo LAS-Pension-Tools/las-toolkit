@@ -4,65 +4,109 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>LAS Pensions Tools – Feedback</title>
-<meta name="description" content="Send feedback or report an issue with LAS Pensions tools." />
+<meta name="description" content="Send feedback or report an issue with LAS Pensions tools.">
+
+<!-- Favicon (LAS green with 'FB') -->
+<link rel="icon" type="image/svg+xml"
+ href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23023020'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Arial, sans-serif' font-size='14' font-weight='bold' fill='%23FFFFFF'%3EFB%3C/text%3E%3C/svg%3E">
+
 <style>
   :root{
     --las-green:#023020;
     --nhs-blue:#005EB8;
     --ink:#111827;
-    --muted:#6B7280;
+    --muted:#4B5563;
     --bg:#F7FAFC;
     --card:#FFFFFF;
-    --border:#E5E7EB;
+    --border:#D1D5DB;
+    --focus:#FFB81C; /* NHS yellow for strong focus */
   }
   *{box-sizing:border-box}
+  html:focus-within{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html:focus-within{scroll-behavior:auto} }
   body{
     margin:0; font-family:Inter, Arial, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", sans-serif;
-    background:var(--bg); color:var(--ink);
+    background:var(--bg); color:var(--ink); line-height:1.6; font-size:16px;
   }
-  .wrap{max-width:900px; margin:24px auto; padding:0 16px;}
-  .hero{
+  .wrap{max-width:900px; margin:24px auto; padding:0 16px}
+  a{color:var(--nhs-blue)}
+  a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:3px dashed var(--focus); outline-offset:2px;
+  }
+  .skip{position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden}
+  .skip:focus{left:16px; top:10px; width:auto; height:auto; background:#fff; padding:8px 10px; border-radius:8px; z-index:999}
+  header{
+    display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  .brand{
     border-left:8px solid var(--nhs-blue);
-    background:#F4F8FF; padding:16px; border-radius:12px; margin-bottom:16px;
+    background:#F4F8FF; padding:14px; border-radius:12px; flex:1 1 520px;
   }
   h1{margin:0 0 6px; color:var(--las-green); font-size:28px; line-height:1.2}
-  p.lead{margin:0; color:#333}
+  p.lead{margin:0; color:#222}
+  .a11y{
+    display:flex; gap:8px; flex-wrap:wrap;
+  }
+  .a11y button{
+    border:1px solid var(--border); background:#fff; color:#111; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:600;
+  }
+  main{display:block}
   form{
     background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px;
   }
   fieldset{border:none; margin:0 0 14px; padding:0}
   legend{font-weight:700; color:var(--las-green); margin-bottom:8px}
-  label{display:block; font-size:14px; color:#111; margin:8px 0 6px}
+  label{display:block; font-size:15px; color:#111; margin:8px 0 6px}
   input[type="text"], input[type="datetime-local"], input[type="email"], select, textarea{
-    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px; background:#fff;
+    width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; font-size:16px; background:#fff;
   }
-  textarea{min-height:110px; resize:vertical}
+  textarea{min-height:120px; resize:vertical}
   .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px}
-  .row{display:flex; gap:12px; flex-wrap:wrap}
-  .hint{font-size:12px; color:var(--muted)}
+  .hint{font-size:13px; color:var(--muted)}
   .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
   button,.btn{
     display:inline-block; border:1px solid var(--nhs-blue); background:var(--nhs-blue); color:#fff;
-    padding:10px 14px; border-radius:10px; font-weight:700; text-decoration:none; cursor:pointer;
+    padding:12px 16px; border-radius:10px; font-weight:700; text-decoration:none; cursor:pointer;
   }
   button.secondary,.btn.secondary{background:#fff; color:var(--nhs-blue)}
-  .note{margin-top:10px; font-size:12px; color:#374151}
+  .note{margin-top:10px; font-size:13px; color:#374151}
   .footer{margin-top:12px; font-size:12px; color:#6B7280}
+
+  /* High-contrast / Large-text toggles */
+  body.hc{
+    --bg:#000; --card:#111; --border:#fff; --ink:#fff; --muted:#E5E7EB; --nhs-blue:#9BCBFF; --focus:#FFB81C;
+    color:var(--ink);
+  }
+  body.hc .brand{background:#111; border-left-color:#9BCBFF}
+  body.lg{font-size:18px}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="hero">
+<a class="skip" href="#formStart">Skip to form</a>
+
+<div class="wrap" role="application" aria-labelledby="page-title">
+  <header>
+    <div class="brand" id="page-title">
       <h1>LAS Pensions Tools – Feedback</h1>
       <p class="lead">Tell us about a bug, incorrect data, unclear content, or suggest an improvement.
         This opens an email to <strong>londamb.Pensions@nhs.net</strong>. You can attach screenshots after it opens.</p>
     </div>
+    <div class="a11y" aria-label="Accessibility options">
+      <button type="button" id="btnLarge" aria-pressed="false">A&nbsp;A (Large text)</button>
+      <button type="button" id="btnContrast" aria-pressed="false">High contrast</button>
+    </div>
+  </header>
 
-    <form id="fbForm">
+  <main id="main" role="main">
+    <form id="fbForm" aria-describedby="formHelp">
+      <p id="formHelp" class="hint">Required fields are marked.</p>
+      <span id="formStart" tabindex="-1"></span>
+
       <fieldset class="grid">
         <div>
-          <label for="category">What do you need to tell us?</label>
-          <select id="category" required>
+          <label for="category">What do you need to tell us? <span class="hint">(required)</span></label>
+          <select id="category" required aria-required="true">
             <option value="" selected disabled>Choose one…</option>
             <option>Bug / something broken</option>
             <option>Data looks wrong</option>
@@ -72,8 +116,8 @@
           </select>
         </div>
         <div>
-          <label for="tool">Which tool/page is this about?</label>
-          <select id="tool" required>
+          <label for="tool">Which tool/page is this about? <span class="hint">(required)</span></label>
+          <select id="tool" required aria-required="true">
             <option value="" selected disabled>Choose one…</option>
             <option>Contribution Rate Checker</option>
             <option>Refund Eligibility Flow</option>
@@ -140,8 +184,8 @@
       </fieldset>
 
       <fieldset>
-        <label for="summary">Short summary</label>
-        <input type="text" id="summary" placeholder="e.g. 2015 CARE: year selector not loading" required>
+        <label for="summary">Short summary <span class="hint">(required)</span></label>
+        <input type="text" id="summary" placeholder="e.g. 2015 CARE: year selector not loading" required aria-required="true" autocomplete="off">
       </fieldset>
 
       <fieldset class="grid">
@@ -164,15 +208,15 @@
       <fieldset class="grid">
         <div>
           <label for="name">Your name</label>
-          <input type="text" id="name" placeholder="Optional">
+          <input type="text" id="name" autocomplete="name">
         </div>
         <div>
           <label for="email">Your email</label>
-          <input type="email" id="email" placeholder="Optional">
+          <input type="email" id="email" autocomplete="email">
         </div>
         <div>
           <label for="dept">Department / Location</label>
-          <input type="text" id="dept" placeholder="Optional">
+          <input type="text" id="dept">
         </div>
       </fieldset>
 
@@ -181,35 +225,42 @@
       </fieldset>
 
       <div class="actions">
-        <button type="submit" id="sendBtn">Send email</button>
-        <button type="button" class="secondary" id="copyBtn">Copy email text (use with Outlook Web)</button>
+        <button type="submit" id="sendBtn" aria-label="Send email to the LAS Pensions inbox">Send email</button>
+        <button type="button" class="secondary" id="copyBtn" aria-label="Copy the email text so you can paste it into Outlook Web">Copy email text</button>
       </div>
 
       <div class="note">
-        Privacy: please avoid sharing NI numbers or unnecessary identifiers. Screenshots may include personal data—only share what’s needed to diagnose the issue.
+        <strong>What to include:</strong>
+        <ul>
+          <li>Tool name / URL and a short summary</li>
+          <li>Steps to reproduce + what you expected vs what you saw</li>
+          <li>How often it happens and the impact (blocker/major/minor)</li>
+          <li>Your browser (Edge/Chrome/etc.) and device (Windows/macOS/iOS/Android)</li>
+          <li>Screenshot(s) of any error</li>
+        </ul>
+        Privacy: please avoid sensitive identifiers (e.g., NI numbers). Share only what’s needed.
       </div>
     </form>
 
-    <div class="footer">LAS Pensions • This page generates an email to londamb.Pensions@nhs.net • v1.0</div>
-  </div>
+    <div class="footer">LAS Pensions • This page generates an email to londamb.Pensions@nhs.net • v1.1</div>
+  </main>
+</div>
 
 <script>
 (function(){
   const form = document.getElementById('fbForm');
-  const to = 'londamb.Pensions@nhs.net'; // NHS inbox
+  const to = 'londamb.Pensions@nhs.net';
 
-  function v(id){ return document.getElementById(id).value.trim(); }
+  function v(id){ return (document.getElementById(id).value || '').trim(); }
   function yn(id){ return document.getElementById(id).checked ? 'Yes' : 'No'; }
 
-  function buildSubject(){
+  function subject(){
     const tool = v('tool') || 'Tool not specified';
     const cat  = v('category') || 'Feedback';
     const prio = v('priority') || 'Medium';
     return `[LAS Pensions Tools] ${tool} – ${cat} – ${prio}`;
   }
-
-  function buildBody(){
-    // Build a plain-text body so it survives mailto encoding
+  function body(){
     const lines = [];
     lines.push(`Summary: ${v('summary')}`);
     lines.push(`Category: ${v('category')}`);
@@ -233,40 +284,31 @@
     lines.push('Attachments: please add any screenshots before sending.');
     return lines.join('\n');
   }
-
-  function openMailClient(){
-    const subject = encodeURIComponent(buildSubject());
-    const body    = encodeURIComponent(buildBody());
-    const url = `mailto:${to}?subject=${subject}&body=${body}`;
+  function openMail(){
+    const url = `mailto:${to}?subject=${encodeURIComponent(subject())}&body=${encodeURIComponent(body())}`;
     window.location.href = url;
   }
-
   function copyToClipboard(text){
-    navigator.clipboard.writeText(text).then(()=> {
-      alert('Copied. Open Outlook Web, start a new message to londamb.Pensions@nhs.net, paste, and attach screenshots.');
-    }).catch(()=> {
-      // Fallback for older browsers
-      const ta = document.createElement('textarea');
-      ta.value = text; document.body.appendChild(ta);
-      ta.select(); document.execCommand('copy');
-      document.body.removeChild(ta);
-      alert('Copied. Open your email, paste, and attach screenshots.');
-    });
+    (navigator.clipboard ? navigator.clipboard.writeText(text) :
+      new Promise((res)=>{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); res(); })
+    ).then(()=> alert('Copied. Open Outlook Web, start a new message to londamb.Pensions@nhs.net, paste, and attach screenshots.'));
   }
-
   form.addEventListener('submit', function(e){
     e.preventDefault();
     if(!v('summary') || !v('category') || !v('tool')){
       alert('Please complete Summary, Category and Tool/Page.');
       return;
     }
-    openMailClient();
+    openMail();
+  });
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    copyToClipboard(`To: ${to}\nSubject: ${subject()}\n\n${body()}`);
   });
 
-  document.getElementById('copyBtn').addEventListener('click', function(){
-    const full = `To: ${to}\nSubject: ${buildSubject()}\n\n${buildBody()}`;
-    copyToClipboard(full);
-  });
+  // Accessibility toggles
+  const btnL=document.getElementById('btnLarge'); const btnC=document.getElementById('btnContrast');
+  btnL.addEventListener('click', ()=>{ document.body.classList.toggle('lg'); btnL.setAttribute('aria-pressed', document.body.classList.contains('lg')); });
+  btnC.addEventListener('click', ()=>{ document.body.classList.toggle('hc'); btnC.setAttribute('aria-pressed', document.body.classList.contains('hc')); });
 })();
 </script>
 </body>
