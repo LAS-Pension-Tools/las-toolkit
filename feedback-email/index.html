@@ -6,24 +6,25 @@
 <title>LAS Pensions Tools – Feedback</title>
 <meta name="description" content="Send feedback or report an issue with LAS Pensions tools.">
 
-<!-- Favicon (LAS green with 'FB') -->
+<!-- Favicon: LAS green with £ -->
 <link rel="icon" type="image/svg+xml"
- href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23023020'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Arial, sans-serif' font-size='14' font-weight='bold' fill='%23FFFFFF'%3EFB%3C/text%3E%3C/svg%3E">
+ href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23023020'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Arial, sans-serif' font-size='18' font-weight='bold' fill='%23FFFFFF'%3E%C2%A3%3C/text%3E%3C/svg%3E">
 
 <style>
   :root{
     --las-green:#023020;
     --nhs-blue:#005EB8;
-    --ink:#111827;
-    --muted:#4B5563;
+    --ink:#111827;        /* main text */
+    --muted:#4B5563;      /* hints */
     --bg:#F7FAFC;
     --card:#FFFFFF;
     --border:#D1D5DB;
-    --focus:#FFB81C; /* NHS yellow for strong focus */
+    --focus:#FFB81C;      /* NHS yellow for strong focus */
   }
   *{box-sizing:border-box}
   html:focus-within{scroll-behavior:smooth}
   @media (prefers-reduced-motion: reduce){ html:focus-within{scroll-behavior:auto} }
+
   body{
     margin:0; font-family:Inter, Arial, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", sans-serif;
     background:var(--bg); color:var(--ink); line-height:1.6; font-size:16px;
@@ -35,51 +36,53 @@
   }
   .skip{position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden}
   .skip:focus{left:16px; top:10px; width:auto; height:auto; background:#fff; padding:8px 10px; border-radius:8px; z-index:999}
-  header{
-    display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;
-    margin-bottom:12px;
-  }
-  .brand{
-    border-left:8px solid var(--nhs-blue);
-    background:#F4F8FF; padding:14px; border-radius:12px; flex:1 1 520px;
-  }
-  h1{margin:0 0 6px; color:var(--las-green); font-size:28px; line-height:1.2}
-  p.lead{margin:0; color:#222}
-  .a11y{
-    display:flex; gap:8px; flex-wrap:wrap;
-  }
-  .a11y button{
-    border:1px solid var(--border); background:#fff; color:#111; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:600;
-  }
+
+  header{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px}
+  .brand{border-left:8px solid var(--nhs-blue); background:#F4F8FF; padding:14px; border-radius:12px; flex:1 1 520px}
+  h1{margin:0 0 6px; color:var(--las-green); font-size:1.75rem; line-height:1.2}
+  p.lead{margin:0; color:var(--ink)}
+
+  .a11y{display:flex; gap:8px; flex-wrap:wrap}
+  .a11y button{border:1px solid var(--border); background:#fff; color:var(--ink); padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:600}
+
   main{display:block}
-  form{
-    background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px;
-  }
+  form{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px}
   fieldset{border:none; margin:0 0 14px; padding:0}
   legend{font-weight:700; color:var(--las-green); margin-bottom:8px}
-  label{display:block; font-size:15px; color:#111; margin:8px 0 6px}
+  label{display:block; font-size:1rem; color:var(--ink); margin:8px 0 6px}
   input[type="text"], input[type="datetime-local"], input[type="email"], select, textarea{
-    width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; font-size:16px; background:#fff;
+    width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; font-size:1rem; background:#fff; color:var(--ink);
   }
+  input::placeholder, textarea::placeholder{color:#6B7280}
   textarea{min-height:120px; resize:vertical}
   .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px}
-  .hint{font-size:13px; color:var(--muted)}
+  .hint{font-size:0.9rem; color:var(--muted)}
   .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
-  button,.btn{
-    display:inline-block; border:1px solid var(--nhs-blue); background:var(--nhs-blue); color:#fff;
-    padding:12px 16px; border-radius:10px; font-weight:700; text-decoration:none; cursor:pointer;
-  }
+  button,.btn{display:inline-block; border:1px solid var(--nhs-blue); background:var(--nhs-blue); color:#fff; padding:12px 16px; border-radius:10px; font-weight:700; text-decoration:none; cursor:pointer}
   button.secondary,.btn.secondary{background:#fff; color:var(--nhs-blue)}
-  .note{margin-top:10px; font-size:13px; color:#374151}
-  .footer{margin-top:12px; font-size:12px; color:#6B7280}
+  .note{margin-top:10px; font-size:0.9rem; color:#374151}
+  .footer{margin-top:12px; font-size:0.85rem; color:#6B7280}
 
-  /* High-contrast / Large-text toggles */
+  /* High-contrast mode */
   body.hc{
-    --bg:#000; --card:#111; --border:#fff; --ink:#fff; --muted:#E5E7EB; --nhs-blue:#9BCBFF; --focus:#FFB81C;
+    --bg:#000; --card:#111; --border:#FFFFFF; --ink:#FFFFFF; --muted:#E5E7EB; --nhs-blue:#9BCBFF; --focus:#FFB81C;
     color:var(--ink);
   }
   body.hc .brand{background:#111; border-left-color:#9BCBFF}
+  body.hc h1{color:#FFFFFF}               /* ensure the title is readable */
+  body.hc p.lead{color:var(--ink)}        /* readable intro text */
+  body.hc legend{color:#FFFFFF}           /* section titles */
+  body.hc input, body.hc select, body.hc textarea{
+    background:#000; color:#FFFFFF; border-color:#FFFFFF;
+  }
+  body.hc input::placeholder, body.hc textarea::placeholder{color:#D1D5DB}
+
+  /* Large-text mode (bumps everything, including controls) */
   body.lg{font-size:18px}
+  body.lg h1{font-size:2rem}
+  body.lg .hint{font-size:1rem}
+  body.lg button{padding:14px 18px}
+
 </style>
 </head>
 <body>
@@ -93,7 +96,7 @@
         This opens an email to <strong>londamb.Pensions@nhs.net</strong>. You can attach screenshots after it opens.</p>
     </div>
     <div class="a11y" aria-label="Accessibility options">
-      <button type="button" id="btnLarge" aria-pressed="false">A&nbsp;A (Large text)</button>
+      <button type="button" id="btnLarge" aria-pressed="false">A A (Large text)</button>
       <button type="button" id="btnContrast" aria-pressed="false">High contrast</button>
     </div>
   </header>
@@ -242,7 +245,7 @@
       </div>
     </form>
 
-    <div class="footer">LAS Pensions • This page generates an email to londamb.Pensions@nhs.net • v1.1</div>
+    <div class="footer">LAS Pensions • This page generates an email to londamb.Pensions@nhs.net • v1.2</div>
   </main>
 </div>
 
@@ -293,6 +296,7 @@
       new Promise((res)=>{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); res(); })
     ).then(()=> alert('Copied. Open Outlook Web, start a new message to londamb.Pensions@nhs.net, paste, and attach screenshots.'));
   }
+
   form.addEventListener('submit', function(e){
     e.preventDefault();
     if(!v('summary') || !v('category') || !v('tool')){
@@ -305,10 +309,29 @@
     copyToClipboard(`To: ${to}\nSubject: ${subject()}\n\n${body()}`);
   });
 
-  // Accessibility toggles
-  const btnL=document.getElementById('btnLarge'); const btnC=document.getElementById('btnContrast');
-  btnL.addEventListener('click', ()=>{ document.body.classList.toggle('lg'); btnL.setAttribute('aria-pressed', document.body.classList.contains('lg')); });
-  btnC.addEventListener('click', ()=>{ document.body.classList.toggle('hc'); btnC.setAttribute('aria-pressed', document.body.classList.contains('hc')); });
+  // Accessibility toggles with persistence
+  const btnL=document.getElementById('btnLarge');
+  const btnC=document.getElementById('btnContrast');
+
+  function applyPrefs(){
+    const lg = localStorage.getItem('las_fb_lg') === '1';
+    const hc = localStorage.getItem('las_fb_hc') === '1';
+    document.body.classList.toggle('lg', lg);
+    document.body.classList.toggle('hc', hc);
+    btnL.setAttribute('aria-pressed', lg);
+    btnC.setAttribute('aria-pressed', hc);
+  }
+  btnL.addEventListener('click', ()=>{
+    const newVal = !document.body.classList.contains('lg');
+    localStorage.setItem('las_fb_lg', newVal ? '1' : '0');
+    applyPrefs();
+  });
+  btnC.addEventListener('click', ()=>{
+    const newVal = !document.body.classList.contains('hc');
+    localStorage.setItem('las_fb_hc', newVal ? '1' : '0');
+    applyPrefs();
+  });
+  applyPrefs();
 })();
 </script>
 </body>
