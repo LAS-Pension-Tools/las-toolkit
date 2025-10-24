@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LAS Pensions Tools – Feedback</title>
+<meta name="description" content="Send feedback or report an issue with LAS Pensions tools." />
+<style>
+  :root{
+    --las-green:#023020;
+    --nhs-blue:#005EB8;
+    --ink:#111827;
+    --muted:#6B7280;
+    --bg:#F7FAFC;
+    --card:#FFFFFF;
+    --border:#E5E7EB;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:Inter, Arial, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", sans-serif;
+    background:var(--bg); color:var(--ink);
+  }
+  .wrap{max-width:900px; margin:24px auto; padding:0 16px;}
+  .hero{
+    border-left:8px solid var(--nhs-blue);
+    background:#F4F8FF; padding:16px; border-radius:12px; margin-bottom:16px;
+  }
+  h1{margin:0 0 6px; color:var(--las-green); font-size:28px; line-height:1.2}
+  p.lead{margin:0; color:#333}
+  form{
+    background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px;
+  }
+  fieldset{border:none; margin:0 0 14px; padding:0}
+  legend{font-weight:700; color:var(--las-green); margin-bottom:8px}
+  label{display:block; font-size:14px; color:#111; margin:8px 0 6px}
+  input[type="text"], input[type="datetime-local"], input[type="email"], select, textarea{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px; background:#fff;
+  }
+  textarea{min-height:110px; resize:vertical}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px}
+  .row{display:flex; gap:12px; flex-wrap:wrap}
+  .hint{font-size:12px; color:var(--muted)}
+  .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+  button,.btn{
+    display:inline-block; border:1px solid var(--nhs-blue); background:var(--nhs-blue); color:#fff;
+    padding:10px 14px; border-radius:10px; font-weight:700; text-decoration:none; cursor:pointer;
+  }
+  button.secondary,.btn.secondary{background:#fff; color:var(--nhs-blue)}
+  .note{margin-top:10px; font-size:12px; color:#374151}
+  .footer{margin-top:12px; font-size:12px; color:#6B7280}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>LAS Pensions Tools – Feedback</h1>
+      <p class="lead">Tell us about a bug, incorrect data, unclear content, or suggest an improvement.
+        This opens an email to <strong>londamb.Pensions@nhs.net</strong>. You can attach screenshots after it opens.</p>
+    </div>
+
+    <form id="fbForm">
+      <fieldset class="grid">
+        <div>
+          <label for="category">What do you need to tell us?</label>
+          <select id="category" required>
+            <option value="" selected disabled>Choose one…</option>
+            <option>Bug / something broken</option>
+            <option>Data looks wrong</option>
+            <option>Content unclear / needs update</option>
+            <option>Feature request / improvement</option>
+            <option>General feedback</option>
+          </select>
+        </div>
+        <div>
+          <label for="tool">Which tool/page is this about?</label>
+          <select id="tool" required>
+            <option value="" selected disabled>Choose one…</option>
+            <option>Contribution Rate Checker</option>
+            <option>Refund Eligibility Flow</option>
+            <option>Partial Retirement</option>
+            <option>2015 CARE Calculator</option>
+            <option>Opt-Out Calculator</option>
+            <option>New Starter</option>
+            <option>McCloud Remedy</option>
+            <option>Other (see below)</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <label for="other">If “Other”, name the tool or paste the URL</label>
+        <input type="text" id="other" placeholder="e.g. https://las-pension-tools.github.io/las-toolkit/contribution-rate-checker/">
+      </fieldset>
+
+      <fieldset class="grid">
+        <div>
+          <label for="impact">Impact on you/others</label>
+          <select id="impact">
+            <option>Blocker (can’t proceed)</option>
+            <option>Major issue (workaround exists)</option>
+            <option>Minor issue</option>
+            <option>Not an issue, just a suggestion</option>
+          </select>
+        </div>
+        <div>
+          <label for="frequency">How often does it happen?</label>
+          <select id="frequency">
+            <option>Once</option>
+            <option>Sometimes</option>
+            <option>Always / every attempt</option>
+          </select>
+        </div>
+        <div>
+          <label for="priority">Priority (your view)</label>
+          <select id="priority">
+            <option>High</option>
+            <option selected>Medium</option>
+            <option>Low</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset class="grid">
+        <div>
+          <label for="browser">Browser</label>
+          <select id="browser">
+            <option>Edge</option><option>Chrome</option><option>Safari</option><option>Firefox</option><option>Other / Not sure</option>
+          </select>
+        </div>
+        <div>
+          <label for="device">Device / OS</label>
+          <select id="device">
+            <option>Windows desktop/laptop</option><option>macOS</option><option>iPhone/iPad (iOS/iPadOS)</option><option>Android</option><option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="dt">Date & time you experienced the issue</label>
+          <input type="datetime-local" id="dt">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <label for="summary">Short summary</label>
+        <input type="text" id="summary" placeholder="e.g. 2015 CARE: year selector not loading" required>
+      </fieldset>
+
+      <fieldset class="grid">
+        <div>
+          <label for="expected">What did you expect?</label>
+          <textarea id="expected" placeholder="What you thought would happen…"></textarea>
+        </div>
+        <div>
+          <label for="actual">What did you see?</label>
+          <textarea id="actual" placeholder="What actually happened… Include any error text."></textarea>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <label for="steps">Steps to reproduce (if it’s a bug)</label>
+        <textarea id="steps" placeholder="1) … 2) … 3) …"></textarea>
+        <div class="hint">Attach screenshots after the email opens.</div>
+      </fieldset>
+
+      <fieldset class="grid">
+        <div>
+          <label for="name">Your name</label>
+          <input type="text" id="name" placeholder="Optional">
+        </div>
+        <div>
+          <label for="email">Your email</label>
+          <input type="email" id="email" placeholder="Optional">
+        </div>
+        <div>
+          <label for="dept">Department / Location</label>
+          <input type="text" id="dept" placeholder="Optional">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <label><input type="checkbox" id="ok" checked> OK to contact me for clarification</label>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit" id="sendBtn">Send email</button>
+        <button type="button" class="secondary" id="copyBtn">Copy email text (use with Outlook Web)</button>
+      </div>
+
+      <div class="note">
+        Privacy: please avoid sharing NI numbers or unnecessary identifiers. Screenshots may include personal data—only share what’s needed to diagnose the issue.
+      </div>
+    </form>
+
+    <div class="footer">LAS Pensions • This page generates an email to londamb.Pensions@nhs.net • v1.0</div>
+  </div>
+
+<script>
+(function(){
+  const form = document.getElementById('fbForm');
+  const to = 'londamb.Pensions@nhs.net'; // NHS inbox
+
+  function v(id){ return document.getElementById(id).value.trim(); }
+  function yn(id){ return document.getElementById(id).checked ? 'Yes' : 'No'; }
+
+  function buildSubject(){
+    const tool = v('tool') || 'Tool not specified';
+    const cat  = v('category') || 'Feedback';
+    const prio = v('priority') || 'Medium';
+    return `[LAS Pensions Tools] ${tool} – ${cat} – ${prio}`;
+  }
+
+  function buildBody(){
+    // Build a plain-text body so it survives mailto encoding
+    const lines = [];
+    lines.push(`Summary: ${v('summary')}`);
+    lines.push(`Category: ${v('category')}`);
+    lines.push(`Tool / Page: ${v('tool')}`);
+    if(v('other')) lines.push(`Other tool / URL: ${v('other')}`);
+    lines.push(`Impact: ${v('impact')}`);
+    lines.push(`Frequency: ${v('frequency')}`);
+    lines.push(`Priority (user view): ${v('priority')}`);
+    lines.push(`Browser: ${v('browser')}`);
+    lines.push(`Device / OS: ${v('device')}`);
+    if(v('dt')) lines.push(`Date/time: ${v('dt')}`);
+    lines.push('');
+    if(v('expected')) lines.push(`Expected:\n${v('expected')}\n`);
+    if(v('actual')) lines.push(`Actual:\n${v('actual')}\n`);
+    if(v('steps')) lines.push(`Steps to reproduce:\n${v('steps')}\n`);
+    lines.push(`OK to contact?: ${yn('ok')}`);
+    if(v('name')) lines.push(`Your name: ${v('name')}`);
+    if(v('email')) lines.push(`Your email: ${v('email')}`);
+    if(v('dept')) lines.push(`Dept/Location: ${v('dept')}`);
+    lines.push('');
+    lines.push('Attachments: please add any screenshots before sending.');
+    return lines.join('\n');
+  }
+
+  function openMailClient(){
+    const subject = encodeURIComponent(buildSubject());
+    const body    = encodeURIComponent(buildBody());
+    const url = `mailto:${to}?subject=${subject}&body=${body}`;
+    window.location.href = url;
+  }
+
+  function copyToClipboard(text){
+    navigator.clipboard.writeText(text).then(()=> {
+      alert('Copied. Open Outlook Web, start a new message to londamb.Pensions@nhs.net, paste, and attach screenshots.');
+    }).catch(()=> {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta);
+      alert('Copied. Open your email, paste, and attach screenshots.');
+    });
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!v('summary') || !v('category') || !v('tool')){
+      alert('Please complete Summary, Category and Tool/Page.');
+      return;
+    }
+    openMailClient();
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    const full = `To: ${to}\nSubject: ${buildSubject()}\n\n${buildBody()}`;
+    copyToClipboard(full);
+  });
+})();
+</script>
+</body>
+</html>
