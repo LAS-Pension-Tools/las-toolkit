@@ -8,14 +8,27 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>'">
 
   <style>
-    /* ---------- LAS-inspired, contrast-safe styles (no external CSS) ---------- */
+    /* ---------- Design tokens ---------- */
     :root{
       --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
-      --thead-bg:#F2F5F3; --thead-text:#0B3A2D; --row-active-bg:#E8F4F0; --row-active-text:#111;
+      --ok:#1b8555; --warn:#9F3131;
     }
+    /* Auto theme respects OS, unless user picks a theme (class on <html>) */
     @media (prefers-color-scheme: dark){
-      :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; --thead-bg:#1A2420; --thead-text:#D6EFE6; --row-active-bg:#0F2F26; --row-active-text:#EDEFF1; }
+      :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
     }
+    /* Manual theme overrides */
+    html.theme-light{
+      --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC;
+    }
+    html.theme-dark{
+      --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A;
+    }
+    /* High-contrast (dark text on near-white; bolder borders and focus) */
+    html.theme-hc{
+      --bg:#ffffff; --panel:#ffffff; --text:#000000; --muted:#202020; --border:#000000; --focus:#005fcc;
+    }
+
     *{ box-sizing:border-box }
     html,body{ margin:0; padding:0 }
     body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
@@ -39,11 +52,11 @@
     .tot{ border-top:1px solid var(--border); padding-top:8px; margin-top:8px; font-weight:700 }
     .kpi{ border:1px solid var(--border); border-radius:12px; padding:12px }
     .note{ border:2px solid var(--border); border-left:6px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel); color:var(--text); }
-    .actions{ display:flex; gap:8px; flex-wrap:wrap }
-    .text-green{ color:#1b8555 } .text-red{ color:#9F3131 }
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center }
+    .text-green{ color:var(--ok) } .text-red{ color:var(--warn) }
     .hide{ display:none }
 
-    /* ---------- Print styles (one-page PDF summary) ---------- */
+    /* Print styles */
     @media print{
       body{ background:#fff; color:#000 }
       .header, .panel, .kpi, .card{ border-color:#ddd; }
@@ -62,10 +75,34 @@
         <p class="small" style="margin:0">Monthly payslip illustration — <b>stay in</b> vs <b>opt out</b>. NI is inferred from your <b>DOB</b> (Cat A by default; Cat C at/over SPA (66); Cat M under 21 uses same employee rates as A).</p>
       </div>
       <div class="actions">
+        <label class="small" for="themeSelect" style="color:#fff">Theme</label>
+        <select id="themeSelect" title="Theme">
+          <option value="auto">Auto</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="hc">High contrast</option>
+        </select>
         <button id="btnAdmin" class="btn" aria-expanded="false" aria-controls="admin">Admin</button>
         <button id="btnPrint" class="btn primary">Print / Save PDF</button>
       </div>
     </header>
+
+    <!-- Illustration disclaimer -->
+    <section class="panel" aria-label="Disclaimer">
+      <div class="note small">
+        <b>Illustration, not payroll.</b> Figures here are simplified monthly calculations. ESR uses year-to-date (cumulative) PAYE/NI, payroll rounding and any other deductions, so results will differ.
+        <details style="margin-top:8px">
+          <summary><b>Why might this differ from ESR?</b></summary>
+          <ul style="margin:8px 0 0 18px">
+            <li>PAYE is often <b>cumulative</b> in ESR; this tool uses a month view with current inputs.</li>
+            <li>Tax code basis (e.g. <b>W1/M1</b> emergency vs cumulative) changes PAYE.</li>
+            <li>Only <b>pensionable</b> payments are entered here; ESR may have extras (overtime, arrears, non-pensionable items).</li>
+            <li>Other deductions (student loans, court orders, salary sacrifice, childcare, etc.) are not included here.</li>
+            <li>Rounding and payroll cut-off timings can create small variances.</li>
+          </ul>
+        </details>
+      </div>
+    </section>
 
     <!-- Inputs -->
     <section class="panel grid2" aria-label="Inputs">
@@ -165,7 +202,7 @@
         </div>
       </div>
 
-      <!-- NEW: Benefits forfeited by opting out -->
+      <!-- Benefits forfeited -->
       <div class="note" style="margin-top:12px">
         <div style="font-weight:700; margin-bottom:6px">Benefits you give up by opting out</div>
         <ul class="small" style="margin:0 0 0 18px">
@@ -206,7 +243,7 @@
     </footer>
   </div>
 
-  <!-- PRINT SUMMARY (hidden on screen, shown only when printing) -->
+  <!-- PRINT SUMMARY -->
   <section id="printSummary" class="panel hide" aria-label="Print summary">
     <h2 style="margin-top:0">NHS Pension Opt-Out Calculator — Summary</h2>
     <div class="small muted" id="printMeta">Generated: —</div>
@@ -240,7 +277,7 @@
   </section>
 
   <script>
-  // ---------- Data (England & NI only) ----------
+  /* ---------- Data ---------- */
   const defaultRates = {
     defaultYear: "2025/26",
     years: [{
@@ -275,7 +312,8 @@
     }]
   };
 
-  // ---------- Storage helpers ----------
+  /* ---------- Storage helpers ---------- */
+  const THEME_KEY = 'las_optout_theme';
   function loadRates(){
     try { const raw = localStorage.getItem('las_optout_rates_v1'); if(!raw) return defaultRates;
       const parsed = JSON.parse(raw); return parsed?.years?.length ? parsed : defaultRates;
@@ -283,12 +321,12 @@
   }
   function saveRates(r){ localStorage.setItem('las_optout_rates_v1', JSON.stringify(r, null, 2)); }
 
-  // ---------- Formatting ----------
+  /* ---------- Formatting ---------- */
   const GBP = new Intl.NumberFormat('en-GB',{style:'currency', currency:'GBP'});
   const fmt = n => GBP.format((+n)||0);
   const pct = n => `${(n*100).toFixed(1)}%`;
 
-  // ---------- Tax helpers ----------
+  /* ---------- Tax helpers ---------- */
   function parseTaxCode(code){
     const c = (code||'').toUpperCase().trim();
     if(!c) return {mode:'STANDARD', allowance:12570};
@@ -341,7 +379,7 @@
     return between*ncfg.employeeRates.main + above*ncfg.employeeRates.upper;
   }
 
-  // ---------- UI state ----------
+  /* ---------- UI state ---------- */
   const state = {
     items: [],
     rates: loadRates(),
@@ -349,7 +387,7 @@
   };
   state.year = state.rates.years[0];
 
-  // ---------- DOM ----------
+  /* ---------- DOM ---------- */
   const elItems = document.getElementById('items');
   const elAdd = document.getElementById('addItem');
   const elClear = document.getElementById('clearItems');
@@ -381,6 +419,8 @@
   const elEmployer = document.getElementById('employerPension');
   const elBenefitEmployer = document.getElementById('benefitEmployer');
 
+  const themeSelect = document.getElementById('themeSelect');
+
   // Print DOM
   const printSummary = document.getElementById('printSummary');
   const printPayments = document.getElementById('printPayments');
@@ -403,16 +443,31 @@
   const btnExport = document.getElementById('exportRates');
   const btnPrint = document.getElementById('btnPrint');
 
-  // ---------- Admin visibility via query string ----------
+  /* ---------- Admin visibility via query string ---------- */
   const params = new URLSearchParams(location.search);
   const isAdmin = params.get('admin') === '1';
-  if(!isAdmin){
-    // Hide admin access completely unless ?admin=1
-    btnAdmin.classList.add('hide');
-    adminSec.classList.add('hide');
-  }
+  if(!isAdmin){ btnAdmin.classList.add('hide'); adminSec.classList.add('hide'); }
 
-  // ---------- Items UI ----------
+  /* ---------- Theme control ---------- */
+  function applyTheme(val){
+    document.documentElement.classList.remove('theme-light','theme-dark','theme-hc');
+    if(val==='light') document.documentElement.classList.add('theme-light');
+    if(val==='dark')  document.documentElement.classList.add('theme-dark');
+    if(val==='hc')    document.documentElement.classList.add('theme-hc');
+  }
+  function initTheme(){
+    const saved = localStorage.getItem(THEME_KEY) || 'auto';
+    themeSelect.value = saved;
+    applyTheme(saved);
+  }
+  themeSelect.addEventListener('change', ()=>{
+    const v = themeSelect.value;
+    localStorage.setItem(THEME_KEY, v);
+    applyTheme(v);
+  });
+  initTheme();
+
+  /* ---------- Items UI ---------- */
   let idSeq = 0;
   function itemRow(it){
     const row = document.createElement('div');
@@ -445,7 +500,7 @@
     remove.addEventListener('click', ()=>{ state.items = state.items.filter(x=>x.id!==it.id); render(); });
 
     function toggleMode(){
-      if(chk.checked){ // use rate
+      if(chk.checked){
         rate.classList.remove('hide'); hours.classList.remove('hide'); amount.classList.add('hide'); preview.textContent = fmt((it.rate||0)*(it.hours||0));
         it.useRate = true;
       }else{
@@ -466,28 +521,26 @@
     elItems.appendChild(itemRow(it));
     render();
   }
-
   function rebuildItems(){
     elItems.innerHTML = '';
     state.items.forEach(it => elItems.appendChild(itemRow(it)));
   }
-
   elAdd.addEventListener('click', ()=> addItem('Other', 0));
   elClear.addEventListener('click', ()=> { state.items=[]; rebuildItems(); render(); });
 
-  // Initial two rows like your sheet
+  // Initial rows
   addItem('Basic', 0);
   addItem('HCA', 0);
 
-  // ---------- Admin ----------
+  /* ---------- Admin ---------- */
   function refreshAdminText(){ ratesCurrent.value = JSON.stringify(state.rates, null, 2); }
-  btnAdmin.addEventListener('click', ()=>{
+  btnAdmin?.addEventListener('click', ()=>{
     adminSec.classList.toggle('hide');
     const expanded = btnAdmin.getAttribute('aria-expanded') === 'true';
     btnAdmin.setAttribute('aria-expanded', String(!expanded));
     refreshAdminText();
   });
-  btnImport.addEventListener('click', ()=>{
+  btnImport?.addEventListener('click', ()=>{
     try{
       const parsed = JSON.parse(ratesPaste.value);
       if(!parsed?.years?.length) throw new Error('Malformed JSON');
@@ -496,85 +549,68 @@
       alert('Rates imported.');
     }catch(e){ alert('Import failed: ' + e.message); }
   });
-  btnExport.addEventListener('click', ()=>{
+  btnExport?.addEventListener('click', ()=>{
     const blob = new Blob([JSON.stringify(state.rates,null,2)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url);
   });
 
-  // ---------- Print / PDF ----------
+  /* ---------- Print / PDF ---------- */
   btnPrint.addEventListener('click', ()=>{
-    // Fill summary fields before print
     fillPrintSummary();
-    // Trigger print
     window.print();
   });
-
   function fillPrintSummary(){
-    // Timestamp
     const now = new Date();
     printMeta.textContent = 'Generated: ' + now.toLocaleString('en-GB');
-    // Payments list
     printPayments.innerHTML = '';
     let total = 0;
     state.items.forEach(it=>{
       const val = it.useRate ? (it.rate||0)*(it.hours||0) : (+it.amount||0);
-      if(!val) return;
-      total += val;
+      if(!val) return; total += val;
       const row=document.createElement('div'); row.className='space';
       row.innerHTML = `<div>${it.label}</div><div>${fmt(val)}</div>`;
       printPayments.appendChild(row);
     });
     printTotalPayments.textContent = fmt(total);
-
-    // Key numbers
     printNetStay.textContent = document.getElementById('stayNet').textContent;
     printNetOut.textContent  = document.getElementById('outNet').textContent;
     printDelta.textContent   = document.getElementById('delta').textContent;
     const employerTxt = document.getElementById('employerPension').textContent.replace(/^≈\s*/, '');
     printEmployer.textContent = employerTxt;
     printBenefitEmployer.textContent = 'Employer pension contribution (approx.): ' + employerTxt;
-
     printTaxCode.textContent = (document.getElementById('taxCode').value || '—').toUpperCase();
     printDob.textContent = document.getElementById('dob').value || '—';
   }
 
-  // ---------- Recalc & render ----------
+  /* ---------- Recalc & render ---------- */
   function render(){
-    // totals
     const monthlyGross = state.items.reduce((s,it)=> s + (it.useRate ? (it.rate||0)*(it.hours||0) : (+it.amount||0)), 0);
-    elTotalPay.textContent = fmt(monthlyGross);
+    document.getElementById('totalPay').textContent = fmt(monthlyGross);
 
-    // annual
     const annualGross = monthlyGross * 12;
     const nhsRate = nhsRateFor(annualGross, state.year.nhs);
-    elNhsRate.textContent = '(' + pct(nhsRate) + ')';
-
+    document.getElementById('nhsRate').textContent = '(' + pct(nhsRate) + ')';
     const monthlyNhs = (annualGross * nhsRate) / 12;
 
-    // NI category: over SPA at month end => C (EE NI £0). Under 21 => M (same EE rate as A).
     const monthEnd = new Date(); monthEnd.setMonth(monthEnd.getMonth()+1, 0);
     const age = ageOnDate(elDob.value, monthEnd);
     const overSPA = age!==null ? age>=66 : false;
 
-    // PAYE — net pay arrangement reduces ANI by employee pension
     const parsedCode = parseTaxCode(elTaxCode.value);
     const aniStay = Math.max(0, annualGross - annualGross*nhsRate);
     const taxableStay = Math.max(0, monthlyGross - monthlyNhs);
 
     const taxStay = calcPAYE(taxableStay, aniStay, state.year.tax, parsedCode);
-    const taxOut  = calcPAYE(monthlyGross, annualGross, state.year.tax, parsedCode);
+    const taxOut  = calcPAYE(monthlyGross,   annualGross, state.year.tax, parsedCode);
 
-    // NI (unchanged by pension contributions)
     const niStay = calcNI(monthlyGross, state.year.ni, overSPA);
     const niOut  = calcNI(monthlyGross, state.year.ni, overSPA);
 
-    // Net
     const netStay = monthlyGross - monthlyNhs - taxStay - niStay;
     const netOut  = monthlyGross - taxOut - niOut;
     const delta   = netOut - netStay;
 
-    // Payments lists (hide £0 rows)
     function fillPayments(container){
       container.innerHTML='';
       state.items.forEach(it=>{
@@ -587,42 +623,37 @@
     }
     fillPayments(elStayPayments); fillPayments(elOutPayments);
 
-    // Fill deductions & totals
-    elStayTP.textContent = fmt(monthlyGross);
-    elOutTP.textContent  = fmt(monthlyGross);
+    document.getElementById('stayTotalPayments').textContent = fmt(monthlyGross);
+    document.getElementById('outTotalPayments').textContent  = fmt(monthlyGross);
 
-    elStayNhs.textContent = fmt(monthlyNhs);
-    elStayTax.textContent = fmt(taxStay);
-    elStayNi.textContent  = fmt(niStay);
-    elStayTD.textContent  = fmt(monthlyNhs + taxStay + niStay);
-    elStayNet.textContent = fmt(netStay);
-    elStayTaxable.textContent = fmt(taxableStay);
+    document.getElementById('stayNhs').textContent = fmt(monthlyNhs);
+    document.getElementById('stayTax').textContent = fmt(taxStay);
+    document.getElementById('stayNi').textContent  = fmt(niStay);
+    document.getElementById('stayTotalDeds').textContent  = fmt(monthlyNhs + taxStay + niStay);
+    document.getElementById('stayNet').textContent = fmt(netStay);
+    document.getElementById('stayTaxable').textContent = fmt(taxableStay);
 
-    elOutTax.textContent   = fmt(taxOut);
-    elOutNi.textContent    = fmt(niOut);
-    elOutTD.textContent    = fmt(taxOut + niOut);
-    elOutNet.textContent   = fmt(netOut);
-    elOutTaxable.textContent = fmt(monthlyGross);
+    document.getElementById('outTax').textContent   = fmt(taxOut);
+    document.getElementById('outNi').textContent    = fmt(niOut);
+    document.getElementById('outTotalDeds').textContent    = fmt(taxOut + niOut);
+    document.getElementById('outNet').textContent   = fmt(netOut);
+    document.getElementById('outTaxable').textContent = fmt(monthlyGross);
 
-    // KPIs
+    const elDelta = document.getElementById('delta');
     elDelta.textContent = fmt(delta);
     elDelta.className = 'text-'+(delta>=0?'green':'red');
-    const netAnnualStay = netStay*12;
-    const netAnnualOut  = netOut*12;
-    elNetAnnual.textContent = fmt(netAnnualStay) + ' / ' + fmt(netAnnualOut);
+    document.getElementById('netAnnual').textContent = fmt(netStay*12) + ' / ' + fmt(netOut*12);
 
     const employerAnnual = annualGross * (state.year.nhs.employerRateHint||0);
-    elEmployer.textContent  = '≈ ' + fmt(employerAnnual) + '/yr';
+    document.getElementById('employerPension').textContent  = '≈ ' + fmt(employerAnnual) + '/yr';
     elBenefitEmployer.textContent = 'Employer pension contribution (approx.): ' + fmt(employerAnnual) + '/yr';
 
-    // Admin JSON (keep fresh)
     refreshAdminText();
   }
 
   elDob.addEventListener('input', render);
   elTaxCode.addEventListener('input', render);
 
-  // initial
   render();
   </script>
 </body>
