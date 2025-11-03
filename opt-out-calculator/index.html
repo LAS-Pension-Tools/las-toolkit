@@ -11,54 +11,57 @@
     :root{
       --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
       --ok:#1b8555; --warn:#9F3131;
+      --heading-w:800;
     }
     @media (prefers-color-scheme: dark){
       :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
     }
     html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; }
     html.theme-dark{  --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
-    html.theme-hc{    --bg:#ffffff; --panel:#ffffff; --text:#000000; --muted:#202020; --border:#000000; --focus:#005fcc; }
+    /* Improved High-contrast: pure white bg, black text/borders, heavier headings & thicker focus */
+    html.theme-hc{
+      --bg:#ffffff; --panel:#ffffff; --text:#000000; --muted:#000000; --border:#000000; --focus:#005fcc;
+      --heading-w:900;
+    }
 
     *{ box-sizing:border-box }
     html,body{ margin:0; padding:0 }
     body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
     .wrap{ max-width:980px; margin:0 auto; padding:20px; }
     .header{ background:var(--brand); color:#fff; padding:22px 20px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
-    .header h1{ margin:0 0 4px 0; font-size:22px }
-    .panel{ background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; }
+    .header h1{ margin:0 0 4px 0; font-size:22px; font-weight:var(--heading-w) }
+    .panel{ background:var(--panel); border:2px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; }
     .grid2{ display:grid; grid-template-columns:1fr; gap:14px } @media(min-width:860px){ .grid2{ grid-template-columns:1fr 1fr } }
     .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:8px; align-items:end }
     .cs1{grid-column:span 1}.cs2{grid-column:span 2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}.cs7{grid-column:span 7}.cs8{grid-column:span 8}.cs12{grid-column:span 12}
-    label>span.small{ display:block; font-size:12px; opacity:.85; margin-bottom:4px }
-    input,select,textarea{ width:100%; border:1px solid var(--border); background:var(--panel); color:var(--text); border-radius:8px; padding:8px 10px }
-    input:focus,select:focus,textarea:focus{ outline:3px solid var(--focus); outline-offset:2px }
-    .btn{ appearance:none; background:var(--panel); color:var(--brand); border:2px solid var(--brand); padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer }
+    label>span.small{ display:block; font-size:12px; margin-bottom:4px; color:var(--muted) }
+    input,select,textarea{ width:100%; border:2px solid var(--border); background:var(--panel); color:var(--text); border-radius:8px; padding:9px 10px; font-weight:600 }
+    input:focus,select:focus,textarea:focus{ outline:4px solid var(--focus); outline-offset:2px }
+    .btn{ appearance:none; background:var(--panel); color:var(--brand); border:3px solid var(--brand); padding:9px 12px; border-radius:10px; font-weight:800; cursor:pointer }
     .btn:hover{ background:#F0F7F4 }
     .btn.primary{ background:var(--brand); color:#fff }
     .small{ font-size:12px } .muted{ color:var(--muted) }
     .space{ display:flex; justify-content:space-between; align-items:center }
     .payslip{ display:grid; grid-template-columns:1fr; gap:12px } @media(min-width:860px){ .payslip{ grid-template-columns:1fr 1fr } }
-    .card{ border:1px solid var(--border); border-radius:12px; padding:12px }
-    .tot{ border-top:1px solid var(--border); padding-top:8px; margin-top:8px; font-weight:700 }
-    .kpi{ border:1px solid var(--border); border-radius:12px; padding:12px }
-    .note{ border:2px solid var(--border); border-left:6px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel); color:var(--text); }
+    .card{ border:2px solid var(--border); border-radius:12px; padding:12px }
+    .tot{ border-top:2px solid var(--border); padding-top:8px; margin-top:8px; font-weight:800 }
+    .kpi{ border:2px solid var(--border); border-radius:12px; padding:12px }
+    .note{ border:3px solid var(--border); border-left:10px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel); color:var(--text); }
     .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center }
     .text-green{ color:var(--ok) } .text-red{ color:var(--warn) }
     .hide{ display:none }
 
     /* ---------- PRINT RULES ---------- */
-    @page{ size:A4; margin:12mm } /* helps browsers lay out cleanly */
-    /* Default print = SUMMARY (kept for your existing button) */
+    @page{ size:A4; margin:12mm }
+    /* Default print = SUMMARY page */
     @media print{
       body{ background:#fff; color:#000 }
-      .header, .panel, .kpi, .card{ border-color:#ddd; }
+      .header, .panel, .kpi, .card{ border-color:#000; }
       .header{ border-radius:0; }
-      /* Hide everything on print by default */
-      .wrap, #admin, #payslipPanel, #disclaimer, #benefits, #inputs, #summaryToggle { display:none !important; }
-      /* Show the prepared summary */
+      .wrap, #admin, #payslipPanel, #disclaimer, #inputs { display:none !important; }
       #printSummary{ display:block !important; }
     }
-    /* Print ILLUSTRATION: when we add .print-illustration to <html> just before printing */
+    /* Illustration-only print mode (toggled via class on <html>) */
     @media print{
       html.print-illustration #printSummary{ display:none !important; }
       html.print-illustration .wrap{ display:block !important; }
@@ -68,11 +71,11 @@
       html.print-illustration #admin,
       html.print-illustration footer{ display:none !important; }
     }
-    /* Compact scaling (approx 65%). Works in Chromium; we add transform for Firefox. */
+    /* Compact scaling ~80% for illustration */
     @media print{
-      html.print-illustration.print-compact body{ zoom:.65; } /* Chrome/Edge */
+      html.print-illustration.print-compact body{ zoom:.8; } /* Chrome/Edge */
       html.print-illustration.print-compact .wrap{
-        transform:scale(.65); transform-origin:top left; width:calc(100% / .65); /* Firefox fallback */
+        transform:scale(.8); transform-origin:top left; width:calc(100% / .8); /* Firefox fallback */
       }
     }
   </style>
@@ -90,11 +93,11 @@
           <option value="auto">Auto</option><option value="light">Light</option>
           <option value="dark">Dark</option><option value="hc">High contrast</option>
         </select>
-        <!-- Print buttons -->
+        <!-- Print buttons (always visible to staff) -->
         <button id="btnPrint" class="btn">Print / Save PDF (Summary)</button>
         <button id="btnPrintIllo" class="btn primary">Print Illustration</button>
-        <button id="btnPrintIllo65" class="btn">Print Illustration (65%)</button>
-        <!-- Admin button stays but is query-guarded in JS -->
+        <button id="btnPrintIllo80" class="btn">Print Illustration (80%)</button>
+        <!-- Admin button still query-guarded in JS -->
         <button id="btnAdmin" class="btn" aria-expanded="false" aria-controls="admin">Admin</button>
       </div>
     </header>
@@ -103,26 +106,27 @@
     <section id="disclaimer" class="panel" aria-label="Disclaimer">
       <div class="note small">
         <b>Illustration, not payroll.</b> ESR uses YTD (cumulative) PAYE/NI, rounding and other deductions, so results will differ.
+        <span>For personalised information, check NHS Pensions or the <b>LAS Pensions Department</b>.</span>
       </div>
     </section>
 
     <!-- Inputs -->
     <section id="inputs" class="panel grid2" aria-label="Inputs">
       <div>
-        <h2 style="margin-top:0">Pensionable pay (monthly)</h2>
+        <h2 style="margin-top:0; font-weight:var(--heading-w)">Pensionable pay (monthly)</h2>
         <div id="items"></div>
         <div class="actions" style="margin-top:8px">
           <button id="addItem" class="btn" type="button">+ Add item</button>
           <button id="clearItems" class="btn" type="button">Clear</button>
         </div>
-        <div class="space" style="border-top:1px solid var(--border); padding-top:10px; margin-top:10px">
+        <div class="space" style="border-top:2px solid var(--border); padding-top:10px; margin-top:10px">
           <div class="muted">Total monthly pensionable pay</div>
           <div id="totalPay" style="font-weight:800">£0.00</div>
         </div>
       </div>
 
       <div>
-        <h2 style="margin-top:0">Your details</h2>
+        <h2 style="margin-top:0; font-weight:var(--heading-w)">Your details</h2>
         <div class="row">
           <label class="cs6"><span class="small">Date of birth</span>
             <input id="dob" type="date" />
@@ -137,7 +141,7 @@
 
     <!-- Payslip -->
     <section id="payslipPanel" class="panel" aria-label="Payslip illustration">
-      <h2 style="margin-top:0">Payslip illustration (monthly)</h2>
+      <h2 style="margin-top:0; font-weight:var(--heading-w)">Payslip illustration (monthly)</h2>
       <div class="note small" style="margin-bottom:10px">
         <ul style="margin:0 0 0 16px">
           <li><b>Payments</b> shows each pensionable item you entered.</li>
@@ -221,14 +225,14 @@
       <div class="grid2">
         <div>
           <label class="small">Current JSON</label>
-          <textarea id="ratesCurrent" rows="16" readonly style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:8px"></textarea>
+          <textarea id="ratesCurrent" rows="16" readonly style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:2px solid var(--border); border-radius:8px; padding:8px"></textarea>
           <div class="actions" style="margin-top:8px">
             <button id="exportRates" class="btn" type="button">Export</button>
           </div>
         </div>
         <div>
           <label class="small">Paste new JSON</label>
-          <textarea id="ratesPaste" rows="16" placeholder='{ "years":[ ... ], "defaultYear":"2025/26" }' style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:8px"></textarea>
+          <textarea id="ratesPaste" rows="16" placeholder='{ "years":[ ... ], "defaultYear":"2025/26" }' style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:2px solid var(--border); border-radius:8px; padding:8px"></textarea>
           <div class="actions" style="margin-top:8px">
             <button id="importRates" class="btn" type="button">Import</button>
           </div>
@@ -241,11 +245,11 @@
     </footer>
   </div>
 
-  <!-- PRINT SUMMARY (kept for your existing PDF option) -->
+  <!-- PRINT SUMMARY -->
   <section id="printSummary" class="panel hide" aria-label="Print summary">
-    <h2 style="margin-top:0">NHS Pension Opt-Out Calculator — Summary</h2>
+    <h2 style="margin-top:0; font-weight:var(--heading-w)">NHS Pension Opt-Out Calculator — Summary</h2>
     <div class="small muted" id="printMeta">Generated: —</div>
-    <hr style="border:none; border-top:1px solid var(--border); margin:10px 0 12px">
+    <hr style="border:none; border-top:2px solid var(--border); margin:10px 0 12px">
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
       <div>
         <div class="muted" style="font-weight:700; margin-bottom:4px">Payments entered (monthly)</div>
@@ -261,6 +265,16 @@
         <div class="space"><div>Tax code</div><div id="printTaxCode">—</div></div>
         <div class="space"><div>Date of birth</div><div id="printDob">—</div></div>
       </div>
+    </div>
+    <div class="note small" style="margin-top:12px">
+      <b>Benefits forfeited if you opt out:</b>
+      <ul style="margin:4px 0 0 18px">
+        <li id="printBenefitEmployer">Employer pension contribution (approx.): £0.00/yr</li>
+        <li>Future NHS Pension accrual while opted out (plus in-service revaluation while active).</li>
+        <li>Death-in-service lump sum and survivor benefits linked to active membership.</li>
+        <li>Access to ill-health retirement benefits linked to active membership (subject to eligibility/assessment).</li>
+      </ul>
+      <p class="small muted" style="margin:8px 0 0">For personalised information, check NHS Pensions or the <b>LAS Pensions Department</b>.</p>
     </div>
   </section>
 
@@ -349,7 +363,7 @@
   const themeSelect=document.getElementById('themeSelect');
   const btnPrint=document.getElementById('btnPrint');
   const btnPrintIllo=document.getElementById('btnPrintIllo');
-  const btnPrintIllo65=document.getElementById('btnPrintIllo65');
+  const btnPrintIllo80=document.getElementById('btnPrintIllo80');
 
   /* Admin visibility via ?admin=1 */
   const isAdmin=new URLSearchParams(location.search).get('admin')==='1';
@@ -357,8 +371,8 @@
 
   /* Theme control */
   function applyTheme(v){ document.documentElement.classList.remove('theme-light','theme-dark','theme-hc'); if(v==='light')document.documentElement.classList.add('theme-light'); if(v==='dark')document.documentElement.classList.add('theme-dark'); if(v==='hc')document.documentElement.classList.add('theme-hc'); }
-  (function initTheme(){ const saved=localStorage.getItem(THEME_KEY)||'auto'; themeSelect.value=saved; applyTheme(saved); })();
-  themeSelect.addEventListener('change',()=>{ const v=themeSelect.value; localStorage.setItem(THEME_KEY,v); applyTheme(v); });
+  (function initTheme(){ const saved=localStorage.getItem('las_optout_theme')||'auto'; themeSelect.value=saved; applyTheme(saved); })();
+  themeSelect.addEventListener('change',()=>{ const v=themeSelect.value; localStorage.setItem('las_optout_theme',v); applyTheme(v); });
 
   /* Items UI */
   let idSeq=0;
@@ -393,7 +407,7 @@
   btnImport?.addEventListener('click',()=>{ try{ const p=JSON.parse(ratesPaste.value); if(!p?.years?.length) throw new Error('Malformed JSON'); state.rates=p; state.year=p.years[0]; saveRates(p); ratesPaste.value=''; refreshAdminText(); render(); alert('Rates imported.'); }catch(e){ alert('Import failed: '+e.message); }});
   btnExport?.addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(state.rates,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url); });
 
-  /* PRINT: Summary (existing), Illustration (normal/65%) */
+  /* PRINT: Summary + Illustration (normal / 80%) */
   function fillPrintSummary(){
     const now=new Date(); document.getElementById('printMeta').textContent='Generated: '+now.toLocaleString('en-GB');
     const printPayments=document.getElementById('printPayments'); const printTotalPayments=document.getElementById('printTotalPayments');
@@ -408,19 +422,16 @@
     document.getElementById('printTaxCode').textContent=(elTax.value||'—').toUpperCase();
     document.getElementById('printDob').textContent=elDob.value||'—';
   }
-  btnPrint.addEventListener('click',()=>{ fillPrintSummary(); window.print(); });
+  document.getElementById('btnPrint').addEventListener('click',()=>{ fillPrintSummary(); window.print(); });
 
   function printIllustration(compact=false){
-    // Add classes to switch the @media print behavior
     document.documentElement.classList.add('print-illustration');
     if(compact) document.documentElement.classList.add('print-compact');
-    // Print
     window.print();
-    // Clean up after print
     setTimeout(()=>{ document.documentElement.classList.remove('print-illustration','print-compact'); }, 0);
   }
   btnPrintIllo.addEventListener('click',()=>printIllustration(false));
-  btnPrintIllo65.addEventListener('click',()=>printIllustration(true));
+  btnPrintIllo80.addEventListener('click',()=>printIllustration(true)); // 80% version
 
   /* Recalc & render */
   function render(){
