@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>NHS Pension Opt-Out Calculator (England only)</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>">
+  <!-- Favicon (LAS £) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>'">
 
   <style>
     /* ---------- LAS-inspired, contrast-safe styles (no external CSS) ---------- */
@@ -24,7 +25,7 @@
     .panel{ background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; }
     .grid2{ display:grid; grid-template-columns:1fr; gap:14px } @media(min-width:860px){ .grid2{ grid-template-columns:1fr 1fr } }
     .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:8px; align-items:end }
-    .cs1{grid-column:span 1}.cs2{span:2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}.cs7{grid-column:span 7}.cs8{grid-column:span 8}.cs12{grid-column:span 12}
+    .cs1{grid-column:span 1}.cs2{grid-column:span 2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}.cs7{grid-column:span 7}.cs8{grid-column:span 8}.cs12{grid-column:span 12}
     label>span.small{ display:block; font-size:12px; opacity:.85; margin-bottom:4px }
     input,select,textarea{ width:100%; border:1px solid var(--border); background:var(--panel); color:var(--text); border-radius:8px; padding:8px 10px }
     input:focus,select:focus,textarea:focus{ outline:3px solid var(--focus); outline-offset:2px }
@@ -51,7 +52,7 @@
         <p class="small" style="margin:0">Monthly payslip illustration — <b>stay in</b> vs <b>opt out</b>. NI is inferred from your <b>DOB</b> (Cat A by default; Cat C at/over SPA (66); Cat M under 21 uses same employee rates as A).</p>
       </div>
       <div class="actions">
-        <button id="btnAdmin" class="btn">Admin</button>
+        <button id="btnAdmin" class="btn" aria-expanded="false" aria-controls="admin">Admin</button>
       </div>
     </header>
 
@@ -61,8 +62,8 @@
         <h2 style="margin-top:0">Pensionable pay (monthly)</h2>
         <div id="items"></div>
         <div class="actions" style="margin-top:8px">
-          <button id="addItem" class="btn">+ Add item</button>
-          <button id="clearItems" class="btn">Clear</button>
+          <button id="addItem" class="btn" type="button">+ Add item</button>
+          <button id="clearItems" class="btn" type="button">Clear</button>
         </div>
         <div class="space" style="border-top:1px solid var(--border); padding-top:10px; margin-top:10px">
           <div class="muted">Total monthly pensionable pay</div>
@@ -74,13 +75,13 @@
         <h2 style="margin-top:0">Your details</h2>
         <div class="row">
           <label class="cs6"><span class="small">Date of birth</span>
-            <input id="dob" type="date" />
+            <input id="dob" type="date" aria-describedby="dobHelp"/>
           </label>
           <label class="cs6"><span class="small">Tax code (optional)</span>
-            <input id="taxCode" type="text" placeholder="1257L, BR, D0, D1, NT" value="1257L"/>
+            <input id="taxCode" type="text" placeholder="1257L, BR, D0, D1, NT" value="1257L" inputmode="text" />
           </label>
         </div>
-        <p class="small muted" style="margin-top:8px">We assume the standard NHS “net pay arrangement”.</p>
+        <p id="dobHelp" class="small muted" style="margin-top:8px">We assume the standard NHS “net pay arrangement”.</p>
       </div>
     </section>
 
@@ -90,7 +91,7 @@
       <div class="note small" style="margin-bottom:10px">
         <ul style="margin:0 0 0 16px">
           <li><b>Payments</b> lists each pensionable item (Basic, HCA, etc.) you entered.</li>
-          <li><b>Deductions</b> lists NHS Pension, PAYE and NI. The PAYE line shows a note with the taxable pay used.</li>
+          <li><b>Deductions</b> list NHS Pension, PAYE and NI. The PAYE line shows the taxable pay used.</li>
         </ul>
       </div>
 
@@ -163,14 +164,14 @@
           <label class="small">Current JSON</label>
           <textarea id="ratesCurrent" rows="16" readonly style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:8px"></textarea>
           <div class="actions" style="margin-top:8px">
-            <button id="exportRates" class="btn">Export</button>
+            <button id="exportRates" class="btn" type="button">Export</button>
           </div>
         </div>
         <div>
           <label class="small">Paste new JSON</label>
           <textarea id="ratesPaste" rows="16" placeholder='{ "years":[ ... ], "defaultYear":"2025/26" }' style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:8px"></textarea>
           <div class="actions" style="margin-top:8px">
-            <button id="importRates" class="btn">Import</button>
+            <button id="importRates" class="btn" type="button">Import</button>
           </div>
         </div>
       </div>
@@ -183,6 +184,7 @@
 
   <script>
   // ---------- Data (England & NI only) ----------
+// (same as your original; tweak here if rates change)
   const defaultRates = {
     defaultYear: "2025/26",
     years: [{
@@ -235,7 +237,7 @@
     const c = (code||'').toUpperCase().trim();
     if(!c) return {mode:'STANDARD', allowance:12570};
     if(['BR','D0','D1','NT'].includes(c)) return {mode:c};
-    const m = c.match(/(\\d{3,4})[A-Z]*/);
+    const m = c.match(/(\d{3,4})[A-Z]*/); // FIXED: removed extra backslash
     if(m) return {mode:'STANDARD', allowance: parseInt(m[1],10)*10};
     return {mode:'STANDARD', allowance:12570};
   }
@@ -338,26 +340,28 @@
     row.dataset.id = it.id;
 
     const name = document.createElement('input');
-    name.className = 'cs4'; name.value = it.label;
+    name.className = 'cs4'; name.value = it.label; name.ariaLabel = 'Item name';
     name.addEventListener('input', ()=>{ it.label=name.value; render(); });
 
     const chkWrap = document.createElement('div');
     chkWrap.className = 'cs3'; chkWrap.style.display='flex'; chkWrap.style.alignItems='center'; chkWrap.style.gap='8px';
-    const chk = document.createElement('input'); chk.type='checkbox'; chk.checked=!!it.useRate;
+    const chk = document.createElement('input'); chk.type='checkbox'; chk.checked=!!it.useRate; chk.ariaLabel = 'Use rate times hours';
     const chkLbl = document.createElement('span'); chkLbl.className='small'; chkLbl.textContent='rate × hours';
     chkWrap.append(chk, chkLbl);
 
     const rate = document.createElement('input'); rate.type='number'; rate.placeholder='rate'; rate.className='cs2';
-    rate.value = it.rate ?? ''; rate.addEventListener('input', ()=>{ it.rate=parseFloat(rate.value||'0'); render(); });
+    rate.step='0.01'; rate.min='0'; rate.value = it.rate ?? '';
+    rate.addEventListener('input', ()=>{ it.rate=parseFloat(rate.value||'0'); render(); });
 
     const hours = document.createElement('input'); hours.type='number'; hours.placeholder='hours'; hours.className='cs2';
-    hours.value = it.hours ?? ''; hours.addEventListener('input', ()=>{ it.hours=parseFloat(hours.value||'0'); render(); });
+    hours.step='0.01'; hours.min='0'; hours.value = it.hours ?? '';
+    hours.addEventListener('input', ()=>{ it.hours=parseFloat(hours.value||'0'); render(); });
 
-    const amount = document.createElement('input'); amount.type='number'; amount.className='cs6'; amount.value = it.amount;
+    const amount = document.createElement('input'); amount.type='number'; amount.className='cs6'; amount.step='0.01'; amount.min='0'; amount.value = it.amount;
     amount.addEventListener('input', ()=>{ it.amount=parseFloat(amount.value||'0'); render(); });
 
     const preview = document.createElement('div'); preview.className='cs1 small'; preview.style.textAlign='right'; preview.style.opacity='.7';
-    const remove = document.createElement('button'); remove.className='cs1 btn'; remove.textContent='×'; remove.title='Remove';
+    const remove = document.createElement('button'); remove.className='cs1 btn'; remove.textContent='×'; remove.title='Remove'; remove.type='button';
     remove.addEventListener('click', ()=>{ state.items = state.items.filter(x=>x.id!==it.id); render(); });
 
     function toggleMode(){
@@ -397,7 +401,12 @@
 
   // ---------- Admin ----------
   function refreshAdminText(){ ratesCurrent.value = JSON.stringify(state.rates, null, 2); }
-  btnAdmin.addEventListener('click', ()=>{ adminSec.classList.toggle('hide'); refreshAdminText(); });
+  btnAdmin.addEventListener('click', ()=>{
+    adminSec.classList.toggle('hide');
+    const expanded = btnAdmin.getAttribute('aria-expanded') === 'true';
+    btnAdmin.setAttribute('aria-expanded', String(!expanded));
+    refreshAdminText();
+  });
   btnImport.addEventListener('click', ()=>{
     try{
       const parsed = JSON.parse(ratesPaste.value);
@@ -431,7 +440,7 @@
     const age = ageOnDate(elDob.value, monthEnd);
     const overSPA = age!==null ? age>=66 : false;
 
-    // PAYE
+    // PAYE — net pay arrangement reduces ANI by employee pension
     const parsedCode = parseTaxCode(elTaxCode.value);
     const aniStay = Math.max(0, annualGross - annualGross*nhsRate);
     const taxableStay = Math.max(0, monthlyGross - monthlyNhs);
@@ -439,7 +448,7 @@
     const taxStay = calcPAYE(taxableStay, aniStay, state.year.tax, parsedCode);
     const taxOut  = calcPAYE(monthlyGross, annualGross, state.year.tax, parsedCode);
 
-    // NI
+    // NI (unchanged by pension contributions)
     const niStay = calcNI(monthlyGross, state.year.ni, overSPA);
     const niOut  = calcNI(monthlyGross, state.year.ni, overSPA);
 
