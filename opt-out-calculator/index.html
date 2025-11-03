@@ -20,7 +20,7 @@
     html,body{ margin:0; padding:0 }
     body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
     .wrap{ max-width:980px; margin:0 auto; padding:20px; }
-    .header{ background:var(--brand); color:#fff; padding:22px 20px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+    .header{ background:var(--brand); color:#fff; padding:22px 20px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
     .header h1{ margin:0 0 4px 0; font-size:22px }
     .panel{ background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; }
     .grid2{ display:grid; grid-template-columns:1fr; gap:14px } @media(min-width:860px){ .grid2{ grid-template-columns:1fr 1fr } }
@@ -42,6 +42,16 @@
     .actions{ display:flex; gap:8px; flex-wrap:wrap }
     .text-green{ color:#1b8555 } .text-red{ color:#9F3131 }
     .hide{ display:none }
+
+    /* ---------- Print styles (one-page PDF summary) ---------- */
+    @media print{
+      body{ background:#fff; color:#000 }
+      .header, .panel, .kpi, .card{ border-color:#ddd; }
+      .header{ border-radius:0; }
+      .actions, #admin, #printNote{ display:none !important; }
+      .panel{ page-break-inside:avoid }
+      #printSummary{ display:block !important; }
+    }
   </style>
 </head>
 <body>
@@ -53,6 +63,7 @@
       </div>
       <div class="actions">
         <button id="btnAdmin" class="btn" aria-expanded="false" aria-controls="admin">Admin</button>
+        <button id="btnPrint" class="btn primary">Print / Save PDF</button>
       </div>
     </header>
 
@@ -153,9 +164,21 @@
           <div class="small muted">Not deducted from pay but foregone if you opt out.</div>
         </div>
       </div>
+
+      <!-- NEW: Benefits forfeited by opting out -->
+      <div class="note" style="margin-top:12px">
+        <div style="font-weight:700; margin-bottom:6px">Benefits you give up by opting out</div>
+        <ul class="small" style="margin:0 0 0 18px">
+          <li><span id="benefitEmployer">Employer pension contribution (approx.): £0.00/yr</span></li>
+          <li>Future NHS Pension accrual while opted out (plus in-service revaluation while active).</li>
+          <li>Death-in-service lump sum and survivor benefits linked to active membership (scheme rules apply).</li>
+          <li>Access to ill-health retirement benefits linked to active membership (subject to eligibility/assessment).</li>
+        </ul>
+        <p class="small muted" style="margin:8px 0 0">This is guidance, not financial advice. Check NHS Pensions / HR for your circumstances.</p>
+      </div>
     </section>
 
-    <!-- Admin -->
+    <!-- Admin (hidden unless ?admin=1) -->
     <section id="admin" class="panel hide" aria-label="Admin">
       <h2 style="margin-top:0">Admin — Rates (paste/edit yearly)</h2>
       <p class="small muted">Edits save to this browser (localStorage). Export and commit to your repo when ready.</p>
@@ -175,6 +198,7 @@
           </div>
         </div>
       </div>
+      <p id="printNote" class="small muted" style="margin-top:12px">Tip: open without <code>?admin=1</code> for staff access.</p>
     </section>
 
     <footer class="small muted" style="margin:12px 0 24px">
@@ -182,9 +206,41 @@
     </footer>
   </div>
 
+  <!-- PRINT SUMMARY (hidden on screen, shown only when printing) -->
+  <section id="printSummary" class="panel hide" aria-label="Print summary">
+    <h2 style="margin-top:0">NHS Pension Opt-Out Calculator — Summary</h2>
+    <div class="small muted" id="printMeta">Generated: —</div>
+    <hr style="border:none; border-top:1px solid var(--border); margin:10px 0 12px">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+      <div>
+        <div class="muted" style="font-weight:700; margin-bottom:4px">Payments entered (monthly)</div>
+        <div id="printPayments"></div>
+        <div class="space tot"><div>Total payments</div><div id="printTotalPayments">£0.00</div></div>
+      </div>
+      <div>
+        <div class="muted" style="font-weight:700; margin-bottom:4px">Key figures</div>
+        <div class="space"><div>Net pay — stay in</div><div id="printNetStay">£0.00</div></div>
+        <div class="space"><div>Net pay — opt out</div><div id="printNetOut">£0.00</div></div>
+        <div class="space"><div>Difference (opt-out − stay-in)</div><div id="printDelta">£0.00</div></div>
+        <div class="space"><div>Employer pension (approx.)</div><div id="printEmployer">£0.00/yr</div></div>
+        <div class="space"><div>Tax code</div><div id="printTaxCode">—</div></div>
+        <div class="space"><div>Date of birth</div><div id="printDob">—</div></div>
+      </div>
+    </div>
+    <div class="note small" style="margin-top:12px">
+      <b>Benefits forfeited if you opt out:</b>
+      <ul style="margin:4px 0 0 18px">
+        <li id="printBenefitEmployer">Employer pension contribution (approx.): £0.00/yr</li>
+        <li>Future NHS Pension accrual while opted out (plus in-service revaluation while active).</li>
+        <li>Death-in-service lump sum and survivor benefits linked to active membership (scheme rules apply).</li>
+        <li>Access to ill-health retirement benefits linked to active membership (subject to eligibility/assessment).</li>
+      </ul>
+      <p class="small muted" style="margin:8px 0 0">This is guidance, not financial advice. Speak with NHS Pensions or HR for personalised information.</p>
+    </div>
+  </section>
+
   <script>
   // ---------- Data (England & NI only) ----------
-// (same as your original; tweak here if rates change)
   const defaultRates = {
     defaultYear: "2025/26",
     years: [{
@@ -237,7 +293,7 @@
     const c = (code||'').toUpperCase().trim();
     if(!c) return {mode:'STANDARD', allowance:12570};
     if(['BR','D0','D1','NT'].includes(c)) return {mode:c};
-    const m = c.match(/(\d{3,4})[A-Z]*/); // FIXED: removed extra backslash
+    const m = c.match(/(\d{3,4})[A-Z]*/);
     if(m) return {mode:'STANDARD', allowance: parseInt(m[1],10)*10};
     return {mode:'STANDARD', allowance:12570};
   }
@@ -323,6 +379,20 @@
   const elDelta = document.getElementById('delta');
   const elNetAnnual = document.getElementById('netAnnual');
   const elEmployer = document.getElementById('employerPension');
+  const elBenefitEmployer = document.getElementById('benefitEmployer');
+
+  // Print DOM
+  const printSummary = document.getElementById('printSummary');
+  const printPayments = document.getElementById('printPayments');
+  const printTotalPayments = document.getElementById('printTotalPayments');
+  const printNetStay = document.getElementById('printNetStay');
+  const printNetOut = document.getElementById('printNetOut');
+  const printDelta = document.getElementById('printDelta');
+  const printEmployer = document.getElementById('printEmployer');
+  const printTaxCode = document.getElementById('printTaxCode');
+  const printDob = document.getElementById('printDob');
+  const printBenefitEmployer = document.getElementById('printBenefitEmployer');
+  const printMeta = document.getElementById('printMeta');
 
   // Admin
   const btnAdmin = document.getElementById('btnAdmin');
@@ -331,6 +401,16 @@
   const ratesPaste = document.getElementById('ratesPaste');
   const btnImport = document.getElementById('importRates');
   const btnExport = document.getElementById('exportRates');
+  const btnPrint = document.getElementById('btnPrint');
+
+  // ---------- Admin visibility via query string ----------
+  const params = new URLSearchParams(location.search);
+  const isAdmin = params.get('admin') === '1';
+  if(!isAdmin){
+    // Hide admin access completely unless ?admin=1
+    btnAdmin.classList.add('hide');
+    adminSec.classList.add('hide');
+  }
 
   // ---------- Items UI ----------
   let idSeq = 0;
@@ -422,6 +502,43 @@
     const a = document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url);
   });
 
+  // ---------- Print / PDF ----------
+  btnPrint.addEventListener('click', ()=>{
+    // Fill summary fields before print
+    fillPrintSummary();
+    // Trigger print
+    window.print();
+  });
+
+  function fillPrintSummary(){
+    // Timestamp
+    const now = new Date();
+    printMeta.textContent = 'Generated: ' + now.toLocaleString('en-GB');
+    // Payments list
+    printPayments.innerHTML = '';
+    let total = 0;
+    state.items.forEach(it=>{
+      const val = it.useRate ? (it.rate||0)*(it.hours||0) : (+it.amount||0);
+      if(!val) return;
+      total += val;
+      const row=document.createElement('div'); row.className='space';
+      row.innerHTML = `<div>${it.label}</div><div>${fmt(val)}</div>`;
+      printPayments.appendChild(row);
+    });
+    printTotalPayments.textContent = fmt(total);
+
+    // Key numbers
+    printNetStay.textContent = document.getElementById('stayNet').textContent;
+    printNetOut.textContent  = document.getElementById('outNet').textContent;
+    printDelta.textContent   = document.getElementById('delta').textContent;
+    const employerTxt = document.getElementById('employerPension').textContent.replace(/^≈\s*/, '');
+    printEmployer.textContent = employerTxt;
+    printBenefitEmployer.textContent = 'Employer pension contribution (approx.): ' + employerTxt;
+
+    printTaxCode.textContent = (document.getElementById('taxCode').value || '—').toUpperCase();
+    printDob.textContent = document.getElementById('dob').value || '—';
+  }
+
   // ---------- Recalc & render ----------
   function render(){
     // totals
@@ -490,8 +607,13 @@
     // KPIs
     elDelta.textContent = fmt(delta);
     elDelta.className = 'text-'+(delta>=0?'green':'red');
-    elNetAnnual.textContent = fmt(netStay*12) + ' / ' + fmt(netOut*12);
-    elEmployer.textContent  = '≈ ' + fmt(annualGross * (state.year.nhs.employerRateHint||0)) + '/yr';
+    const netAnnualStay = netStay*12;
+    const netAnnualOut  = netOut*12;
+    elNetAnnual.textContent = fmt(netAnnualStay) + ' / ' + fmt(netAnnualOut);
+
+    const employerAnnual = annualGross * (state.year.nhs.employerRateHint||0);
+    elEmployer.textContent  = '≈ ' + fmt(employerAnnual) + '/yr';
+    elBenefitEmployer.textContent = 'Employer pension contribution (approx.): ' + fmt(employerAnnual) + '/yr';
 
     // Admin JSON (keep fresh)
     refreshAdminText();
