@@ -8,20 +8,15 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>'">
 
   <style>
-    /* ---------- Design tokens ---------- */
     :root{
       --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
-      --ok:#1b8555; --warn:#9F3131; --heading-w:800;
-      --scale:1;         /* accessibility font scale */
-      --motion:1;        /* 1 = normal motion, 0 = reduced */
+      --ok:#1b8555; --warn:#9F3131; --heading-w:800; --scale:1; --motion:1;
     }
     @media (prefers-color-scheme: dark){
       :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
     }
     html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; }
     html.theme-dark{  --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
-
-    /* High contrast */
     html.theme-hc{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading-w:900; }
     html.theme-hc-large{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading-w:900; --scale:1.12; }
 
@@ -32,11 +27,9 @@
     a.skip:focus{ position:static; width:auto; height:auto; padding:8px 12px; background:#ffd; border:2px solid #000; border-radius:8px; display:inline-block; margin:8px; }
 
     .wrap{ max-width:980px; margin:0 auto; padding:20px; }
-
     .header{ background:var(--brand); color:#fff; padding:16px; border-radius:12px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap }
     .header h1{ margin:0; font-size:22px; font-weight:var(--heading-w) }
 
-    /* Accessibility toolbar (always visible) */
     .a11y-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
     .a11y-group{ display:flex; gap:6px; align-items:center; background:rgba(255,255,255,.1); padding:6px; border-radius:10px }
     .a11y-label{ font-size:12px; color:#fff; opacity:.9 }
@@ -45,7 +38,6 @@
     .grid2{ display:grid; grid-template-columns:1fr; gap:14px } @media(min-width:860px){ .grid2{ grid-template-columns:1fr 1fr } }
     .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:8px; align-items:end }
     .cs1{grid-column:span 1}.cs2{grid-column:span 2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}
-
     label>span.small{ display:block; font-size:12px; margin-bottom:4px; color:var(--muted) }
 
     input,select,textarea{ width:100%; border:2px solid var(--border); background:var(--panel); color:var(--text); border-radius:8px; padding:9px 10px; font-weight:600 }
@@ -64,14 +56,10 @@
     .kpi{ border:2px solid var(--border); border-radius:12px; padding:12px }
     .note{ border:3px solid var(--border); border-left:10px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel); color:var(--text) }
 
-    /* Prefer-reduced-motion override */
-    @media (prefers-reduced-motion: reduce){
-      :root{ --motion:0 }
-    }
+    @media (prefers-reduced-motion: reduce){ :root{ --motion:0 } }
     [data-anim]{ transition: transform .2s ease, opacity .2s ease; }
     html.reduce-motion [data-anim]{ transition:none !important }
 
-    /* ---------- PRINT ---------- */
     @page{ size:A4; margin:12mm }
     @media print{
       body{ background:#fff; color:#000 }
@@ -83,7 +71,7 @@
       html.print-illustration footer{ display:none !important }
       html.print-illustration #payslipPanel{ display:block !important }
       html.print-illustration .wrap{ transform:scale(.8); transform-origin:top left; width:calc(100%/.8) }
-      html.print-illustration body{ zoom:.8 } /* Chromium hint */
+      html.print-illustration body{ zoom:.8 }
     }
   </style>
 </head>
@@ -98,7 +86,6 @@
       </div>
 
       <div class="a11y-bar" aria-label="Accessibility controls">
-        <!-- Theme -->
         <div class="a11y-group" role="group" aria-label="Theme">
           <span class="a11y-label">Theme</span>
           <select id="themeSelect" title="Theme selector" aria-label="Theme selector">
@@ -109,22 +96,17 @@
             <option value="hc-large">High contrast (Large)</option>
           </select>
         </div>
-        <!-- Readability -->
         <div class="a11y-group" role="group" aria-label="Readability">
           <label class="a11y-label"><input id="toggleFont" type="checkbox" aria-label="Increase body font size by twelve percent"> Larger text</label>
           <label class="a11y-label"><input id="toggleMotion" type="checkbox" aria-label="Reduce motion and animations"> Reduce motion</label>
         </div>
-        <!-- Print -->
         <button id="btnPrintIllo" class="btn primary" type="button" aria-label="Print payslip illustration">Print illustration</button>
-
-        <!-- Admin / ANDI -->
         <button id="btnAdmin" class="btn hide" aria-label="Open admin panel" aria-expanded="false" aria-controls="admin" type="button">Admin</button>
         <button id="btnANDI" class="btn hide" type="button" aria-label="Run ANDI accessibility checker" aria-describedby="andiNote">ANDI</button>
       </div>
-      <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA accessibility testing tool locally. No data is sent externally.</p>
+      <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA ANDI accessibility tool locally. No data is sent externally.</p>
     </header>
 
-    <!-- Disclaimer -->
     <section id="disclaimer" class="panel" aria-label="Disclaimer">
       <div class="note small">
         <b>Illustration, not payroll.</b> ESR uses YTD (cumulative) PAYE/NI, rounding and other deductions, so results will differ.
@@ -132,7 +114,6 @@
       </div>
     </section>
 
-    <!-- Inputs -->
     <main id="main" tabindex="-1">
       <section id="inputs" class="panel grid2" aria-label="Inputs">
         <div>
@@ -162,7 +143,6 @@
         </div>
       </section>
 
-      <!-- Payslip Illustration -->
       <section id="payslipPanel" class="panel" aria-label="Payslip illustration">
         <h2 style="margin-top:0; font-weight:var(--heading-w)">Payslip illustration (monthly)</h2>
         <div class="note small" style="margin-bottom:10px">
@@ -173,7 +153,6 @@
         </div>
 
         <div class="payslip" data-anim>
-          <!-- Stay in -->
           <div class="card">
             <div style="font-weight:800; margin-bottom:6px">Stay in</div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
@@ -193,7 +172,6 @@
             <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="stayNet" aria-live="polite">£0.00</div></div>
           </div>
 
-          <!-- Opt out -->
           <div class="card">
             <div style="font-weight:800; margin-bottom:6px">Opt out</div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
@@ -224,25 +202,41 @@
             <div class="small muted">Net annual pay — stay in / opt out</div>
             <div id="netAnnual" style="font-size:18px; font-weight:800" aria-live="polite">£0.00 / £0.00</div>
           </div>
+
+          <!-- >>> WHAT YOU’D BE GIVING UP (new) -->
           <div class="kpi" id="benefits">
             <div class="small muted">Employer pension (context)</div>
             <div id="employerPension" style="font-size:18px; font-weight:800" aria-live="polite">≈ £0.00/yr</div>
             <div class="small muted">Not deducted from pay but foregone if you opt out.</div>
+
             <div class="note" style="margin-top:12px">
-              <div style="font-weight:700; margin-bottom:6px">Benefits you give up by opting out</div>
+              <div style="font-weight:700; margin-bottom:6px">
+                Benefits you will be giving up by opting out of the <span id="benefitSchemeLabel">2015 NHS Pension Scheme</span>
+              </div>
               <ul class="small" style="margin:0 0 0 18px">
-                <li><span id="benefitEmployer">Employer pension contribution (approx.): £0.00/yr</span></li>
-                <li>Future NHS Pension accrual while opted out.</li>
-                <li>Death-in-service & survivor benefits linked to active membership.</li>
-                <li>Access to ill-health retirement benefits linked to active membership.</li>
+                <li>Based on your current pensionable earnings, you would give up an <b>annual pension accrual</b> of around
+                  <b><span id="benefitAccrual">£0.00/yr</span></b> for life after retirement.</li>
+                <li>To illustrate the value of the NHS pension you would be giving up, buying similar benefits on the
+                  <q>open market</q> could cost around <b><span id="benefitMarketCost">£0.00</span></b> for <i>each year</i> you give up accruing benefits.</li>
+                <li>An annual pension payable for life after retirement.</li>
+                <li>Tax-free cash lump sum on retirement for those with 1995 Section membership (optional for other 2015 members).</li>
+                <li>Death-in-service life assurance lump sum to nominated people or an organisation.</li>
+                <li>Pension benefits payable to dependants, including children.</li>
+                <li>Ill-health retirement benefits linked to active membership.</li>
+                <li>Tax relief on pension contributions.</li>
               </ul>
+              <p class="small" style="margin:10px 0 0">
+                More information is available in the NHS Pension Scheme Guide at
+                <a href="https://www.nhsbsa.nhs.uk/nhs-pensions" target="_blank" rel="noopener">nhsbsa.nhs.uk/nhs-pensions</a>.
+                This is an illustration and excludes revaluation, survivor benefits calculations, early/late retirement factors and personal tax circumstances.
+              </p>
             </div>
           </div>
+          <!-- <<< WHAT YOU’D BE GIVING UP -->
         </div>
       </section>
     </main>
 
-    <!-- Admin -->
     <section id="admin" class="panel hide" aria-label="Admin">
       <h2 style="margin-top:0">Admin — Rates (paste/edit yearly)</h2>
       <p class="small muted">Edits save to this browser (localStorage). Export and commit when ready.</p>
@@ -271,7 +265,7 @@
   </div>
 
   <script>
-  /* ---------- Rates data ---------- */
+  /* ---------- Rates data (fallback if no localStorage) ---------- */
   const defaultRates = {
     defaultYear: "2025/26",
     years: [{
@@ -293,21 +287,21 @@
           { min: 65191, max: null,  rate: 0.125 }
         ],
         employerRateHint: 0.237
+      },
+      benefits: {
+        schemeLabel: "2015 NHS Pension Scheme (CARE 1/54th)",
+        accrualFraction: "1/54",
+        annuityFactor: 18
       }
     }]
   };
 
-  /* ---------- Storage, formatting & theme ---------- */
-  const THEME_KEY='las_optout_theme';
-  const FONT_KEY='las_optout_fontscale';
-  const MOTION_KEY='las_optout_motion';
-
+  /* ---------- Storage / formatting / theme ---------- */
+  const THEME_KEY='las_optout_theme', FONT_KEY='las_optout_fontscale', MOTION_KEY='las_optout_motion';
   function loadRates(){ try{const raw=localStorage.getItem('las_optout_rates_v1'); if(!raw) return defaultRates; const p=JSON.parse(raw); return p?.years?.length?p:defaultRates;}catch{return defaultRates;} }
   function saveRates(r){ localStorage.setItem('las_optout_rates_v1', JSON.stringify(r,null,2)); }
-
   const GBP = new Intl.NumberFormat('en-GB',{style:'currency', currency:'GBP'});
-  const fmt = n => GBP.format((+n)||0);
-  const pct = n => `${(n*100).toFixed(1)}%`;
+  const fmt = n => GBP.format((+n)||0), pct = n => `${(n*100).toFixed(1)}%`;
 
   function applyTheme(v){
     document.documentElement.classList.remove('theme-light','theme-dark','theme-hc','theme-hc-large');
@@ -316,8 +310,6 @@
     else if(v==='hc') document.documentElement.classList.add('theme-hc');
     else if(v==='hc-large') document.documentElement.classList.add('theme-hc-large');
   }
-
-  // A11y toggles (font & motion)
   function applyFontToggle(on){ document.documentElement.style.setProperty('--scale', on?'1.12':'1'); }
   function applyMotionToggle(on){ document.documentElement.classList.toggle('reduce-motion', on); }
 
@@ -386,15 +378,13 @@
   }
 
   /* ---------- State & DOM ---------- */
-  const state = { items:[], rates:loadRates(), year:null };
-  state.year = state.rates.years[0];
+  const state = { items:[], rates:loadRates(), year:null }; state.year = state.rates.years[0];
 
   const elItems = document.getElementById('items');
   const elAdd = document.getElementById('addItem');
   const elClear = document.getElementById('clearItems');
   const elDob = document.getElementById('dob');
   const elTax = document.getElementById('taxCode');
-
   const elStayPayments = document.getElementById('stayPayments');
   const elOutPayments  = document.getElementById('outPayments');
 
@@ -408,14 +398,8 @@
 
   const btnANDI = document.getElementById('btnANDI');
   const andiNote = document.getElementById('andiNote');
+  if(isAdmin){ btnAdmin.classList.remove('hide'); btnANDI.classList.remove('hide'); andiNote.classList.remove('hide'); andiNote.setAttribute('aria-hidden','false'); }
 
-  if(isAdmin){
-    btnAdmin.classList.remove('hide');
-    btnANDI.classList.remove('hide');
-    andiNote.classList.remove('hide'); andiNote.setAttribute('aria-hidden','false');
-  }
-
-  /* ---------- Admin ---------- */
   function refreshAdminText(){ if(ratesCurrent) ratesCurrent.value = JSON.stringify(state.rates,null,2); }
   btnAdmin?.addEventListener('click',()=>{
     adminSec.classList.toggle('hide');
@@ -439,17 +423,14 @@
     URL.revokeObjectURL(url);
   });
 
-  /* ---------- ANDI loader ---------- */
   btnANDI?.addEventListener('click', ()=>{
     if(window.ANDI){ window.ANDI.init(); return; }
     const s=document.createElement('script');
-    s.src='andi/andi.js'; // expects /andi/andi.js
-    s.onload=()=>console.log('ANDI loaded');
+    s.src='andi/andi.js'; s.onload=()=>console.log('ANDI loaded');
     s.onerror=()=>alert('Could not load ANDI. Check the andi/ folder path.');
     document.body.appendChild(s);
   });
 
-  /* ---------- Pay items UI ---------- */
   let idSeq=0;
   function itemRow(it){
     const row=document.createElement('div'); row.className='row'; row.dataset.id=it.id;
@@ -459,10 +440,8 @@
     name.addEventListener('input',()=>{ it.label=name.value; render(); });
 
     const wrap=document.createElement('div'); wrap.className='cs3'; wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
-    const chk=document.createElement('input'); chk.type='checkbox'; chk.checked=!!it.useRate;
-    chk.setAttribute('aria-label','Use rate times hours instead of entering a total');
-    const lbl=document.createElement('span'); lbl.className='small'; lbl.textContent='rate × hours';
-    wrap.append(chk,lbl);
+    const chk=document.createElement('input'); chk.type='checkbox'; chk.checked=!!it.useRate; chk.setAttribute('aria-label','Use rate times hours instead of entering a total');
+    const lbl=document.createElement('span'); lbl.className='small'; lbl.textContent='rate × hours'; wrap.append(chk,lbl);
 
     const rate=document.createElement('input'); rate.type='number'; rate.placeholder='rate'; rate.className='cs2'; rate.step='0.01'; rate.min='0'; rate.value=it.rate ?? '';
     rate.setAttribute('aria-label','Hourly rate (£)');
@@ -492,7 +471,6 @@
       }
     }
     chk.addEventListener('change',()=>{ toggle(); render(); }); toggle();
-
     rate.addEventListener('input',()=>{ it.rate=parseFloat(rate.value||'0'); render(); });
     hours.addEventListener('input',()=>{ it.hours=parseFloat(hours.value||'0'); render(); });
     amount.addEventListener('input',()=>{ it.amount=parseFloat(amount.value||'0'); render(); });
@@ -505,19 +483,25 @@
     state.items.push(it); elItems.appendChild(itemRow(it)); render();
   }
   function rebuildItems(){ elItems.innerHTML=''; state.items.forEach(it=>elItems.appendChild(itemRow(it))); }
-
-  document.getElementById('addItem').addEventListener('click',()=> addItem('Other',0));
-  document.getElementById('clearItems').addEventListener('click',()=>{ state.items=[]; rebuildItems(); render(); });
+  elAdd.addEventListener('click',()=> addItem('Other',0));
+  elClear.addEventListener('click',()=>{ state.items=[]; rebuildItems(); render(); });
   addItem('Basic',0); addItem('HCA',0);
 
-  /* ---------- Print: Illustration-only (80%) ---------- */
   const btnPrintIllo = document.getElementById('btnPrintIllo');
   function enablePrintFlags(){ document.documentElement.classList.add('print-illustration'); }
   function disablePrintFlags(){ document.documentElement.classList.remove('print-illustration'); }
   window.addEventListener('afterprint', disablePrintFlags);
   btnPrintIllo.addEventListener('click', ()=>{ enablePrintFlags(); setTimeout(()=>window.print(),50); setTimeout(disablePrintFlags,2000); });
 
-  /* ---------- Recalc & render ---------- */
+  // Parse "1/54" -> 54; fallback 54 if not parseable
+  function parseAccrualFraction(frac){
+    if(typeof frac==='string'){
+      const m=frac.trim().match(/^(\d+)\s*\/\s*(\d+)$/);
+      if(m){ const num=+m[1], den=+m[2]; if(den>0) return {num,den}; }
+    }
+    return {num:1, den:54};
+  }
+
   function render(){
     const monthlyGross = state.items.reduce((s,it)=> s + (it.useRate ? (it.rate||0)*(it.hours||0) : (+it.amount||0)), 0);
     document.getElementById('totalPay').textContent = fmt(monthlyGross);
@@ -576,17 +560,33 @@
     elDelta.className = 'text-' + (delta>=0 ? 'green' : 'red');
     document.getElementById('netAnnual').textContent = fmt(netStay*12) + ' / ' + fmt(netOut*12);
 
+    // Employer context
     const employerAnnual = annualGross * (state.year.nhs.employerRateHint||0);
     document.getElementById('employerPension').textContent = '≈ ' + fmt(employerAnnual) + '/yr';
-    document.getElementById('benefitEmployer').textContent = 'Employer pension contribution (approx.): ' + fmt(employerAnnual) + '/yr';
 
-    // small motion cue
+    // >>> Benefits illustration (reads from JSON, falls back if missing)
+    const b = (state.year && state.year.benefits) ? state.year.benefits : {
+      schemeLabel: '2015 NHS Pension Scheme (CARE 1/54th)',
+      accrualFraction: '1/54',
+      annuityFactor: 18
+    };
+    const {num,den} = parseAccrualFraction(b.accrualFraction||'1/54');
+    const accrualPerYear = (annualGross * (num/den));               // £/yr pension added this year
+    const marketCostThisYear = accrualPerYear * (b.annuityFactor||18);
+
+    document.getElementById('benefitSchemeLabel').textContent = b.schemeLabel || '2015 NHS Pension Scheme (CARE 1/54th)';
+    document.getElementById('benefitAccrual').textContent = fmt(accrualPerYear) + '/yr';
+    document.getElementById('benefitMarketCost').textContent = fmt(marketCostThisYear);
+    // <<< Benefits illustration
+
     if(getComputedStyle(document.documentElement).getPropertyValue('--motion')!=='0'){
       document.querySelectorAll('[data-anim]').forEach(n=>{
         n.style.transform='scale(1.001)'; n.style.opacity='0.99';
         setTimeout(()=>{ n.style.transform=''; n.style.opacity=''; },120);
       });
     }
+
+    refreshAdminText();
   }
 
   elDob.addEventListener('input', render);
