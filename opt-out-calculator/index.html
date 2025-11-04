@@ -12,6 +12,8 @@
     :root{
       --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
       --ok:#1b8555; --warn:#9F3131; --heading-w:800;
+      --scale:1;         /* accessibility font scale */
+      --motion:1;        /* 1 = normal motion, 0 = reduced */
     }
     @media (prefers-color-scheme: dark){
       :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
@@ -19,30 +21,35 @@
     html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; }
     html.theme-dark{  --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
 
-    /* High contrast (normal +15%) */
+    /* High contrast */
     html.theme-hc{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading-w:900; }
-    html.theme-hc body{ font-size:1.15em; }
-
-    /* High contrast (Large +25%) */
-    html.theme-hc-large{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading-w:900; }
-    html.theme-hc-large body{ font-size:1.25em; }
+    html.theme-hc-large{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading-w:900; --scale:1.12; }
 
     *{ box-sizing:border-box }
     html,body{ margin:0; padding:0 }
-    body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
+    body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; font-size:calc(16px * var(--scale)); }
+    a.skip{ position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+    a.skip:focus{ position:static; width:auto; height:auto; padding:8px 12px; background:#ffd; border:2px solid #000; border-radius:8px; display:inline-block; margin:8px; }
+
     .wrap{ max-width:980px; margin:0 auto; padding:20px; }
 
-    .header{ background:var(--brand); color:#fff; padding:20px; border-radius:12px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .header{ background:var(--brand); color:#fff; padding:16px; border-radius:12px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap }
     .header h1{ margin:0; font-size:22px; font-weight:var(--heading-w) }
 
-    .panel{ background:var(--panel); border:2px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; }
+    /* Accessibility toolbar (always visible) */
+    .a11y-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
+    .a11y-group{ display:flex; gap:6px; align-items:center; background:rgba(255,255,255,.1); padding:6px; border-radius:10px }
+    .a11y-label{ font-size:12px; color:#fff; opacity:.9 }
+
+    .panel{ background:var(--panel); border:2px solid var(--border); border-radius:12px; padding:16px; margin-top:16px }
     .grid2{ display:grid; grid-template-columns:1fr; gap:14px } @media(min-width:860px){ .grid2{ grid-template-columns:1fr 1fr } }
     .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:8px; align-items:end }
-    .cs1{grid-column:span 1}.cs2{grid-column:span 2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}.cs7{grid-column:span 7}.cs8{grid-column:span 8}.cs12{grid-column:span 12}
+    .cs1{grid-column:span 1}.cs2{grid-column:span 2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}
+
     label>span.small{ display:block; font-size:12px; margin-bottom:4px; color:var(--muted) }
 
     input,select,textarea{ width:100%; border:2px solid var(--border); background:var(--panel); color:var(--text); border-radius:8px; padding:9px 10px; font-weight:600 }
-    input:focus,select:focus,textarea:focus{ outline:4px solid var(--focus); outline-offset:2px }
+    input:focus,select:focus,textarea:focus,button:focus{ outline:4px solid var(--focus); outline-offset:2px }
 
     .btn{ appearance:none; background:var(--panel); color:var(--brand); border:3px solid var(--brand); padding:9px 12px; border-radius:10px; font-weight:800; cursor:pointer }
     .btn:hover{ background:#F0F7F4 }
@@ -55,48 +62,64 @@
     .card{ border:2px solid var(--border); border-radius:12px; padding:12px }
     .tot{ border-top:2px solid var(--border); padding-top:8px; margin-top:8px; font-weight:800 }
     .kpi{ border:2px solid var(--border); border-radius:12px; padding:12px }
-    .note{ border:3px solid var(--border); border-left:10px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel); color:var(--text); }
+    .note{ border:3px solid var(--border); border-left:10px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel); color:var(--text) }
 
-    /* ---------- PRINT (single consolidated block; mobile-safe) ---------- */
+    /* Prefer-reduced-motion override */
+    @media (prefers-reduced-motion: reduce){
+      :root{ --motion:0 }
+    }
+    [data-anim]{ transition: transform .2s ease, opacity .2s ease; }
+    html.reduce-motion [data-anim]{ transition:none !important }
+
+    /* ---------- PRINT ---------- */
     @page{ size:A4; margin:12mm }
     @media print{
       body{ background:#fff; color:#000 }
-      .header, .panel, .kpi, .card{ border-color:#000; }
+      .header, .panel, .kpi, .card{ border-color:#000 }
       html.print-illustration .header,
       html.print-illustration #inputs,
       html.print-illustration #disclaimer,
       html.print-illustration #admin,
-      html.print-illustration footer{ display:none !important; }
-      html.print-illustration #payslipPanel{ display:block !important; }
-      /* 80% scale to fit one A4 */
-      html.print-illustration .wrap{ transform:scale(.8); transform-origin:top left; width:calc(100%/.8); }
-      html.print-illustration body{ zoom:.8; } /* Chromium hint */
+      html.print-illustration footer{ display:none !important }
+      html.print-illustration #payslipPanel{ display:block !important }
+      html.print-illustration .wrap{ transform:scale(.8); transform-origin:top left; width:calc(100%/.8) }
+      html.print-illustration body{ zoom:.8 } /* Chromium hint */
     }
   </style>
 </head>
 <body>
+  <a href="#main" class="skip">Skip to main content</a>
+
   <div class="wrap">
-    <header class="header">
+    <header class="header" role="banner">
       <div>
         <h1>NHS Pension Opt-Out Calculator (England only)</h1>
         <p class="small" style="margin:0">Monthly payslip illustration — <b>stay in</b> vs <b>opt out</b>. NI inferred from <b>DOB</b>.</p>
       </div>
 
-      <div class="actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-        <label class="small" for="themeSelect" style="color:#fff">Theme</label>
-        <select id="themeSelect" title="Theme selector" aria-label="Theme selector">
-          <option value="auto">Auto</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-          <option value="hc">High contrast</option>
-          <option value="hc-large">High contrast (Large)</option>
-        </select>
-
+      <div class="a11y-bar" aria-label="Accessibility controls">
+        <!-- Theme -->
+        <div class="a11y-group" role="group" aria-label="Theme">
+          <span class="a11y-label">Theme</span>
+          <select id="themeSelect" title="Theme selector" aria-label="Theme selector">
+            <option value="auto">Auto</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="hc">High contrast</option>
+            <option value="hc-large">High contrast (Large)</option>
+          </select>
+        </div>
+        <!-- Readability -->
+        <div class="a11y-group" role="group" aria-label="Readability">
+          <label class="a11y-label"><input id="toggleFont" type="checkbox" aria-label="Increase body font size by twelve percent"> Larger text</label>
+          <label class="a11y-label"><input id="toggleMotion" type="checkbox" aria-label="Reduce motion and animations"> Reduce motion</label>
+        </div>
+        <!-- Print -->
         <button id="btnPrintIllo" class="btn primary" type="button" aria-label="Print payslip illustration">Print illustration</button>
 
-        <!-- Admin/tester-only -->
+        <!-- Admin / ANDI -->
         <button id="btnAdmin" class="btn hide" aria-label="Open admin panel" aria-expanded="false" aria-controls="admin" type="button">Admin</button>
-        <button id="btnANDI" class="btn hide" type="button" aria-label="Run ANDI accessibility checker" aria-describedby="andiNote">Run ANDI Accessibility Checker</button>
+        <button id="btnANDI" class="btn hide" type="button" aria-label="Run ANDI accessibility checker" aria-describedby="andiNote">ANDI</button>
       </div>
       <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA accessibility testing tool locally. No data is sent externally.</p>
     </header>
@@ -105,117 +128,119 @@
     <section id="disclaimer" class="panel" aria-label="Disclaimer">
       <div class="note small">
         <b>Illustration, not payroll.</b> ESR uses YTD (cumulative) PAYE/NI, rounding and other deductions, so results will differ.
-        <span>For personalised information, check NHS Pensions or the <b>LAS Pensions Department</b>.</span>
+        <span>For personalised information, contact the <b>LAS Pensions Department</b> or NHS Pensions.</span>
       </div>
     </section>
 
     <!-- Inputs -->
-    <section id="inputs" class="panel grid2" aria-label="Inputs">
-      <div>
-        <h2 style="margin-top:0; font-weight:var(--heading-w)">Pensionable pay (monthly)</h2>
-        <div id="items"></div>
-        <div class="actions" style="margin-top:8px">
-          <button id="addItem" class="btn" type="button" aria-label="Add a new pay item">+ Add item</button>
-          <button id="clearItems" class="btn" type="button" aria-label="Clear all pay items">Clear</button>
-        </div>
-        <div class="space" style="border-top:2px solid var(--border); padding-top:10px; margin-top:10px">
-          <div class="muted">Total monthly pensionable pay</div>
-          <div id="totalPay" style="font-weight:800">£0.00</div>
-        </div>
-      </div>
-
-      <div>
-        <h2 style="margin-top:0; font-weight:var(--heading-w)">Your details</h2>
-        <div class="row">
-          <label class="cs6" for="dob"><span class="small">Date of birth</span>
-            <input id="dob" type="date" aria-label="Date of birth" />
-          </label>
-          <label class="cs6" for="taxCode"><span class="small">Tax code (optional)</span>
-            <input id="taxCode" type="text" aria-label="Tax code (optional)" placeholder="1257L, BR, D0, D1, NT" value="1257L" />
-          </label>
-        </div>
-        <p class="small muted" style="margin-top:8px">Assumes NHS “net pay arrangement”.</p>
-      </div>
-    </section>
-
-    <!-- Payslip Illustration -->
-    <section id="payslipPanel" class="panel" aria-label="Payslip illustration">
-      <h2 style="margin-top:0; font-weight:var(--heading-w)">Payslip illustration (monthly)</h2>
-      <div class="note small" style="margin-bottom:10px">
-        <ul style="margin:0 0 0 16px">
-          <li><b>Payments</b> shows each pensionable item you entered.</li>
-          <li><b>Deductions</b> show NHS Pension, PAYE and NI. The PAYE line shows taxable pay used.</li>
-        </ul>
-      </div>
-
-      <div class="payslip">
-        <!-- Stay in -->
-        <div class="card">
-          <div style="font-weight:800; margin-bottom:6px">Stay in</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-            <div>
-              <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
-              <div id="stayPayments"></div>
-              <div class="space tot"><div>Total payments</div><div id="stayTotalPayments">£0.00</div></div>
-            </div>
-            <div>
-              <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
-              <div class="space"><div>NHS Pension <span id="nhsRate">(0.0%)</span></div><div id="stayNhs">£0.00</div></div>
-              <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="stayTaxable">£0.00</span>)</span></div><div id="stayTax">£0.00</div></div>
-              <div class="space"><div>National Insurance</div><div id="stayNi">£0.00</div></div>
-              <div class="space tot"><div>Total deductions</div><div id="stayTotalDeds">£0.00</div></div>
-            </div>
+    <main id="main" tabindex="-1">
+      <section id="inputs" class="panel grid2" aria-label="Inputs">
+        <div>
+          <h2 style="margin-top:0; font-weight:var(--heading-w)">Pensionable pay (monthly)</h2>
+          <div id="items"></div>
+          <div class="actions" style="margin-top:8px">
+            <button id="addItem" class="btn" type="button" aria-label="Add a new pay item">+ Add item</button>
+            <button id="clearItems" class="btn" type="button" aria-label="Clear all pay items">Clear</button>
           </div>
-          <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="stayNet">£0.00</div></div>
-        </div>
-
-        <!-- Opt out -->
-        <div class="card">
-          <div style="font-weight:800; margin-bottom:6px">Opt out</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-            <div>
-              <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
-              <div id="outPayments"></div>
-              <div class="space tot"><div>Total payments</div><div id="outTotalPayments">£0.00</div></div>
-            </div>
-            <div>
-              <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
-              <div class="space"><div>NHS Pension</div><div>£0.00</div></div>
-              <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="outTaxable">£0.00</span>)</span></div><div id="outTax">£0.00</div></div>
-              <div class="space"><div>National Insurance</div><div id="outNi">£0.00</div></div>
-              <div class="space tot"><div>Total deductions</div><div id="outTotalDeds">£0.00</div></div>
-            </div>
-          </div>
-          <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="outNet">£0.00</div></div>
-        </div>
-      </div>
-
-      <!-- KPIs -->
-      <div style="display:grid; gap:12px; grid-template-columns:1fr; margin-top:12px">
-        <div class="kpi">
-          <div class="small muted">Difference in take-home (opt-out minus stay-in)</div>
-          <div id="delta" style="font-size:20px; font-weight:800">£0.00</div>
-        </div>
-        <div class="kpi">
-          <div class="small muted">Net annual pay — stay in / opt out</div>
-          <div id="netAnnual" style="font-size:18px; font-weight:800">£0.00 / £0.00</div>
-        </div>
-        <div class="kpi" id="benefits">
-          <div class="small muted">Employer pension (context)</div>
-          <div id="employerPension" style="font-size:18px; font-weight:800">≈ £0.00/yr</div>
-          <div class="small muted">Not deducted from pay but foregone if you opt out.</div>
-          <div class="note" style="margin-top:12px">
-            <div style="font-weight:700; margin-bottom:6px">Benefits you give up by opting out</div>
-            <ul class="small" style="margin:0 0 0 18px">
-              <li><span id="benefitEmployer">Employer pension contribution (approx.): £0.00/yr</span></li>
-              <li>Future NHS Pension accrual while opted out.</li>
-              <li>Death-in-service & survivor benefits linked to active membership.</li>
-              <li>Access to ill-health retirement benefits linked to active membership.</li>
-            </ul>
+          <div class="space" style="border-top:2px solid var(--border); padding-top:10px; margin-top:10px">
+            <div class="muted">Total monthly pensionable pay</div>
+            <div id="totalPay" style="font-weight:800" aria-live="polite">£0.00</div>
           </div>
         </div>
-      </div>
-    </section>
+
+        <div>
+          <h2 style="margin-top:0; font-weight:var(--heading-w)">Your details</h2>
+          <div class="row">
+            <label class="cs6" for="dob"><span class="small">Date of birth</span>
+              <input id="dob" type="date" aria-label="Date of birth" />
+            </label>
+            <label class="cs6" for="taxCode"><span class="small">Tax code (optional)</span>
+              <input id="taxCode" type="text" aria-label="Tax code (optional)" placeholder="1257L, BR, D0, D1, NT" value="1257L" />
+            </label>
+          </div>
+          <p class="small muted" style="margin-top:8px">Assumes NHS “net pay arrangement”.</p>
+        </div>
+      </section>
+
+      <!-- Payslip Illustration -->
+      <section id="payslipPanel" class="panel" aria-label="Payslip illustration">
+        <h2 style="margin-top:0; font-weight:var(--heading-w)">Payslip illustration (monthly)</h2>
+        <div class="note small" style="margin-bottom:10px">
+          <ul style="margin:0 0 0 16px">
+            <li><b>Payments</b> shows each pensionable item you entered.</li>
+            <li><b>Deductions</b> show NHS Pension, PAYE and NI. The PAYE line shows taxable pay used.</li>
+          </ul>
+        </div>
+
+        <div class="payslip" data-anim>
+          <!-- Stay in -->
+          <div class="card">
+            <div style="font-weight:800; margin-bottom:6px">Stay in</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+              <div>
+                <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
+                <div id="stayPayments"></div>
+                <div class="space tot"><div>Total payments</div><div id="stayTotalPayments" aria-live="polite">£0.00</div></div>
+              </div>
+              <div>
+                <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
+                <div class="space"><div>NHS Pension <span id="nhsRate">(0.0%)</span></div><div id="stayNhs">£0.00</div></div>
+                <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="stayTaxable">£0.00</span>)</span></div><div id="stayTax">£0.00</div></div>
+                <div class="space"><div>National Insurance</div><div id="stayNi">£0.00</div></div>
+                <div class="space tot"><div>Total deductions</div><div id="stayTotalDeds" aria-live="polite">£0.00</div></div>
+              </div>
+            </div>
+            <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="stayNet" aria-live="polite">£0.00</div></div>
+          </div>
+
+          <!-- Opt out -->
+          <div class="card">
+            <div style="font-weight:800; margin-bottom:6px">Opt out</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+              <div>
+                <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
+                <div id="outPayments"></div>
+                <div class="space tot"><div>Total payments</div><div id="outTotalPayments" aria-live="polite">£0.00</div></div>
+              </div>
+              <div>
+                <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
+                <div class="space"><div>NHS Pension</div><div>£0.00</div></div>
+                <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="outTaxable">£0.00</span>)</span></div><div id="outTax">£0.00</div></div>
+                <div class="space"><div>National Insurance</div><div id="outNi">£0.00</div></div>
+                <div class="space tot"><div>Total deductions</div><div id="outTotalDeds" aria-live="polite">£0.00</div></div>
+              </div>
+            </div>
+            <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="outNet" aria-live="polite">£0.00</div></div>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div style="display:grid; gap:12px; grid-template-columns:1fr; margin-top:12px" data-anim>
+          <div class="kpi">
+            <div class="small muted">Difference in take-home (opt-out minus stay-in)</div>
+            <div id="delta" style="font-size:20px; font-weight:800" aria-live="polite">£0.00</div>
+          </div>
+          <div class="kpi">
+            <div class="small muted">Net annual pay — stay in / opt out</div>
+            <div id="netAnnual" style="font-size:18px; font-weight:800" aria-live="polite">£0.00 / £0.00</div>
+          </div>
+          <div class="kpi" id="benefits">
+            <div class="small muted">Employer pension (context)</div>
+            <div id="employerPension" style="font-size:18px; font-weight:800" aria-live="polite">≈ £0.00/yr</div>
+            <div class="small muted">Not deducted from pay but foregone if you opt out.</div>
+            <div class="note" style="margin-top:12px">
+              <div style="font-weight:700; margin-bottom:6px">Benefits you give up by opting out</div>
+              <ul class="small" style="margin:0 0 0 18px">
+                <li><span id="benefitEmployer">Employer pension contribution (approx.): £0.00/yr</span></li>
+                <li>Future NHS Pension accrual while opted out.</li>
+                <li>Death-in-service & survivor benefits linked to active membership.</li>
+                <li>Access to ill-health retirement benefits linked to active membership.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
 
     <!-- Admin -->
     <section id="admin" class="panel hide" aria-label="Admin">
@@ -237,6 +262,7 @@
           </div>
         </div>
       </div>
+      <p id="andiNote2" class="small muted hide">ANDI is available via the “ANDI” button in the header.</p>
     </section>
 
     <footer class="small muted" style="margin:12px 0 24px">
@@ -256,7 +282,6 @@
         additionalRateThreshold: 125140,
         bands: { ENG_NI: [ {upper:37700,rate:.20},{upper:125140,rate:.40},{upper:null,rate:.45} ] }
       },
-      ni: { monthly: { LEL: 542, PT: 1048, UEL: 4189 }, employeeRates
       ni: { monthly: { LEL: 542, PT: 1048, UEL: 4189 }, employeeRates: { main: .08, upper: .02 } },
       nhs: {
         tiers: [
@@ -273,18 +298,14 @@
   };
 
   /* ---------- Storage, formatting & theme ---------- */
-  const THEME_KEY = 'las_optout_theme';
-  function loadRates(){
-    try{
-      const raw = localStorage.getItem('las_optout_rates_v1');
-      if(!raw) return defaultRates;
-      const p = JSON.parse(raw);
-      return p?.years?.length ? p : defaultRates;
-    }catch{ return defaultRates; }
-  }
+  const THEME_KEY='las_optout_theme';
+  const FONT_KEY='las_optout_fontscale';
+  const MOTION_KEY='las_optout_motion';
+
+  function loadRates(){ try{const raw=localStorage.getItem('las_optout_rates_v1'); if(!raw) return defaultRates; const p=JSON.parse(raw); return p?.years?.length?p:defaultRates;}catch{return defaultRates;} }
   function saveRates(r){ localStorage.setItem('las_optout_rates_v1', JSON.stringify(r,null,2)); }
 
-  const GBP = new Intl.NumberFormat('en-GB',{ style:'currency', currency:'GBP' });
+  const GBP = new Intl.NumberFormat('en-GB',{style:'currency', currency:'GBP'});
   const fmt = n => GBP.format((+n)||0);
   const pct = n => `${(n*100).toFixed(1)}%`;
 
@@ -295,11 +316,25 @@
     else if(v==='hc') document.documentElement.classList.add('theme-hc');
     else if(v==='hc-large') document.documentElement.classList.add('theme-hc-large');
   }
-  (function initTheme(){
-    const sel = document.getElementById('themeSelect');
-    const saved = localStorage.getItem(THEME_KEY) || 'auto';
-    sel.value = saved; applyTheme(saved);
-    sel.addEventListener('change', ()=>{ const v=sel.value; localStorage.setItem(THEME_KEY,v); applyTheme(v); });
+
+  // A11y toggles (font & motion)
+  function applyFontToggle(on){ document.documentElement.style.setProperty('--scale', on?'1.12':'1'); }
+  function applyMotionToggle(on){ document.documentElement.classList.toggle('reduce-motion', on); }
+
+  (function initA11y(){
+    const themeSel=document.getElementById('themeSelect');
+    const savedTheme=localStorage.getItem(THEME_KEY)||'auto';
+    themeSel.value=savedTheme; applyTheme(savedTheme);
+    themeSel.addEventListener('change',()=>{ const v=themeSel.value; localStorage.setItem(THEME_KEY,v); applyTheme(v); });
+
+    const fontBox=document.getElementById('toggleFont');
+    const motionBox=document.getElementById('toggleMotion');
+    const savedFont=localStorage.getItem(FONT_KEY)==='1';
+    const savedMotion=localStorage.getItem(MOTION_KEY)==='1';
+    fontBox.checked=savedFont; motionBox.checked=savedMotion;
+    applyFontToggle(savedFont); applyMotionToggle(savedMotion);
+    fontBox.addEventListener('change',()=>{ localStorage.setItem(FONT_KEY, fontBox.checked?'1':'0'); applyFontToggle(fontBox.checked); });
+    motionBox.addEventListener('change',()=>{ localStorage.setItem(MOTION_KEY, motionBox.checked?'1':'0'); applyMotionToggle(motionBox.checked); });
   })();
 
   /* ---------- Tax helpers ---------- */
@@ -363,10 +398,7 @@
   const elStayPayments = document.getElementById('stayPayments');
   const elOutPayments  = document.getElementById('outPayments');
 
-  const elDelta = document.getElementById('delta');
-  const elBenefitEmployer = document.getElementById('benefitEmployer');
-
-  const isAdmin = new URLSearchParams(location.search).get('admin')==='1';
+  const isAdmin = new URLSearchParams(location.search).get('admin')==='1' || new URLSearchParams(location.search).get('a11y')==='1';
   const btnAdmin = document.getElementById('btnAdmin');
   const adminSec = document.getElementById('admin');
   const ratesCurrent = document.getElementById('ratesCurrent');
@@ -407,7 +439,7 @@
     URL.revokeObjectURL(url);
   });
 
-  /* ---------- ANDI loader (admin only) ---------- */
+  /* ---------- ANDI loader ---------- */
   btnANDI?.addEventListener('click', ()=>{
     if(window.ANDI){ window.ANDI.init(); return; }
     const s=document.createElement('script');
@@ -450,7 +482,7 @@
       if(chk.checked){
         rate.classList.remove('hide'); hours.classList.remove('hide');
         amount.classList.add('hide');
-        preview.textContent = fmt((it.rate||0)*(it.hours||0));
+        preview.textContent = GBP.format((it.rate||0)*(it.hours||0));
         it.useRate = true;
       }else{
         rate.classList.add('hide'); hours.classList.add('hide');
@@ -474,8 +506,8 @@
   }
   function rebuildItems(){ elItems.innerHTML=''; state.items.forEach(it=>elItems.appendChild(itemRow(it))); }
 
-  elAdd.addEventListener('click',()=> addItem('Other',0));
-  elClear.addEventListener('click',()=>{ state.items=[]; rebuildItems(); render(); });
+  document.getElementById('addItem').addEventListener('click',()=> addItem('Other',0));
+  document.getElementById('clearItems').addEventListener('click',()=>{ state.items=[]; rebuildItems(); render(); });
   addItem('Basic',0); addItem('HCA',0);
 
   /* ---------- Print: Illustration-only (80%) ---------- */
@@ -539,15 +571,22 @@
     document.getElementById('outNet').textContent = fmt(netOut);
     document.getElementById('outTaxable').textContent = fmt(monthlyGross);
 
+    const elDelta = document.getElementById('delta');
     elDelta.textContent = fmt(delta);
     elDelta.className = 'text-' + (delta>=0 ? 'green' : 'red');
     document.getElementById('netAnnual').textContent = fmt(netStay*12) + ' / ' + fmt(netOut*12);
 
     const employerAnnual = annualGross * (state.year.nhs.employerRateHint||0);
     document.getElementById('employerPension').textContent = '≈ ' + fmt(employerAnnual) + '/yr';
-    elBenefitEmployer.textContent = 'Employer pension contribution (approx.): ' + fmt(employerAnnual) + '/yr';
+    document.getElementById('benefitEmployer').textContent = 'Employer pension contribution (approx.): ' + fmt(employerAnnual) + '/yr';
 
-    refreshAdminText();
+    // small motion cue
+    if(getComputedStyle(document.documentElement).getPropertyValue('--motion')!=='0'){
+      document.querySelectorAll('[data-anim]').forEach(n=>{
+        n.style.transform='scale(1.001)'; n.style.opacity='0.99';
+        setTimeout(()=>{ n.style.transform=''; n.style.opacity=''; },120);
+      });
+    }
   }
 
   elDob.addEventListener('input', render);
