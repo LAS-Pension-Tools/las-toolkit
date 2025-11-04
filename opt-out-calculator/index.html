@@ -7,7 +7,6 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>'">
 
   <style>
-    /* ---------- Design tokens ---------- */
     :root{
       --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
       --ok:#1b8555; --warn:#9F3131; --heading-w:800;
@@ -18,18 +17,11 @@
     html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; }
     html.theme-dark{  --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
 
-    /* High-contrast (normal) — +15% text */
-    html.theme-hc{
-      --bg:#ffffff; --panel:#ffffff; --text:#000000; --muted:#000000; --border:#000000; --focus:#003a7a;
-      --heading-w:900;
-    }
+    /* High contrast */
+    html.theme-hc{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading-w:900; }
     html.theme-hc body{ font-size:1.15em; }
-
-    /* High-contrast (Large) — +25% text */
-    html.theme-hc-large{
-      --bg:#ffffff; --panel:#ffffff; --text:#000000; --muted:#000000; --border:#000000; --focus:#003a7a;
-      --heading-w:900;
-    }
+    /* High contrast (Large) */
+    html.theme-hc-large{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading-w:900; }
     html.theme-hc-large body{ font-size:1.25em; }
 
     *{ box-sizing:border-box }
@@ -65,18 +57,18 @@
     .text-green{ color:var(--ok) } .text-red{ color:var(--warn) }
     .hide{ display:none }
 
-    /* ---------- PRINT RULES ---------- */
+    /* ---------- PRINT (single consolidated block to avoid mobile overrides) ---------- */
     @page{ size:A4; margin:12mm }
-    /* Default print = SUMMARY page */
     @media print{
       body{ background:#fff; color:#000 }
       .header, .panel, .kpi, .card{ border-color:#000; }
       .header{ border-radius:0; }
+
+      /* Default: PRINT SUMMARY */
       .wrap, #admin, #payslipPanel, #disclaimer, #inputs { display:none !important; }
       #printSummary{ display:block !important; }
-    }
-    /* Illustration-only print (header & inputs removed) */
-    @media print{
+
+      /* Illustration-only (80%) when .print-illustration is on <html> */
       html.print-illustration #printSummary{ display:none !important; }
       html.print-illustration .wrap{ display:block !important; }
       html.print-illustration .header,
@@ -85,12 +77,11 @@
       html.print-illustration #admin,
       html.print-illustration footer{ display:none !important; }
       html.print-illustration #payslipPanel{ display:block !important; }
-    }
-    /* Compact scaling ~80% for illustration (fits one A4) */
-    @media print{
+
+      /* Scale to ~80% to fit one A4 page */
       html.print-illustration.print-compact body{ zoom:.8; } /* Chrome/Edge */
       html.print-illustration.print-compact .wrap{
-        transform:scale(.8); transform-origin:top left; width:calc(100% / .8); /* Firefox fallback */
+        transform:scale(.8); transform-origin:top left; width:calc(100% /.8); /* Firefox/iOS fallback */
       }
     }
   </style>
@@ -111,11 +102,9 @@
           <option value="hc">High contrast</option>
           <option value="hc-large">High contrast (Large)</option>
         </select>
-        <!-- Print buttons (visible to all) -->
-        <button id="btnPrint" class="btn">Print / Save PDF (Summary)</button>
-        <button id="btnPrintIllo" class="btn primary">Print Illustration</button>
-        <button id="btnPrintIllo80" class="btn">Print Illustration (80%)</button>
-        <!-- Admin button stays query-guarded -->
+        <!-- Single print button as requested -->
+        <button id="btnPrintIllo80" class="btn primary">Print illustration</button>
+        <!-- Admin stays query-guarded -->
         <button id="btnAdmin" class="btn" aria-expanded="false" aria-controls="admin">Admin</button>
       </div>
     </header>
@@ -157,7 +146,7 @@
       </div>
     </section>
 
-    <!-- Payslip -->
+    <!-- Payslip Illustration -->
     <section id="payslipPanel" class="panel" aria-label="Payslip illustration">
       <h2 style="margin-top:0; font-weight:var(--heading-w)">Payslip illustration (monthly)</h2>
       <div class="note small" style="margin-bottom:10px">
@@ -263,7 +252,7 @@
     </footer>
   </div>
 
-  <!-- PRINT SUMMARY -->
+  <!-- PRINT SUMMARY (still available via browser print if needed) -->
   <section id="printSummary" class="panel hide" aria-label="Print summary">
     <h2 style="margin-top:0; font-weight:var(--heading-w)">NHS Pension Opt-Out Calculator — Summary</h2>
     <div class="small muted" id="printMeta">Generated: —</div>
@@ -379,8 +368,6 @@
   const ratesCurrent=document.getElementById('ratesCurrent'), ratesPaste=document.getElementById('ratesPaste');
 
   const themeSelect=document.getElementById('themeSelect');
-  const btnPrint=document.getElementById('btnPrint');
-  const btnPrintIllo=document.getElementById('btnPrintIllo');
   const btnPrintIllo80=document.getElementById('btnPrintIllo80');
 
   /* Admin visibility via ?admin=1 */
@@ -394,7 +381,6 @@
     else if(v==='dark') document.documentElement.classList.add('theme-dark');
     else if(v==='hc') document.documentElement.classList.add('theme-hc');
     else if(v==='hc-large') document.documentElement.classList.add('theme-hc-large');
-    /* 'auto' = no explicit class; respects OS preference */
   }
   (function initTheme(){ const saved=localStorage.getItem(THEME_KEY)||'auto'; themeSelect.value=saved; applyTheme(saved); })();
   themeSelect.addEventListener('change',()=>{ const v=themeSelect.value; localStorage.setItem(THEME_KEY,v); applyTheme(v); });
@@ -422,54 +408,41 @@
   }
   function addItem(label='Basic',amount=0){ const it={id:'it-'+(idSeq++), label, amount, useRate:false, rate:null, hours:null}; state.items.push(it); elItems.appendChild(itemRow(it)); render(); }
   function rebuildItems(){ elItems.innerHTML=''; state.items.forEach(it=>elItems.appendChild(itemRow(it))); }
-  elAdd.addEventListener('click',()=>addItem('Other',0));
-  elClear.addEventListener('click',()=>{ state.items=[]; rebuildItems(); render(); });
+  document.getElementById('addItem').addEventListener('click',()=>addItem('Other',0));
+  document.getElementById('clearItems').addEventListener('click',()=>{ state.items=[]; rebuildItems(); render(); });
   addItem('Basic',0); addItem('HCA',0);
 
   /* Admin */
   function refreshAdminText(){ if(ratesCurrent) ratesCurrent.value=JSON.stringify(state.rates,null,2); }
-  btnAdmin?.addEventListener('click',()=>{ adminSec.classList.toggle('hide'); const ex=btnAdmin.getAttribute('aria-expanded')==='true'; btnAdmin.setAttribute('aria-expanded',String(!ex)); refreshAdminText(); });
+  document.getElementById('btnAdmin')?.addEventListener('click',()=>{ adminSec.classList.toggle('hide'); const ex=document.getElementById('btnAdmin').getAttribute('aria-expanded')==='true'; document.getElementById('btnAdmin').setAttribute('aria-expanded',String(!ex)); refreshAdminText(); });
   btnImport?.addEventListener('click',()=>{ try{ const p=JSON.parse(ratesPaste.value); if(!p?.years?.length) throw new Error('Malformed JSON'); state.rates=p; state.year=p.years[0]; saveRates(p); ratesPaste.value=''; refreshAdminText(); render(); alert('Rates imported.'); }catch(e){ alert('Import failed: '+e.message); }});
   btnExport?.addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(state.rates,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url); });
 
-  /* PRINT: Summary + Illustration (80%) */
-  function fillPrintSummary(){
-    const now=new Date(); document.getElementById('printMeta').textContent='Generated: '+now.toLocaleString('en-GB');
-
-    const printPayments=document.getElementById('printPayments');
-    const printTotalPayments=document.getElementById('printTotalPayments');
-    printPayments.innerHTML=''; let total=0;
-    state.items.forEach(it=>{ const v=it.useRate?(it.rate||0)*(it.hours||0):(+it.amount||0); if(!v) return; total+=v; const row=document.createElement('div'); row.className='space'; row.innerHTML=`<div>${it.label}</div><div>${fmt(v)}</div>`; printPayments.appendChild(row); });
-    printTotalPayments.textContent=fmt(total);
-
-    document.getElementById('printNetStay').textContent=document.getElementById('stayNet').textContent;
-    document.getElementById('printNetOut').textContent =document.getElementById('outNet').textContent;
-    document.getElementById('printDelta').textContent  =document.getElementById('delta').textContent;
-
-    const employerTxt=document.getElementById('employerPension').textContent.replace(/^≈\s*/,'');
-    document.getElementById('printEmployer').textContent=employerTxt;
-
-    document.getElementById('printTaxCode').textContent=(elTax.value||'—').toUpperCase();
-
-    // Format DOB as dd-mm-yyyy (UK)
-    const dobVal=elDob.value; // yyyy-mm-dd
-    if(dobVal && /^\d{4}-\d{2}-\d{2}$/.test(dobVal)){
-      const [y,m,d]=dobVal.split('-');
-      document.getElementById('printDob').textContent = `${d}-${m}-${y}`;
-    }else{
-      document.getElementById('printDob').textContent = '—';
-    }
+  /* PRINT: Illustration-only (80%) with mobile-safe timing */
+  function enableIllustrationPrintFlags(){
+    document.documentElement.classList.add('print-illustration','print-compact');
   }
-  btnPrint.addEventListener('click',()=>{ fillPrintSummary(); window.print(); });
-
-  function printIllustration(compact=false){
-    document.documentElement.classList.add('print-illustration');
-    if(compact) document.documentElement.classList.add('print-compact'); // 80%
-    window.print();
-    setTimeout(()=>{ document.documentElement.classList.remove('print-illustration','print-compact'); }, 0);
+  function disableIllustrationPrintFlags(){
+    document.documentElement.classList.remove('print-illustration','print-compact');
   }
-  btnPrintIllo.addEventListener('click',()=>printIllustration(false));
-  btnPrintIllo80.addEventListener('click',()=>printIllustration(true)); // 80%
+
+  // Some mobile browsers fire print before reflow. Ensure class is active during print.
+  const mql = window.matchMedia ? window.matchMedia('print') : null;
+  if(mql && mql.addEventListener){
+    mql.addEventListener('change', e => { if(e.matches){ enableIllustrationPrintFlags(); } else { disableIllustrationPrintFlags(); }});
+  } else if(mql && mql.addListener){ // Safari/iOS fallback
+    mql.addListener(e => { if(e.matches){ enableIllustrationPrintFlags(); } else { disableIllustrationPrintFlags(); }});
+  }
+  window.addEventListener('beforeprint', enableIllustrationPrintFlags);
+  window.addEventListener('afterprint', disableIllustrationPrintFlags);
+
+  btnPrintIllo80.addEventListener('click', ()=>{
+    // Ensure flags are set, then give the browser a tick to reflow before opening the dialog
+    enableIllustrationPrintFlags();
+    setTimeout(()=>{ window.print(); }, 50);
+    // Safety cleanup in case afterprint doesn't fire
+    setTimeout(disableIllustrationPrintFlags, 2000);
+  });
 
   /* Recalc & render */
   function render(){
