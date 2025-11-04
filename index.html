@@ -1,658 +1,446 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-GB">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow, noarchive">
-    <title>NHS Refund Eligibility Tool</title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23023020'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3E£%3C/text%3E%3C/svg%3E">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NHS Pension Opt-Out Calculator (England only)</title>
+  <meta name="description" content="NHS Pension Opt-Out Calculator (England only) — monthly payslip illustration: stay in vs opt out. For guidance only.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>'">
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            line-height: 1.6;
-        }
+  <style>
+    :root{
+      --brand:#023020;--text:#111;--muted:#4A5568;--bg:#FAFAFA;--panel:#fff;
+      --border:#D6D9DC;--focus:#0B69A3;--ok:#1b8555;--warn:#9F3131;--heading-w:800;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{--bg:#0f1214;--panel:#121618;--text:#EDEFF1;--muted:#C7CFD6;--border:#2C343A;}
+    }
+    html.theme-light{--bg:#FAFAFA;--panel:#fff;--text:#111;--muted:#4A5568;}
+    html.theme-dark{--bg:#0f1214;--panel:#121618;--text:#EDEFF1;--muted:#C7CFD6;}
+    html.theme-hc{--bg:#fff;--panel:#fff;--text:#000;--muted:#000;--border:#000;--focus:#003a7a;}
+    html.theme-hc body{font-size:1.15em;}
+    html.theme-hc-large{--bg:#fff;--panel:#fff;--text:#000;--muted:#000;--border:#000;--focus:#003a7a;}
+    html.theme-hc-large body{font-size:1.25em;}
 
-        .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            max-width: 650px;
-            width: 100%;
-            overflow: hidden;
-        }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+    .header{background:var(--brand);color:#fff;padding:20px;border-radius:12px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .header h1{margin:0;font-size:22px;font-weight:var(--heading-w)}
+    .panel{background:var(--panel);border:2px solid var(--border);border-radius:12px;padding:16px;margin-top:16px}
+    .grid2{display:grid;grid-template-columns:1fr;gap:14px}
+    @media(min-width:860px){.grid2{grid-template-columns:1fr 1fr}}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:8px;align-items:end}
+    .cs1{grid-column:span 1}.cs2{grid-column:span 2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}
+    label>span.small{display:block;font-size:12px;margin-bottom:4px;color:var(--muted)}
+    input,select,textarea{width:100%;border:2px solid var(--border);background:var(--panel);color:var(--text);border-radius:8px;padding:9px 10px;font-weight:600}
+    input:focus,select:focus,textarea:focus{outline:4px solid var(--focus);outline-offset:2px}
+    .btn{background:var(--panel);color:var(--brand);border:3px solid var(--brand);padding:9px 12px;border-radius:10px;font-weight:800;cursor:pointer}
+    .btn.primary{background:var(--brand);color:#fff}
+    .hide{display:none}
+    .small{font-size:12px}.muted{color:var(--muted)}.space{display:flex;justify-content:space-between;align-items:center}
+    .payslip{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:860px){.payslip{grid-template-columns:1fr 1fr}}
+    .card{border:2px solid var(--border);border-radius:12px;padding:12px}
+    .tot{border-top:2px solid var(--border);padding-top:8px;margin-top:8px;font-weight:800}
+    .note{border:3px solid var(--border);border-left:10px solid var(--brand);border-radius:10px;padding:10px 12px}
+    .kpi{border:2px solid var(--border);border-radius:12px;padding:12px}
+    .text-green{color:var(--ok)}.text-red{color:var(--warn)}
 
-        .header {
-            background: linear-gradient(135deg, #023020 0%, #036635 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-
-        .progress-bar {
-            height: 4px;
-            background: #e0e0e0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: #023020;
-            width: 0;
-            transition: width 0.3s ease;
-        }
-
-        .content {
-            padding: 30px;
-            min-height: 300px;
-        }
-
-        .step {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .step.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .question {
-            margin-bottom: 25px;
-        }
-
-        .question h2 {
-            color: #023020;
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-
-        .question p {
-            color: #666;
-            font-size: 15px;
-        }
-
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        button {
-            background: white;
-            color: #023020;
-            border: 2px solid #023020;
-            padding: 15px 25px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: left;
-            position: relative;
-        }
-
-        button:hover, button:focus {
-            background: #023020;
-            color: white;
-            transform: translateX(5px);
-        }
-
-        button:focus {
-            outline: 3px solid #036635;
-            outline-offset: 2px;
-        }
-
-        button[disabled] {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .result {
-            background: #f8f9fa;
-            border-left: 4px solid #023020;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-
-        .result h3 {
-            color: #023020;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-
-        .result p {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .result ul {
-            margin-left: 20px;
-            color: #555;
-        }
-
-        .result ul li {
-            margin-bottom: 8px;
-        }
-
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .nav-button {
-            background: transparent;
-            color: #023020;
-            border: 1px solid #ddd;
-            padding: 10px 20px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-button:hover {
-            background: #f8f9fa;
-            transform: none;
-        }
-
-        .breadcrumbs {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .breadcrumb.active {
-            color: #023020;
-            font-weight: 600;
-        }
-
-        .arrow {
-            font-size: 18px;
-        }
-
-        .info-box {
-            background: #e8f4f0;
-            border: 1px solid #a3d4c7;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-size: 14px;
-        }
-
-        .info-box strong {
-            color: #023020;
-        }
-
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 20px;
-            }
-            
-            .content {
-                padding: 20px;
-            }
-            
-            button {
-                padding: 12px 20px;
-                font-size: 15px;
-            }
-        }
-        
-        a {
-            color: #023020;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    @page{size:A4;margin:12mm}
+    @media print{
+      html.print-illustration .header,
+      html.print-illustration #inputs,
+      html.print-illustration #admin,
+      html.print-illustration #disclaimer,
+      html.print-illustration footer{display:none!important}
+      html.print-illustration #payslipPanel{display:block!important}
+      html.print-illustration .wrap{transform:scale(.8);transform-origin:top left;width:calc(100%/.8)}
+      html.print-illustration body{zoom:.8}
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>LAS Pensions Hub - Decision Tool</h1>
-            <p>NHS Pension Scheme guidance tool</p>
-        </div>
-        
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressBar"></div>
-        </div>
-        
-        <div class="content">
-            <div id="breadcrumbs" class="breadcrumbs" aria-label="Progress through questionnaire"></div>
-            
-            <!-- Step 1: Initial Choice -->
-            <div class="step active" data-step="1">
-                <div class="question">
-                    <h2>What would you like to know about?</h2>
-                    <p>Select the option that best describes your situation</p>
-                </div>
-                
-                <div class="button-group" role="group" aria-label="Initial options">
-                    <button onclick="app.handleChoice('opt-out')" aria-describedby="opt-out-desc">
-                        <strong>Opting Out</strong>
-                        <div id="opt-out-desc" style="font-size: 14px; color: #666; font-weight: normal;">
-                            Learn about leaving the pension scheme
-                        </div>
-                    </button>
-                    
-                    <button onclick="app.handleChoice('refund')" aria-describedby="refund-desc">
-                        <strong>Getting a Refund</strong>
-                        <div id="refund-desc" style="font-size: 14px; color: #666; font-weight: normal;">
-                            Check if you're eligible for contribution refunds
-                        </div>
-                    </button>
-                    
-                    <button onclick="app.handleChoice('info')" aria-describedby="info-desc">
-                        <strong>General Information</strong>
-                        <div id="info-desc" style="font-size: 14px; color: #666; font-weight: normal;">
-                            View key forms and contact details
-                        </div>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Step 2: Opt Out Result -->
-            <div class="step" data-step="2">
-                <div class="result">
-                    <h3>✓ Opting Out of the NHS Pension Scheme</h3>
-                    <p><strong>Yes, you can opt out at any time.</strong></p>
-                    
-                    <p>To opt out, you need to:</p>
-                    <ul>
-                        <li>Complete Form SD502 (Application to Leave the NHS Pension Scheme)</li>
-                        <li><strong>Print and sign the original form (wet signature required)</strong></li>
-                        <li>Submit to LAS Pensions Department: 220 Waterloo Road, London SE1 8SD</li>
-                        <li>LAS will process your opt-out via ESR</li>
-                        <li>Keep a photocopy for your records</li>
-                    </ul>
-                    
-                    <div class="info-box">
-                        <strong>Important:</strong> Opting out means you'll lose valuable benefits including employer contributions, life assurance, and ill-health retirement cover. The scheme may be more affordable than you think due to tax relief. Consider seeking independent financial advice before making this decision. See the <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/leaving-the-scheme--1" target="_blank" style="color: #023020; font-weight: bold;">Leaving the NHS Pension Scheme</a> page on the LAS Pensions Hub for more information.
-                    </div>
-                    
-                    <p style="margin-top: 20px;">Would you also like to check if you're eligible for a refund?</p>
-                    <div class="button-group">
-                        <button onclick="app.checkRefundAfterOptOut()">Check Refund Eligibility</button>
-                    </div>
-                    
-                    <p style="margin-top: 15px; font-size: 14px; color: #666;">
-                        <strong>Note:</strong> SD502 (opt-out) and RF12 (refund) are separate although linked processes. If eligible for a refund (less than 2 years membership), you can submit Form RF12 at the same time as your SD502 form, but not before. Both forms go to LAS Pensions Department. Only apply for a refund if you don't plan to opt back in within a year.
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Step 3: Refund - Check Opt Out -->
-            <div class="step" data-step="3">
-                <div class="question">
-                    <h2>Have you already opted out?</h2>
-                    <p>You must submit Form SD502 to opt out. You can submit Form RF12 (refund application) at the same time as SD502, but not before</p>
-                </div>
-                
-                <div class="button-group">
-                    <button onclick="app.handleOptOutStatus(true)">Yes, I've submitted/am submitting SD502</button>
-                    <button onclick="app.handleOptOutStatus(false)">No, I haven't opted out yet</button>
-                </div>
-            </div>
-            
-            <!-- Step 4: Must Opt Out First -->
-            <div class="step" data-step="4">
-                <div class="result">
-                    <h3>⚠️ Action Required</h3>
-                    <p><strong>You must opt out first before applying for a refund.</strong></p>
-                    
-                    <p>Steps to take:</p>
-                    <ul>
-                        <li>Complete Form SD502 to opt out of the scheme</li>
-                        <li><strong>Print and sign with wet signature (originals only accepted)</strong></li>
-                        <li>Submit original hard copy to LAS Pensions Department</li>
-                        <li>LAS will process your opt-out via ESR</li>
-                        <li>If you want a refund and won't opt back in within a year, you can submit Form RF12 at the same time as SD502, but not before</li>
-                    </ul>
-                    
-                    <div class="info-box">
-                        <strong>Note:</strong> Your opt-out will take effect from the 1st of the month following receipt of your SD502 form. SD502 and RF12 are separate although linked processes. We cannot accept photocopies, scans, or digital signatures. See the <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/leaving-the-scheme--1" target="_blank" style="color: #023020; font-weight: bold;">LAS Pensions Hub</a> for full instructions.
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Step 5: Check Membership Duration -->
-            <div class="step" data-step="5">
-                <div class="question">
-                    <h2>How long have you been a scheme member?</h2>
-                    <p>Include all periods of qualifying NHS Pension Scheme membership, including any prior Trust employment. You must have <strong>less than 2 years</strong> of qualifying membership to be eligible for a refund.</p>
-                </div>
-                
-                <div class="button-group">
-                    <button onclick="app.handleMembershipDuration('less-than-2')">Less than 2 years total</button>
-                    <button onclick="app.handleMembershipDuration('almost-2')">Almost 2 years (will be 2 years next month)</button>
-                    <button onclick="app.handleMembershipDuration('more-than-2')">More than 2 years total</button>
-                </div>
-            </div>
-            
-            <!-- Step 6: Eligible for Refund -->
-            <div class="step" data-step="6">
-                <div class="result">
-                    <h3>✓ You May Be Eligible for a Refund</h3>
-                    <p><strong>Based on your membership duration, you can apply for a refund.</strong></p>
-                    
-                    <p>Next steps:</p>
-                    <ul>
-                        <li>Complete Form RF12 (Application for Refund of Pension Contributions)</li>
-                        <li><strong>Must be original with wet signature - no photocopies accepted</strong></li>
-                        <li>Submit to: LAS Pensions Department, 220 Waterloo Road, London SE1 8SD</li>
-                        <li>Can be submitted at the same time as SD502 (but not before)</li>
-                        <li>LAS will submit your RF12 application online to NHS Pensions</li>
-                        <li>NHS Pensions will write to you directly with their decision</li>
-                        <li>If approved, payment will be made directly to your bank account</li>
-                    </ul>
-                    
-                    <div class="info-box">
-                        <strong>Important:</strong> Only apply for a refund if you don't plan to opt back into the scheme within a year. Refunds are subject to tax and National Insurance deductions. Refunds are only available if you haven't transferred your pension benefits to another scheme. See the <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/refunds-of-nhs-pension-contributions--4" target="_blank" style="color: #023020; font-weight: bold;">LAS Pensions Hub</a> for full instructions.
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Step 7: Urgent Deadline -->
-            <div class="step" data-step="7">
-                <div class="result">
-                    <h3>⏰ Urgent Action Required</h3>
-                    <p><strong>You may be eligible, but you must act quickly!</strong></p>
-                    
-                    <p>Critical deadline:</p>
-                    <ul>
-                        <li>Complete Form SD502 (opt-out) immediately</li>
-                        <li>If you want a refund and won't be opting back in within a year, also complete Form RF12</li>
-                        <li><strong>Must be originals with wet signatures - no photocopies or emails accepted</strong></li>
-                        <li>Print and post them TODAY or TOMORROW to LAS Pensions Department</li>
-                        <li><strong>Forms MUST reach LAS before you reach 2 years membership</strong></li>
-                        <li>RF12 cannot be processed before SD502</li>
-                        <li>LAS will submit RF12 online to NHS Pensions who make the final refund decision</li>
-                        <li>NHS Pensions will write to you directly with their decision</li>
-                    </ul>
-                    
-                    <div class="info-box" style="background: #fee; border-color: #fcc;">
-                        <strong>Warning:</strong> If your form arrives after you reach 2 years of membership, your refund will be automatically rejected. There are no exceptions to this rule. Forms cannot be submitted by email. Only apply for a refund if you don't plan to opt back in within a year. See the <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/refunds-of-nhs-pension-contributions--4" target="_blank" style="color: #c00; font-weight: bold;">LAS Pensions Hub</a> for full instructions.
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Step 8: Not Eligible -->
-            <div class="step" data-step="8">
-                <div class="result">
-                    <h3>✗ Not Eligible for Refund</h3>
-                    <p><strong>Members with more than 2 years of service cannot receive refunds.</strong></p>
-                    
-                    <p>Your options:</p>
-                    <ul>
-                        <li><strong>Deferred benefits:</strong> Your pension will be preserved and payable at retirement age</li>
-                        <li>Transfer to another registered pension scheme</li>
-                        <li>NHS Pensions will write to you once LAS confirms your opt-out status</li>
-                    </ul>
-                    
-                    <div class="info-box">
-                        <strong>Recommendation:</strong> Contact the LAS Pensions Department at <a href="tel:02032674866" style="color: #023020;">020 3267 4866</a> or <a href="mailto:londamb.Pensions@nhs.net" style="color: #023020;">londamb.Pensions@nhs.net</a> to discuss your options, or seek independent financial advice. See the LAS Pensions Hub for more information about deferred benefits.
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Step 9: General Information -->
-            <div class="step" data-step="9">
-                <div class="result">
-                    <h3>📋 Key Information & Resources</h3>
-                    
-                    <p><strong>Essential Forms:</strong></p>
-                    <ul>
-                        <li><strong>SD502:</strong> Application to Leave the NHS Pension Scheme (Opt-out)
-                            <ul style="font-size: 14px; margin-top: 5px;">
-                                <li>Submit to LAS Pensions Department</li>
-                                <li>LAS processes your opt-out via ESR</li>
-                                <li>Separate process from refund application</li>
-                            </ul>
-                        </li>
-                        <li><strong>RF12:</strong> Application for Refund of Pension Contributions
-                            <ul style="font-size: 14px; margin-top: 5px;">
-                                <li>Submit to LAS Pensions Department</li>
-                                <li>Can be submitted with SD502, but not before</li>
-                                <li>LAS submits online to NHS Pensions</li>
-                                <li>NHS Pensions makes final decision and contacts you directly</li>
-                            </ul>
-                        </li>
-                    </ul>
-                    
-                    <p><strong>Where to Send Forms:</strong></p>
-                    <div class="info-box">
-                        <strong>ALL forms go to LAS Pensions Department:</strong><br><br>
-                        London Ambulance Service NHS Trust<br>
-                        220 Waterloo Road<br>
-                        London SE1 8SD<br><br>
-                        <strong>SD502 (Opt-out):</strong> LAS processes via ESR<br>
-                        <strong>RF12 (Refund):</strong> Can be sent with SD502 (but not before). LAS submits RF12 online to NHS Pensions<br><br>
-                        <strong>⚠️ Forms NOT accepted by email - original hard copies with wet signatures only</strong>
-                    </div>
-                    
-                    <p><strong>Contact Details:</strong></p>
-                    <ul>
-                        <li><strong>LAS Pensions Department:</strong>
-                            <ul>
-                                <li>Tel: <a href="tel:02032674866" style="color: #023020;">020 3267 4866</a></li>
-                                <li>Email: <a href="mailto:londamb.Pensions@nhs.net" style="color: #023020;">londamb.Pensions@nhs.net</a></li>
-                                <li>Can discuss your pension options and process questions</li>
-                            </ul>
-                        </li>
-                        <li><strong>NHS Pensions (NHSBSA):</strong>
-                            <ul>
-                                <li>Tel: <a href="tel:03003301346" style="color: #023020;">0300 330 1346</a></li>
-                                <li>Email: <a href="mailto:nhsbsa.pensionsmember@nhsbsa.nhs.uk" style="color: #023020;">nhsbsa.pensionsmember@nhsbsa.nhs.uk</a></li>
-                                <li>Hours: Monday-Friday, 8am-6pm</li>
-                                <li>General scheme information only</li>
-                            </ul>
-                        </li>
-                        <li><strong>For personalised financial advice:</strong> Consider seeking independent financial advice</li>
-                    </ul>
-                    
-                    <div class="info-box">
-                        <strong>Before submitting forms:</strong> Ensure your current address is updated via Employee Self-Service to avoid delays. For help updating details, contact: <a href="mailto:londamb.MYESR@nhs.net" style="color: #023020;">londamb.MYESR@nhs.net</a><br><br>
-                        <strong>For detailed instructions:</strong> Please see the relevant pages on the LAS Pensions Hub intranet: <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/leaving-the-scheme--1" target="_blank" style="color: #023020; font-weight: bold;">Leaving the NHS Pension Scheme</a> and <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/refunds-of-nhs-pension-contributions--4" target="_blank" style="color: #023020; font-weight: bold;">Refunds of NHS Pension Contributions</a>.
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Navigation -->
-            <div class="navigation" id="navigation">
-                <button class="nav-button" onclick="app.goBack()" id="backButton">
-                    <span class="arrow">←</span> Back
-                </button>
-                <button class="nav-button" onclick="app.reset()">
-                    Start Over
-                </button>
-            </div>
-        </div>
+<div class="wrap">
+  <header class="header">
+    <div>
+      <h1>NHS Pension Opt-Out Calculator (England only)</h1>
+      <p class="small" style="margin:0">Monthly payslip illustration — <b>stay in</b> vs <b>opt out</b>. NI inferred from <b>DOB</b>.</p>
     </div>
-    
-    <script>
-        const app = {
-            currentStep: 1,
-            history: [],
-            steps: {
-                1: { title: 'Start', progress: 0 },
-                2: { title: 'Opt Out Info', progress: 100 },
-                3: { title: 'Refund Check', progress: 33 },
-                4: { title: 'Must Opt Out', progress: 100 },
-                5: { title: 'Membership Duration', progress: 66 },
-                6: { title: 'Eligible', progress: 100 },
-                7: { title: 'Urgent', progress: 100 },
-                8: { title: 'Not Eligible', progress: 100 },
-                9: { title: 'Information', progress: 100 }
-            },
-            
-            init() {
-                this.updateBreadcrumbs();
-                this.updateProgressBar();
-                this.updateNavigation();
-            },
-            
-            handleChoice(choice) {
-                this.history.push(this.currentStep);
-                
-                switch(choice) {
-                    case 'opt-out':
-                        this.goToStep(2);
-                        break;
-                    case 'refund':
-                        this.goToStep(3);
-                        break;
-                    case 'info':
-                        this.goToStep(9);
-                        break;
-                }
-            },
-            
-            checkRefundAfterOptOut() {
-                this.history.push(this.currentStep);
-                this.goToStep(5);
-            },
-            
-            handleOptOutStatus(hasOptedOut) {
-                this.history.push(this.currentStep);
-                if (hasOptedOut) {
-                    this.goToStep(5);
-                } else {
-                    this.goToStep(4);
-                }
-            },
-            
-            handleMembershipDuration(duration) {
-                this.history.push(this.currentStep);
-                
-                switch(duration) {
-                    case 'less-than-2':
-                        this.goToStep(6);
-                        break;
-                    case 'almost-2':
-                        this.goToStep(7);
-                        break;
-                    case 'more-than-2':
-                        this.goToStep(8);
-                        break;
-                }
-            },
-            
-            goToStep(stepNumber) {
-                // Hide current step
-                document.querySelector(`.step[data-step="${this.currentStep}"]`).classList.remove('active');
-                
-                // Show new step
-                this.currentStep = stepNumber;
-                document.querySelector(`.step[data-step="${stepNumber}"]`).classList.add('active');
-                
-                // Update UI
-                this.updateBreadcrumbs();
-                this.updateProgressBar();
-                this.updateNavigation();
-                
-                // Focus management for accessibility
-                const newStep = document.querySelector(`.step[data-step="${stepNumber}"]`);
-                const firstButton = newStep.querySelector('button');
-                if (firstButton) {
-                    setTimeout(() => firstButton.focus(), 100);
-                }
-            },
-            
-            goBack() {
-                if (this.history.length > 0) {
-                    const previousStep = this.history.pop();
-                    this.goToStep(previousStep);
-                }
-            },
-            
-            reset() {
-                this.history = [];
-                this.goToStep(1);
-            },
-            
-            updateBreadcrumbs() {
-                const container = document.getElementById('breadcrumbs');
-                const path = [...this.history, this.currentStep];
-                
-                container.innerHTML = path.map((step, index) => {
-                    const isLast = index === path.length - 1;
-                    const stepInfo = this.steps[step];
-                    
-                    return `
-                        <span class="breadcrumb ${isLast ? 'active' : ''}">
-                            ${stepInfo.title}
-                        </span>
-                        ${!isLast ? '<span class="arrow">→</span>' : ''}
-                    `;
-                }).join('');
-            },
-            
-            updateProgressBar() {
-                const progress = this.steps[this.currentStep].progress;
-                document.getElementById('progressBar').style.width = `${progress}%`;
-            },
-            
-            updateNavigation() {
-                const backButton = document.getElementById('backButton');
-                backButton.style.visibility = this.history.length > 0 ? 'visible' : 'hidden';
-            }
-        };
-        
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => app.init());
-        
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                app.reset();
-            }
-        });
-    </script>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label class="small" for="themeSelect" style="color:#fff">Theme</label>
+      <select id="themeSelect" aria-label="Theme selector">
+        <option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option>
+        <option value="hc">High contrast</option><option value="hc-large">High contrast (Large)</option>
+      </select>
+      <button id="btnPrintIllo" class="btn primary" type="button" aria-label="Print payslip illustration">Print illustration</button>
+      <button id="btnAdmin" class="btn hide" type="button" aria-expanded="false" aria-controls="admin">Admin</button>
+      <button id="btnANDI" class="btn hide" type="button" aria-describedby="andiNote">Run ANDI Accessibility Checker</button>
+    </div>
+    <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA accessibility tool (ANDI). No data sent externally.</p>
+  </header>
+
+  <section id="disclaimer" class="panel">
+    <div class="note small">
+      <b>Illustration, not payroll.</b> ESR uses cumulative PAYE/NI and rounding, so results will differ.
+      Check NHS Pensions or the <b>LAS Pensions Department</b> for personal guidance.
+    </div>
+  </section>
+
+  <section id="inputs" class="panel grid2" aria-label="Inputs">
+    <div>
+      <h2>Pensionable pay (monthly)</h2>
+      <div id="items"></div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <button id="addItem" class="btn" type="button" aria-label="Add a new pay item">+ Add item</button>
+        <button id="clearItems" class="btn" type="button" aria-label="Clear all pay items">Clear</button>
+      </div>
+      <div class="space" style="border-top:2px solid var(--border);padding-top:10px;margin-top:10px">
+        <div class="muted">Total monthly pensionable pay</div>
+        <div id="totalPay" style="font-weight:800">£0.00</div>
+      </div>
+    </div>
+    <div>
+      <h2>Your details</h2>
+      <div class="row">
+        <label class="cs6" for="dob"><span class="small">Date of birth</span>
+          <input id="dob" type="date" aria-label="Date of birth" />
+        </label>
+        <label class="cs6" for="taxCode"><span class="small">Tax code (optional)</span>
+          <input id="taxCode" type="text" aria-label="Tax code (optional)" placeholder="1257L, BR, D0, D1, NT" value="1257L" />
+        </label>
+      </div>
+      <p class="small muted" style="margin-top:8px">Assumes NHS “net pay arrangement”.</p>
+    </div>
+  </section>
+
+  <section id="payslipPanel" class="panel" aria-label="Payslip illustration">
+    <h2>Payslip illustration (monthly)</h2>
+    <div class="note small" style="margin-bottom:10px">
+      <ul style="margin:0 0 0 16px">
+        <li><b>Payments</b> shows each pensionable item you entered.</li>
+        <li><b>Deductions</b> show NHS Pension, PAYE and NI. The PAYE line uses the taxable pay noted.</li>
+      </ul>
+    </div>
+
+    <div class="payslip">
+      <!-- Stay in -->
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px">Stay in</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div class="muted" style="font-weight:700;margin-bottom:4px">Payments</div>
+            <div id="stayPayments"></div>
+            <div class="space tot"><div>Total payments</div><div id="stayTotalPayments">£0.00</div></div>
+          </div>
+          <div>
+            <div class="muted" style="font-weight:700;margin-bottom:4px">Deductions</div>
+            <div class="space"><div>NHS Pension <span id="nhsRate">(0.0%)</span></div><div id="stayNhs">£0.00</div></div>
+            <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="stayTaxable">£0.00</span>)</span></div><div id="stayTax">£0.00</div></div>
+            <div class="space"><div>National Insurance</div><div id="stayNi">£0.00</div></div>
+            <div class="space tot"><div>Total deductions</div><div id="stayTotalDeds">£0.00</div></div>
+          </div>
+        </div>
+        <div class="space" style="margin-top:10px;font-weight:800"><div>Net pay</div><div id="stayNet">£0.00</div></div>
+      </div>
+
+      <!-- Opt out -->
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px">Opt out</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div class="muted" style="font-weight:700;margin-bottom:4px">Payments</div>
+            <div id="outPayments"></div>
+            <div class="space tot"><div>Total payments</div><div id="outTotalPayments">£0.00</div></div>
+          </div>
+          <div>
+            <div class="muted" style="font-weight:700;margin-bottom:4px">Deductions</div>
+            <div class="space"><div>NHS Pension</div><div>£0.00</div></div>
+            <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="outTaxable">£0.00</span>)</span></div><div id="outTax">£0.00</div></div>
+            <div class="space"><div>National Insurance</div><div id="outNi">£0.00</div></div>
+            <div class="space tot"><div>Total deductions</div><div id="outTotalDeds">£0.00</div></div>
+          </div>
+        </div>
+        <div class="space" style="margin-top:10px;font-weight:800"><div>Net pay</div><div id="outNet">£0.00</div></div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div style="display:grid;gap:12px;grid-template-columns:1fr;margin-top:12px">
+      <div class="kpi"><div class="small muted">Difference in take-home (opt-out minus stay-in)</div><div id="delta" style="font-size:20px;font-weight:800">£0.00</div></div>
+      <div class="kpi"><div class="small muted">Net annual pay — stay in / opt out</div><div id="netAnnual" style="font-size:18px;font-weight:800">£0.00 / £0.00</div></div>
+      <div class="kpi"><div class="small muted">Employer pension (context)</div><div id="employerPension" style="font-size:18px;font-weight:800">≈ £0.00/yr</div><div class="small muted">Not deducted from pay but foregone if you opt out.</div></div>
+    </div>
+  </section>
+
+  <section id="admin" class="panel hide" aria-label="Admin">
+    <h2>Admin — Rates (paste/edit yearly)</h2>
+    <p class="small muted">Edits save to this browser (localStorage). Export and commit to repo when ready.</p>
+    <div class="grid2">
+      <div>
+        <label class="small" for="ratesCurrent">Current JSON</label>
+        <textarea id="ratesCurrent" rows="16" readonly style="width:100%;font-family:ui-monospace,monospace"></textarea>
+        <div style="margin-top:8px"><button id="exportRates" class="btn" type="button">Export</button></div>
+      </div>
+      <div>
+        <label class="small" for="ratesPaste">Paste new JSON</label>
+        <textarea id="ratesPaste" rows="16" placeholder='{ "years":[ ... ], "defaultYear":"2025/26" }' style="width:100%;font-family:ui-monospace,monospace"></textarea>
+        <div style="margin-top:8px"><button id="importRates" class="btn" type="button">Import</button></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="small muted" style="margin:12px 0 24px">
+    HMRC PAYE & NI 2025/26; NHSBSA member tiers 2025/26. For guidance only.
+  </footer>
+</div>
+
+<script>
+/* ---------- Data (England & NI only) ---------- */
+const defaultRates = {
+  defaultYear: "2025/26",
+  years: [{
+    label: "2025/26",
+    tax: {
+      personalAllowance: 12570,
+      higherRateThreshold: 37700,
+      additionalRateThreshold: 125140,
+      bands: { ENG_NI: [
+        { upper: 37700, rate: 0.20 },
+        { upper: 125140, rate: 0.40 },
+        { upper: null,   rate: 0.45 }
+      ] }
+    },
+    ni: { monthly: { LEL: 542, PT: 1048, UEL: 4189 }, employeeRates: { main: 0.08, upper: 0.02 } },
+    nhs: {
+      tiers: [
+        { min: 0, max: 13259, rate: 0.052 },
+        { min: 13260, max: 27797, rate: 0.065 },
+        { min: 27798, max: 33868, rate: 0.083 },
+        { min: 33869, max: 50845, rate: 0.098 },
+        { min: 50846, max: 65190, rate: 0.107 },
+        { min: 65191, max: null,  rate: 0.125 }
+      ],
+      employerRateHint: 0.237
+    }
+  }]
+};
+
+/* ---------- Storage & theme ---------- */
+const THEME_KEY='las_optout_theme';
+function loadRates(){ try{const raw=localStorage.getItem('las_optout_rates_v1'); if(!raw) return defaultRates; const p=JSON.parse(raw); return p?.years?.length?p:defaultRates;}catch{return defaultRates;} }
+function saveRates(r){ localStorage.setItem('las_optout_rates_v1', JSON.stringify(r,null,2)); }
+
+const themeSelect=document.getElementById('themeSelect');
+function applyTheme(v){ document.documentElement.classList.remove('theme-light','theme-dark','theme-hc','theme-hc-large');
+  if(v==='light')document.documentElement.classList.add('theme-light');
+  else if(v==='dark')document.documentElement.classList.add('theme-dark');
+  else if(v==='hc')document.documentElement.classList.add('theme-hc');
+  else if(v==='hc-large')document.documentElement.classList.add('theme-hc-large');
+}
+(function initTheme(){ const saved=localStorage.getItem(THEME_KEY)||'auto'; themeSelect.value=saved; applyTheme(saved); })();
+themeSelect.addEventListener('change',()=>{ const v=themeSelect.value; localStorage.setItem(THEME_KEY,v); applyTheme(v); });
+
+/* ---------- Formatting ---------- */
+const GBP=new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'});
+const fmt=n=>GBP.format((+n)||0), pct=n=>`${(n*100).toFixed(1)}%`;
+
+/* ---------- Tax helpers ---------- */
+function parseTaxCode(code){
+  const c=(code||'').toUpperCase().trim();
+  if(!c) return {mode:'STANDARD', allowance:12570};
+  if(['BR','D0','D1','NT'].includes(c)) return {mode:c};
+  const m=c.match(/(\d{3,4})[A-Z]*/);
+  if(m) return {mode:'STANDARD', allowance:parseInt(m[1],10)*10};
+  return {mode:'STANDARD', allowance:12570};
+}
+function ageOnDate(dob,on){ if(!dob) return null; const b=new Date(dob); if(isNaN(b)) return null; let a=on.getFullYear()-b.getFullYear(); const m=on.getMonth()-b.getMonth(); if(m<0||(m===0&&on.getDate()<b.getDate())) a--; return a; }
+function nhsRateFor(annual,nhs){ const t=nhs.tiers.find(x=>annual>=x.min&&(x.max===null||annual<=x.max)); return t?t.rate:0; }
+function calcPAYE(mTax, ani, tcfg, parsed){
+  const pa0=parsed.mode==='STANDARD'?parsed.allowance:0;
+  const taper=Math.max(0,Math.floor((Math.max(ani,0)-100000)/2));
+  const pa=parsed.mode==='STANDARD'?Math.max(0,pa0-taper):0;
+  if(parsed.mode==='NT') return 0;
+  if(parsed.mode==='BR') return mTax*.20;
+  if(parsed.mode==='D0') return mTax*.40;
+  if(parsed.mode==='D1') return mTax*.45;
+  let remaining=Math.max(0,mTax - pa/12), tax=0, lowerA=0;
+  const bands=tcfg.bands.ENG_NI;
+  for(const b of bands){
+    const upperA=(b.upper==null?Infinity:b.upper), sizeM=(upperA-lowerA)/12;
+    const take=Math.max(0,Math.min(remaining,sizeM));
+    tax+=take*b.rate; remaining-=take; lowerA=upperA; if(remaining<=0) break;
+  }
+  if(remaining>0) tax+=remaining*bands[bands.length-1].rate;
+  return tax;
+}
+function calcNI(mGross,ncfg,overSPA){
+  if(overSPA) return 0; const {PT,UEL}=ncfg.monthly;
+  if(mGross<=PT) return 0;
+  const between=Math.max(0,Math.min(mGross,UEL)-PT);
+  const above=Math.max(0,mGross-UEL);
+  return between*ncfg.employeeRates.main + above*ncfg.employeeRates.upper;
+}
+
+/* ---------- State & DOM ---------- */
+const state={ items:[], rates:loadRates(), year:null }; state.year=state.rates.years[0];
+
+const elItems=document.getElementById('items');
+const elAdd=document.getElementById('addItem');
+const elClear=document.getElementById('clearItems');
+const elTotalPay=document.getElementById('totalPay');
+const elDob=document.getElementById('dob');
+const elTax=document.getElementById('taxCode');
+
+const elStayPayments=document.getElementById('stayPayments');
+const elOutPayments=document.getElementById('outPayments');
+const elStayTP=document.getElementById('stayTotalPayments');
+const elOutTP=document.getElementById('outTotalPayments');
+const elNhsRate=document.getElementById('nhsRate');
+const elStayNhs=document.getElementById('stayNhs');
+const elStayTax=document.getElementById('stayTax');
+const elStayNi=document.getElementById('stayNi');
+const elStayTD=document.getElementById('stayTotalDeds');
+const elStayNet=document.getElementById('stayNet');
+const elStayTaxable=document.getElementById('stayTaxable');
+const elOutTax=document.getElementById('outTax');
+const elOutNi=document.getElementById('outNi');
+const elOutTD=document.getElementById('outTotalDeds');
+const elOutNet=document.getElementById('outNet');
+const elOutTaxable=document.getElementById('outTaxable');
+const elDelta=document.getElementById('delta');
+const elNetAnnual=document.getElementById('netAnnual');
+const elEmployer=document.getElementById('employerPension');
+
+/* ---------- Admin & ANDI ---------- */
+const btnAdmin=document.getElementById('btnAdmin');
+const adminSec=document.getElementById('admin');
+const ratesCurrent=document.getElementById('ratesCurrent');
+const ratesPaste=document.getElementById('ratesPaste');
+const btnImport=document.getElementById('importRates');
+const btnExport=document.getElementById('exportRates');
+const btnANDI=document.getElementById('btnANDI');
+const andiNote=document.getElementById('andiNote');
+
+const isAdmin=new URLSearchParams(location.search).get('admin')==='1';
+if(isAdmin){ btnAdmin.classList.remove('hide'); btnANDI.classList.remove('hide'); andiNote.classList.remove('hide'); andiNote.setAttribute('aria-hidden','false'); }
+btnAdmin?.addEventListener('click',()=>{ adminSec.classList.toggle('hide'); const ex=btnAdmin.getAttribute('aria-expanded')==='true'; btnAdmin.setAttribute('aria-expanded',String(!ex)); refreshAdminText(); });
+btnImport?.addEventListener('click',()=>{ try{ const p=JSON.parse(ratesPaste.value); if(!p?.years?.length) throw new Error('Malformed JSON'); state.rates=p; state.year=p.years[0]; saveRates(p); ratesPaste.value=''; refreshAdminText(); render(); alert('Rates imported.'); }catch(e){ alert('Import failed: '+e.message); }});
+btnExport?.addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(state.rates,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url); });
+btnANDI?.addEventListener('click',()=>{ if(window.ANDI){window.ANDI.init();return;} const s=document.createElement('script'); s.src='andi/andi.js'; s.onload=()=>console.log('ANDI loaded'); s.onerror=()=>alert('Could not load ANDI. Check the andi/ folder path.'); document.body.appendChild(s); });
+
+function refreshAdminText(){ if(ratesCurrent) ratesCurrent.value=JSON.stringify(state.rates,null,2); }
+
+/* ---------- Items UI ---------- */
+let idSeq=0;
+function itemRow(it){
+  const row=document.createElement('div'); row.className='row'; row.dataset.id=it.id;
+
+  const name=document.createElement('input'); name.className='cs4'; name.value=it.label; name.setAttribute('aria-label','Pay item name');
+  name.addEventListener('input',()=>{ it.label=name.value; render(); });
+
+  const wrap=document.createElement('div'); wrap.className='cs3'; wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
+  const chk=document.createElement('input'); chk.type='checkbox'; chk.checked=!!it.useRate; chk.setAttribute('aria-label','Use rate times hours');
+  const lbl=document.createElement('span'); lbl.className='small'; lbl.textContent='rate × hours'; wrap.append(chk,lbl);
+
+  const rate=document.createElement('input'); rate.type='number'; rate.placeholder='rate'; rate.className='cs2'; rate.step='0.01'; rate.min='0'; rate.value=it.rate ?? ''; rate.setAttribute('aria-label','Hourly rate');
+  const hours=document.createElement('input'); hours.type='number'; hours.placeholder='hours'; hours.className='cs2'; hours.step='0.01'; hours.min='0'; hours.value=it.hours ?? ''; hours.setAttribute('aria-label','Hours worked');
+
+  const amount=document.createElement('input'); amount.type='number'; amount.className='cs6'; amount.step='0.01'; amount.min='0'; amount.value=it.amount; amount.setAttribute('aria-label','Total amount (£)');
+
+  const preview=document.createElement('div'); preview.className='cs1 small'; preview.style.textAlign='right'; preview.style.opacity='.7';
+
+  const remove=document.createElement('button'); remove.className='cs1 btn'; remove.textContent='×'; remove.type='button'; remove.setAttribute('aria-label','Remove pay item');
+  remove.addEventListener('click',()=>{ state.items=state.items.filter(x=>x.id!==it.id); render(); });
+
+  function toggle(){ if(chk.checked){ rate.classList.remove('hide'); hours.classList.remove('hide'); amount.classList.add('hide'); preview.textContent=fmt((it.rate||0)*(it.hours||0)); it.useRate=true; } else { rate.classList.add('hide'); hours.classList.add('hide'); amount.classList.remove('hide'); preview.textContent=''; it.useRate=false; } }
+  chk.addEventListener('change',()=>{ toggle(); render(); }); toggle();
+
+  rate.addEventListener('input',()=>{ it.rate=parseFloat(rate.value||'0'); render(); });
+  hours.addEventListener('input',()=>{ it.hours=parseFloat(hours.value||'0'); render(); });
+  amount.addEventListener('input',()=>{ it.amount=parseFloat(amount.value||'0'); render(); });
+
+  row.append(name,wrap,rate,hours,amount,preview,remove);
+  return row;
+}
+function addItem(label='Other',amount=0){ const it={id:'it-'+(idSeq++), label, amount, useRate:false, rate:null, hours:null}; state.items.push(it); elItems.appendChild(itemRow(it)); render(); }
+function rebuildItems(){ elItems.innerHTML=''; state.items.forEach(it=>elItems.appendChild(itemRow(it))); }
+document.getElementById('addItem').addEventListener('click',()=>addItem('Other',0));
+document.getElementById('clearItems').addEventListener('click',()=>{ state.items=[]; rebuildItems(); render(); });
+addItem('Basic',0); addItem('HCA',0);
+
+/* ---------- Print: Illustration-only (80%) ---------- */
+const btnPrintIllo=document.getElementById('btnPrintIllo');
+function enablePrintFlags(){ document.documentElement.classList.add('print-illustration'); }
+function disablePrintFlags(){ document.documentElement.classList.remove('print-illustration'); }
+window.addEventListener('afterprint', disablePrintFlags);
+btnPrintIllo.addEventListener('click', ()=>{ enablePrintFlags(); setTimeout(()=>window.print(),50); setTimeout(disablePrintFlags, 2000); });
+
+/* ---------- Recalc & render ---------- */
+function render(){
+  const monthlyGross=state.items.reduce((s,it)=> s + (it.useRate?(it.rate||0)*(it.hours||0):(+it.amount||0)),0);
+  elTotalPay.textContent=fmt(monthlyGross);
+
+  const annualGross=monthlyGross*12;
+  const nhsRate=nhsRateFor(annualGross,state.year.nhs);
+  elNhsRate.textContent='('+pct(nhsRate)+')';
+  const monthlyNhs=(annualGross*nhsRate)/12;
+
+  const monthEnd=new Date(); monthEnd.setMonth(monthEnd.getMonth()+1,0);
+  const overSPA=(ageOnDate(elDob.value,monthEnd)??0)>=66;
+
+  const parsed=parseTaxCode(elTax.value);
+  const aniStay=Math.max(0,annualGross-annualGross*nhsRate);
+  const taxableStay=Math.max(0,monthlyGross-monthlyNhs);
+
+  const taxStay=calcPAYE(taxableStay,aniStay,state.year.tax,parsed);
+  const taxOut =calcPAYE(monthlyGross,annualGross,state.year.tax,parsed);
+  const niStay=calcNI(monthlyGross,state.year.ni,overSPA);
+  const niOut =calcNI(monthlyGross,state.year.ni,overSPA);
+
+  const netStay=monthlyGross-monthlyNhs-taxStay-niStay;
+  const netOut =monthlyGross-taxOut-niOut;
+  const delta  =netOut-netStay;
+
+  function fill(container){
+    container.innerHTML='';
+    state.items.forEach(it=>{
+      const v=it.useRate?(it.rate||0)*(it.hours||0):(+it.amount||0);
+      if(!v) return;
+      const row=document.createElement('div'); row.className='space';
+      row.innerHTML=`<div>${it.label}</div><div>${fmt(v)}</div>`;
+      container.appendChild(row);
+    });
+  }
+  fill(elStayPayments); fill(elOutPayments);
+
+  elStayTP.textContent=fmt(monthlyGross);
+  elOutTP.textContent =fmt(monthlyGross);
+
+  elStayNhs.textContent=fmt(monthlyNhs);
+  elStayTax.textContent=fmt(taxStay);
+  elStayNi.textContent =fmt(niStay);
+  elStayTD.textContent =fmt(monthlyNhs+taxStay+niStay);
+  elStayNet.textContent =fmt(netStay);
+  elStayTaxable.textContent=fmt(taxableStay);
+
+  elOutTax.textContent =fmt(taxOut);
+  elOutNi.textContent  =fmt(niOut);
+  elOutTD.textContent  =fmt(taxOut+niOut);
+  elOutNet.textContent =fmt(netOut);
+  elOutTaxable.textContent=fmt(monthlyGross);
+
+  elDelta.textContent=fmt(delta);
+  elDelta.className='text-'+(delta>=0?'green':'red');
+  elNetAnnual.textContent=fmt(netStay*12)+' / '+fmt(netOut*12);
+
+  elEmployer.textContent='≈ '+fmt(annualGross*(state.year.nhs.employerRateHint||0))+'/yr';
+
+  refreshAdminText();
+}
+elDob.addEventListener('input',render);
+elTax.addEventListener('input',render);
+render();
+</script>
 </body>
 </html>
