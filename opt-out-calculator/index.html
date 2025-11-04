@@ -18,12 +18,19 @@
     html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; }
     html.theme-dark{  --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
 
-    /* Improved High-contrast (with +15% type size) */
+    /* High-contrast (normal) — +15% text */
     html.theme-hc{
-      --bg:#ffffff; --panel:#ffffff; --text:#000000; --muted:#000000; --border:#000000; --focus:#003a7a; /* deep navy focus */
+      --bg:#ffffff; --panel:#ffffff; --text:#000000; --muted:#000000; --border:#000000; --focus:#003a7a;
       --heading-w:900;
     }
-    html.theme-hc body{ font-size:1.15em; } /* +15% legibility bump */
+    html.theme-hc body{ font-size:1.15em; }
+
+    /* High-contrast (Large) — +25% text */
+    html.theme-hc-large{
+      --bg:#ffffff; --panel:#ffffff; --text:#000000; --muted:#000000; --border:#000000; --focus:#003a7a;
+      --heading-w:900;
+    }
+    html.theme-hc-large body{ font-size:1.25em; }
 
     *{ box-sizing:border-box }
     html,body{ margin:0; padding:0 }
@@ -68,7 +75,7 @@
       .wrap, #admin, #payslipPanel, #disclaimer, #inputs { display:none !important; }
       #printSummary{ display:block !important; }
     }
-    /* Illustration-only print mode (header/top removed) */
+    /* Illustration-only print (header & inputs removed) */
     @media print{
       html.print-illustration #printSummary{ display:none !important; }
       html.print-illustration .wrap{ display:block !important; }
@@ -79,18 +86,18 @@
       html.print-illustration footer{ display:none !important; }
       html.print-illustration #payslipPanel{ display:block !important; }
     }
-    /* Compact scaling ~90% for illustration */
+    /* Compact scaling ~80% for illustration (fits one A4) */
     @media print{
-      html.print-illustration.print-compact body{ zoom:.9; } /* Chrome/Edge */
+      html.print-illustration.print-compact body{ zoom:.8; } /* Chrome/Edge */
       html.print-illustration.print-compact .wrap{
-        transform:scale(.9); transform-origin:top left; width:calc(100% / .9); /* Firefox fallback */
+        transform:scale(.8); transform-origin:top left; width:calc(100% / .8); /* Firefox fallback */
       }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <header class="header" id="topHeader">
+    <header class="header">
       <div>
         <h1>NHS Pension Opt-Out Calculator (England only)</h1>
         <p class="small" style="margin:0">Monthly payslip illustration — <b>stay in</b> vs <b>opt out</b>. NI inferred from <b>DOB</b>.</p>
@@ -98,14 +105,17 @@
       <div class="actions">
         <label class="small" for="themeSelect" style="color:#fff">Theme</label>
         <select id="themeSelect" title="Theme">
-          <option value="auto">Auto</option><option value="light">Light</option>
-          <option value="dark">Dark</option><option value="hc">High contrast</option>
+          <option value="auto">Auto</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="hc">High contrast</option>
+          <option value="hc-large">High contrast (Large)</option>
         </select>
-        <!-- Print buttons (visible to everyone) -->
+        <!-- Print buttons (visible to all) -->
         <button id="btnPrint" class="btn">Print / Save PDF (Summary)</button>
         <button id="btnPrintIllo" class="btn primary">Print Illustration</button>
-        <button id="btnPrintIllo90" class="btn">Print Illustration (90%)</button>
-        <!-- Admin button still query-guarded in JS -->
+        <button id="btnPrintIllo80" class="btn">Print Illustration (80%)</button>
+        <!-- Admin button stays query-guarded -->
         <button id="btnAdmin" class="btn" aria-expanded="false" aria-controls="admin">Admin</button>
       </div>
     </header>
@@ -371,14 +381,21 @@
   const themeSelect=document.getElementById('themeSelect');
   const btnPrint=document.getElementById('btnPrint');
   const btnPrintIllo=document.getElementById('btnPrintIllo');
-  const btnPrintIllo90=document.getElementById('btnPrintIllo90');
+  const btnPrintIllo80=document.getElementById('btnPrintIllo80');
 
   /* Admin visibility via ?admin=1 */
   const isAdmin=new URLSearchParams(location.search).get('admin')==='1';
   if(!isAdmin){ btnAdmin.classList.add('hide'); adminSec.classList.add('hide'); }
 
   /* Theme control */
-  function applyTheme(v){ document.documentElement.classList.remove('theme-light','theme-dark','theme-hc'); if(v==='light')document.documentElement.classList.add('theme-light'); if(v==='dark')document.documentElement.classList.add('theme-dark'); if(v==='hc')document.documentElement.classList.add('theme-hc'); }
+  function applyTheme(v){
+    document.documentElement.classList.remove('theme-light','theme-dark','theme-hc','theme-hc-large');
+    if(v==='light') document.documentElement.classList.add('theme-light');
+    else if(v==='dark') document.documentElement.classList.add('theme-dark');
+    else if(v==='hc') document.documentElement.classList.add('theme-hc');
+    else if(v==='hc-large') document.documentElement.classList.add('theme-hc-large');
+    /* 'auto' = no explicit class; respects OS preference */
+  }
   (function initTheme(){ const saved=localStorage.getItem(THEME_KEY)||'auto'; themeSelect.value=saved; applyTheme(saved); })();
   themeSelect.addEventListener('change',()=>{ const v=themeSelect.value; localStorage.setItem(THEME_KEY,v); applyTheme(v); });
 
@@ -415,7 +432,7 @@
   btnImport?.addEventListener('click',()=>{ try{ const p=JSON.parse(ratesPaste.value); if(!p?.years?.length) throw new Error('Malformed JSON'); state.rates=p; state.year=p.years[0]; saveRates(p); ratesPaste.value=''; refreshAdminText(); render(); alert('Rates imported.'); }catch(e){ alert('Import failed: '+e.message); }});
   btnExport?.addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(state.rates,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url); });
 
-  /* PRINT: Summary + Illustration (normal / 90%) */
+  /* PRINT: Summary + Illustration (80%) */
   function fillPrintSummary(){
     const now=new Date(); document.getElementById('printMeta').textContent='Generated: '+now.toLocaleString('en-GB');
 
@@ -447,12 +464,12 @@
 
   function printIllustration(compact=false){
     document.documentElement.classList.add('print-illustration');
-    if(compact) document.documentElement.classList.add('print-compact'); // 90%
+    if(compact) document.documentElement.classList.add('print-compact'); // 80%
     window.print();
     setTimeout(()=>{ document.documentElement.classList.remove('print-illustration','print-compact'); }, 0);
   }
   btnPrintIllo.addEventListener('click',()=>printIllustration(false));
-  btnPrintIllo90.addEventListener('click',()=>printIllustration(true)); // 90%
+  btnPrintIllo80.addEventListener('click',()=>printIllustration(true)); // 80%
 
   /* Recalc & render */
   function render(){
