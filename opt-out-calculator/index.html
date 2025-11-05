@@ -525,12 +525,26 @@
     const hours=document.createElement('input'); hours.type='number'; hours.placeholder='hours'; hours.className='cs2'; hours.step='0.01'; hours.min='0'; hours.id=hoursId; hours.value=it.hours ?? '';
 
     const amountLabel=document.createElement('label'); amountLabel.className='sr-only'; amountLabel.htmlFor=amountId; amountLabel.textContent='Total amount (£)';
-    const amount=document.createElement('input'); amount.type='number'; amount.className='cs6'; amount.step='0.01'; amount.min='0'; amount.id=amountId; amount.value=it.amount;
+   const amount = document.createElement('input');
+amount.type = 'number';
+amount.className = 'cs6';
+amount.step = '0.01';
+amount.min = '0';
+amount.inputMode = 'decimal';
+amount.placeholder = '£';            // shows £ until you type
+amount.value = it.amount ?? '';      // no default zero
+amount.addEventListener('input', ()=>{ it.amount = parseFloat(amount.value||'0'); render(); });
 
     const preview=document.createElement('div'); preview.className='cs1 small'; preview.style.textAlign='right'; preview.style.opacity='.7';
-    const remove=document.createElement('button'); remove.className='cs1 btn'; remove.type='button'; remove.textContent='×';
-    remove.setAttribute('aria-label', `Remove pay item ${it.label||''}`.trim());
-    remove.addEventListener('click', ()=>{ state.items = state.items.filter(x=>x.id!==it.id); render(); });
+   const remove = document.createElement('button');
+remove.className = 'cs1 btn icon';
+remove.type = 'button';
+remove.textContent = '×';
+remove.setAttribute('aria-label', `Remove pay item ${it.label||''}`.trim());
+remove.addEventListener('click', ()=> {
+  state.items = state.items.filter(x=>x.id !== it.id);
+  render();
+});
 
     function toggleMode(){
       if(chk.checked){
