@@ -150,34 +150,40 @@
     </section>
 
     <main id="main" tabindex="-1">
-      <!-- Inputs -->
-      <section id="inputs" class="panel grid2" aria-label="Inputs">
-        <div>
-          <h2 style="margin-top:0; font-weight:var(--heading-w)">Pensionable pay (monthly)</h2>
-          <div id="items"></div>
-          <div class="actions" style="margin-top:8px">
-            <button id="addItem" class="btn" type="button">+ Add item</button>
-            <button id="clearItems" class="btn" type="button">Clear</button>
-          </div>
-          <div class="space" style="border-top:2px solid var(--border); padding-top:10px; margin-top:10px">
-            <div class="muted">Total monthly pensionable pay</div>
-            <div id="totalPay" style="font-weight:800" aria-live="polite">£0.00</div>
-          </div>
-        </div>
+     <!-- Inputs -->
+<section id="inputs" class="panel grid2" aria-label="Inputs">
+  <!-- Left: pensionable items -->
+  <div>
+    <h2 style="margin-top:0; font-weight:var(--heading-w)">Pensionable pay (monthly)</h2>
 
-        <div>
-          <h2 style="margin-top:0; font-weight:var(--heading-w)">Your details</h2>
-          <div class="row">
-            <label class="cs6" for="dob"><span class="small">Date of birth</span>
-              <input id="dob" type="date" />
-            </label>
-            <label class="cs6" for="taxCode"><span class="small">Tax code (optional)</span>
-              <input id="taxCode" type="text" placeholder="1257L, BR, D0, D1, NT" value="1257L" />
-            </label>
-          </div>
-          <p class="small muted" style="margin-top:8px">Assumes NHS “net pay arrangement”.</p>
-        </div>
-      </section>
+    <div id="items" aria-live="polite"></div>
+
+    <div class="actions" style="margin-top:8px">
+      <button id="addItem" class="btn" type="button">+ Add item</button>
+      <button id="clearEntries" class="btn" type="button">Clear</button>
+    </div>
+
+    <div class="space" style="border-top:2px solid var(--border); padding-top:10px; margin-top:10px">
+      <div class="muted">Total monthly pensionable pay</div>
+      <div id="totalPay" style="font-weight:800">£0.00</div>
+    </div>
+  </div>
+
+  <!-- Right: user details -->
+  <div>
+    <h2 style="margin-top:0; font-weight:var(--heading-w)">Your details</h2>
+    <div class="row">
+      <label class="cs6"><span class="small">Date of birth</span>
+        <input id="dob" type="date" />
+      </label>
+      <label class="cs6"><span class="small">Tax code (optional)</span>
+        <input id="taxCode" type="text" placeholder="1257L, BR, D0, D1, NT" value="1257L"/>
+      </label>
+    </div>
+    <p class="small muted" style="margin-top:8px">Assumes NHS “net pay arrangement”.</p>
+  </div>
+</section>
+
 
       <!-- Payslip Illustration -->
       <section id="payslipPanel" class="panel" aria-label="Payslip illustration">
