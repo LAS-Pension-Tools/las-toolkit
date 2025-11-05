@@ -7,87 +7,101 @@
   <meta name="description" content="NHS Pension Opt-Out Calculator (England only) — illustration of stay-in vs opt-out take-home.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>'">
 
-  <style>
-    /* ---------- Design tokens ---------- */
-    :root{
-      --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
-      --ok:#1b8555; --warn:#9F3131; --heading-w:800; --scale:1; --motion:1;
-    }
-    @media (prefers-color-scheme: dark){
-      :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
-    }
-    html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; }
-    html.theme-dark{  --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
-    html.theme-hc{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading-w:900; }
-    html.theme-hc-large{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading-w:900; --scale:1.12; }
+<style>
+  /* ---------- Design tokens ---------- */
+  :root{
+    --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
+    --ok:#1b8555; --warn:#9F3131; --heading-w:800; --scale:1; --motion:1;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
+  }
+  html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; }
+  html.theme-dark{  --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
+  html.theme-hc{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading-w:900; }
+  html.theme-hc-large{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading-w:900; --scale:1.12; }
 
-    *{ box-sizing:border-box }
-    html,body{ margin:0; padding:0 }
-    body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; font-size:calc(16px * var(--scale)); }
+  *{ box-sizing:border-box }
+  html,body{ margin:0; padding:0 }
+  body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; font-size:calc(16px * var(--scale)); }
 
-    /* Skip link */
-    a.skip{ position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
-    a.skip:focus{ position:static; width:auto; height:auto; padding:8px 12px; background:#ffd; border:2px solid #000; border-radius:8px; display:inline-block; margin:8px; }
+  /* Skip link */
+  a.skip{ position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+  a.skip:focus{ position:static; width:auto; height:auto; padding:8px 12px; background:#ffd; border:2px solid #000; border-radius:8px; display:inline-block; margin:8px; }
 
-    .wrap{ max-width:980px; margin:0 auto; padding:20px; }
+  .wrap{ max-width:980px; margin:0 auto; padding:20px; }
 
-    /* Header + a11y bar */
-    .header{ background:var(--brand); color:#fff; padding:16px; border-radius:12px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap }
-    .header h1{ margin:0; font-size:22px; font-weight:var(--heading-w) }
-    .a11y-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
-    .a11y-group{ display:flex; gap:6px; align-items:center; background:rgba(255,255,255,.1); padding:6px; border-radius:10px }
-    .a11y-label{ font-size:12px; color:#fff; opacity:.9 }
-    .a11y-badge{ display:none; padding:4px 8px; border-radius:8px; background:#2e7d32; color:#fff; font-size:12px; font-weight:700 }
+  /* Header + a11y bar */
+  .header{ background:var(--brand); color:#fff; padding:16px; border-radius:12px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap }
+  .header h1{ margin:0; font-size:22px; font-weight:var(--heading-w) }
+  .a11y-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
+  .a11y-group{ display:flex; gap:6px; align-items:center; background:rgba(255,255,255,.1); padding:6px; border-radius:10px }
+  .a11y-label{ font-size:12px; color:#fff; opacity:.9 }
+  .a11y-badge{ display:none; padding:4px 8px; border-radius:8px; background:#2e7d32; color:#fff; font-size:12px; font-weight:700 }
 
-    /* Panels / layout */
-    .panel{ background:var(--panel); border:2px solid var(--border); border-radius:12px; padding:16px; margin-top:16px }
-    .grid2{ display:grid; grid-template-columns:1fr; gap:14px } @media(min-width:860px){ .grid2{ grid-template-columns:1fr 1fr } }
-    .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:8px; align-items:end }
-    .cs1{grid-column:span 1}.cs2{grid-column:span 2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}
-    label>span.small{ display:block; font-size:12px; margin-bottom:4px; color:var(--muted) }
+  /* Panels / layout */
+  .panel{ background:var(--panel); border:2px solid var(--border); border-radius:12px; padding:16px; margin-top:16px }
+  .grid2{ display:grid; grid-template-columns:1fr; gap:14px } @media(min-width:860px){ .grid2{ grid-template-columns:1fr 1fr } }
+  .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:8px; align-items:end }
+  .cs1{grid-column:span 1}.cs2{grid-column:span 2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}
+  label>span.small{ display:block; font-size:12px; margin-bottom:4px; color:var(--muted) }
 
-    input,select,textarea{ width:100%; border:2px solid var(--border); background:var(--panel); color:var(--text); border-radius:8px; padding:9px 10px; font-weight:600 }
-    input:focus,select:focus,textarea:focus,button:focus{ outline:4px solid var(--focus); outline-offset:2px }
+  /* >>> Spacing between Basic, HCA, etc. */
+  #items{ display:grid; row-gap:12px; }        /* change 12px to taste */
 
-    .btn{ appearance:none; background:var(--panel); color:var(--brand); border:3px solid var(--brand); padding:9px 12px; border-radius:10px; font-weight:800; cursor:pointer }
-    .btn:hover{ background:#F0F7F4 }
-    .btn.primary{ background:var(--brand); color:#fff }
+  /* Inputs/buttons */
+  input,select,textarea{ width:100%; border:2px solid var(--border); background:var(--panel); color:var(--text); border-radius:8px; padding:9px 10px; font-weight:600 }
+  input:focus,select:focus,textarea:focus,button:focus{ outline:4px solid var(--focus); outline-offset:2px }
+  .btn{ appearance:none; background:var(--panel); color:var(--brand); border:3px solid var(--brand); padding:9px 12px; border-radius:10px; font-weight:800; cursor:pointer }
+  .btn:hover{ background:#F0F7F4 }
+  .btn.primary{ background:var(--brand); color:#fff }
+  /* Small square “×” buttons */
+  .btn.icon{ width:42px; height:42px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:20px; line-height:1 }
 
-    .small{ font-size:12px } .muted{ color:var(--muted) } .space{ display:flex; justify-content:space-between; align-items:center }
-    .hide{ display:none } .text-green{ color:var(--ok) } .text-red{ color:var(--warn) }
+  .small{ font-size:12px } .muted{ color:var(--muted) } .space{ display:flex; justify-content:space-between; align-items:center }
+  .hide{ display:none } .text-green{ color:var(--ok) } .text-red{ color:var(--warn) }
 
-    .payslip{ display:grid; grid-template-columns:1fr; gap:12px } @media(min-width:860px){ .payslip{ grid-template-columns:1fr 1fr } }
-    .card{ border:2px solid var(--border); border-radius:12px; padding:12px }
-    .tot{ border-top:2px solid var(--border); padding-top:8px; margin-top:8px; font-weight:800 }
-    .kpi{ border:2px solid var(--border); border-radius:12px; padding:12px }
-    .note{ border:3px solid var(--border); border-left:10px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel); color:var(--text) }
+  .payslip{ display:grid; grid-template-columns:1fr; gap:12px } @media(min-width:860px){ .payslip{ grid-template-columns:1fr 1fr } }
+  .card{ border:2px solid var(--border); border-radius:12px; padding:12px }
+  .tot{ border-top:2px solid var(--border); padding-top:8px; margin-top:8px; font-weight:800 }
+  .kpi{ border:2px solid var(--border); border-radius:12px; padding:12px }
+  .note{ border:3px solid var(--border); border-left:10px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel); color:var(--text) }
 
-    /* Visually hidden (for a11y labels without visual clutter) */
-    .sr-only{
-      position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
-      clip:rect(0,0,0,0); white-space:nowrap; border:0;
-    }
+  /* Visually hidden */
+  .sr-only{
+    position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
 
-    /* Reduced motion toggle */
-    @media (prefers-reduced-motion: reduce){ :root{ --motion:0 } }
-    [data-anim]{ transition: transform .2s ease, opacity .2s ease; }
-    html.reduce-motion [data-anim]{ transition:none !important }
+  /* Hide number spinners (amount/rate/hours) */
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{ -webkit-appearance: none; margin:0; }
+  input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
 
-    /* PRINT (Illustration-only @ 80%) */
-    @page{ size:A4; margin:12mm }
-    @media print{
-      body{ background:#fff; color:#000 }
-      .header, .panel, .kpi, .card{ border-color:#000 }
-      html.print-illustration .header,
-      html.print-illustration #inputs,
-      html.print-illustration #disclaimer,
-      html.print-illustration #admin,
-      html.print-illustration footer{ display:none !important }
-      html.print-illustration #payslipPanel{ display:block !important }
-      html.print-illustration .wrap{ transform:scale(.8); transform-origin:top left; width:calc(100%/.8) }
-      html.print-illustration body{ zoom:.8 }
-    }
-  </style>
+  /* Placeholder styling for the £ hint */
+  input::placeholder{ color:var(--muted); opacity:.75; }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce){ :root{ --motion:0 } }
+  [data-anim]{ transition: transform .2s ease, opacity .2s ease; }
+  html.reduce-motion [data-anim]{ transition:none !important }
+
+  /* PRINT (Illustration-only @ 80%) */
+  @page{ size:A4; margin:12mm }
+  @media print{
+    body{ background:#fff; color:#000 }
+    .header, .panel, .kpi, .card{ border-color:#000 }
+    html.print-illustration .header,
+    html.print-illustration #inputs,
+    html.print-illustration #disclaimer,
+    html.print-illustration #admin,
+    html.print-illustration footer{ display:none !important }
+    html.print-illustration #payslipPanel{ display:block !important }
+    html.print-illustration .wrap{ transform:scale(.8); transform-origin:top left; width:calc(100%/.8) }
+    html.print-illustration body{ zoom:.8 }
+  }
+</style>
+
 </head>
 <body>
   <a href="#main" class="skip">Skip to main content</a>
