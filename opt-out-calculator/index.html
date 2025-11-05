@@ -573,14 +573,20 @@ remove.addEventListener('click', ()=> {
     );
     return row;
   }
-  function addItem(label='Other', amount=0){
-    const it={ id:'it-'+(idSeq++), label, amount, useRate:false, rate:null, hours:null };
-    state.items.push(it); elItems.appendChild(itemRow(it)); render();
-  }
+ function addItem(label='Other', amount=null){
+  const it = { id:'it-'+(idSeq++), label, amount, useRate:false, rate:null, hours:null };
+  state.items.push(it);
+  elItems.appendChild(itemRow(it));
+  render();
+}
+
   function rebuildItems(){ elItems.innerHTML=''; state.items.forEach(it=>elItems.appendChild(itemRow(it))); }
   elAdd.addEventListener('click',()=> addItem('Other',0));
   elClear.addEventListener('click',()=>{ state.items=[]; rebuildItems(); render(); });
   addItem('Basic',0); addItem('HCA',0);
+    // initial rows
+addItem('Basic', null);
+addItem('HCA',   null);
 
   /* Core render */
   function parseAccrualFraction(frac){
