@@ -66,16 +66,25 @@
 
      /* PRINT (Illustration-only @ 80%) */
    @page{size:A4;margin:12mm;}
-    @media print{
-      html.print-illustration .header,
-      html.print-illustration #inputs,
-      html.print-illustration #admin,
-      html.print-illustration #disclaimer,
-      html.print-illustration footer{display:none!important;}
-      html.print-illustration #payslipPanel{display:block!important;}
-      html.print-illustration .wrap{transform:scale(.8);transform-origin:top left;width:calc(100%/.8);}
-      html.print-illustration body{zoom:.8;}
-    }
+   @media print{
+  html.print-illustration .header,
+  html.print-illustration #inputs,
+  html.print-illustration #admin,
+  html.print-illustration #disclaimer,
+  html.print-illustration footer { display:none!important; }
+
+  html.print-illustration #payslipPanel,
+  html.print-illustration #benefitsPanel { display:block!important; }
+
+  html.print-illustration #payslipPanel,
+  html.print-illustration #benefitsPanel { break-inside: avoid; page-break-inside: avoid; }
+
+  html.print-illustration .wrap{
+    transform:scale(.8); transform-origin:top left; width:calc(100%/.8);
+  }
+  html.print-illustration body{ zoom:.8; }
+}
+
   </style>
 </head>
 <body>
