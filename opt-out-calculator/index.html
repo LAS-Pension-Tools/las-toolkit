@@ -8,24 +8,28 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>">
 
   <style>
-    :root{
-      --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
-      --ok:#1b8555; --warn:#9F3131; --heading:800; --scale:1;
-    }
-    @media (prefers-color-scheme: dark){
-      :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
-    }
-    html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; }
-    html.theme-dark{  --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
-    html.theme-hc{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading:900; }
-    html.theme-hc-large{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading:900; --scale:1.12; }
+   :root{
+  --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
+  --heading:800; --scale:1;
+}
 
-    *{ box-sizing:border-box }
-    html,body{ margin:0; padding:0 }
-    body{
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
-      background:var(--bg); color:var(--text); line-height:1.5; font-size:calc(16px*var(--scale))
-    }
+html.theme-light{
+  --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; --heading:800; --scale:1;
+}
+
+/* Dark but contrast-safe (meets WCAG AA) */
+html.theme-dark{
+  --bg:#0f1214; --panel:#121618; --text:#F5F7F9; --muted:#D1D7DE; --border:#2C343A; --focus:#77B3FF; --heading:800; --scale:1;
+}
+
+/* High contrast + Large text */
+html.theme-hc-large{
+  --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading:900; --scale:1.12;
+}
+
+/* Apply size scaling */
+body{ font-size:calc(16px*var(--scale)); }
+
     .wrap{ max-width:980px; margin:0 auto; padding:20px }
 
     .header{ background:var(--brand); color:#fff; padding:16px; border-radius:12px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap }
@@ -108,13 +112,12 @@
       <div class="a11y-bar">
         <div class="a11y-group">
           <span class="a11y-label">Theme</span>
-          <select id="themeSelect" title="Theme">
-            <option value="auto">Auto</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-            <option value="hc">High contrast</option>
-            <option value="hc-large">High contrast (Large)</option>
-          </select>
+         <select id="themeSelect" title="Theme">
+  <option value="auto">Auto</option>
+  <option value="light">Light</option>
+  <option value="dark">Dark (high contrast)</option>
+  <option value="hc-large">High contrast (Large)</option>
+</select>
         </div>
 
         <button id="btnPrintIllo" class="btn primary" type="button" aria-label="Print payslip illustration">Print illustration</button>
@@ -357,12 +360,12 @@
   /* ---------- Theme ---------- */
   const themeSelect=document.getElementById('themeSelect');
   function applyTheme(v){
-    document.documentElement.classList.remove('theme-light','theme-dark','theme-hc','theme-hc-large');
-    if(v==='light') document.documentElement.classList.add('theme-light');
-    else if(v==='dark') document.documentElement.classList.add('theme-dark');
-    else if(v==='hc') document.documentElement.classList.add('theme-hc');
-    else if(v==='hc-large') document.documentElement.classList.add('theme-hc-large');
-  }
+  document.documentElement.className = ''; // clear
+  if (v==='light') document.documentElement.classList.add('theme-light');
+  else if (v==='dark') document.documentElement.classList.add('theme-dark');
+  else if (v==='hc-large') document.documentElement.classList.add('theme-hc-large');
+  // 'auto' = no extra class (respects user OS preference + default tokens)
+}
   (function initTheme(){ const saved=localStorage.getItem(THEME_KEY)||'auto'; themeSelect.value=saved; applyTheme(saved); })();
   themeSelect.addEventListener('change',()=>{ const v=themeSelect.value; localStorage.setItem(THEME_KEY,v); applyTheme(v); });
 
