@@ -64,7 +64,7 @@
     input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
     input[type=number]{ -moz-appearance:textfield; appearance:textfield }
 
-    /* print (illustration only) */
+     /* PRINT (Illustration-only @ 80%) */
     @page{ size:A4; margin:12mm }
     @media print{
       html.print-illustration .header,
@@ -98,13 +98,12 @@
           </select>
         </div>
 
-        <button id="btnPrintIllo" class="btn primary" type="button">Print illustration</button>
-        <button id="btnAdmin" class="btn hide" type="button" aria-controls="admin" aria-expanded="false">Admin</button>
-        <button id="btnANDI" class="btn hide" type="button" aria-describedby="andiNote">Run ANDI Accessibility Checker</button>
-        <span id="a11yBadge" class="a11y-badge" aria-live="polite">Accessibility Mode Enabled</span>
-      </div>
-      <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA accessibility testing tool locally. No data is sent externally.</p>
-    </header>
+          <button id="btnPrintIllo" class="btn primary" type="button" aria-label="Print payslip illustration">Print illustration</button>
+      <button id="btnAdmin" class="btn hide" type="button" aria-expanded="false" aria-controls="admin">Admin</button>
+      <button id="btnANDI" class="btn hide" type="button" aria-describedby="andiNote">Run ANDI Accessibility Checker</button>
+    </div>
+    <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA accessibility tool (ANDI). No data sent externally.</p>
+  </header>
 
     <!-- Disclaimer -->
     <section id="disclaimer" class="panel" aria-label="Disclaimer">
