@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>NHS Pension Opt-Out Calculator (England only)</title>
   <meta name="description" content="Monthly payslip illustration — stay in vs opt out. NI inferred from DOB.">
-  <!-- Clean inline favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>">
 
   <style>
@@ -69,12 +68,12 @@
     .kpi{ border:2px solid var(--border); border-radius:12px; padding:12px }
     .note{ border:3px solid var(--border); border-left:10px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel) }
 
-    /* Hide number spinners for better UX */
+    /* Hide number spinners */
     input[type=number]::-webkit-outer-spin-button,
     input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
     input[type=number]{ -moz-appearance:textfield; appearance:textfield }
 
-    /* PRINT: Illustration + Benefits (one A4 page @ ~80%) */
+    /* PRINT: Illustration + Benefits on one page (~80%) */
     @page{ size:A4; margin:12mm; }
     @media print{
       html.print-illustration .header,
@@ -94,7 +93,7 @@
       html.print-illustration .wrap{
         transform:scale(.80); transform-origin:top left; width:calc(100%/.80);
       }
-      html.print-illustration body{ zoom:.80; } /* chromium hint */
+      html.print-illustration body{ zoom:.80; }
     }
   </style>
 </head>
@@ -246,7 +245,8 @@
         <li>Ill-health retirement benefits.</li>
         <li>Tax relief on pension contributions.</li>
       </ul>
-      <p>See the NHS Pension Scheme Guide at
+      <!-- Make this the same size as the list (small) -->
+      <p class="small">See the NHS Pension Scheme Guide at
         <a href="https://www.nhsbsa.nhs.uk/nhs-pensions" target="_blank" rel="noopener">nhsbsa.nhs.uk/nhs-pensions</a>.
       </p>
       <p class="small muted" style="margin-top:4px">This is an illustration and excludes revaluation, survivor benefit calculations, early/late retirement factors and personal tax circumstances.</p>
@@ -311,7 +311,7 @@
 
   /* ---------- Constants & helpers ---------- */
   const LS_RATES_KEY = 'las_optout_rates_v1';
-  const LS_PREFER_LOCAL_KEY = 'las_optout_rates_prefer_local'; // "1" means prefer local
+  const LS_PREFER_LOCAL_KEY = 'las_optout_rates_prefer_local';
   const THEME_KEY='las_optout_theme';
 
   const GBP = new Intl.NumberFormat('en-GB',{style:'currency', currency:'GBP'});
@@ -366,7 +366,7 @@
   (function initTheme(){ const saved=localStorage.getItem(THEME_KEY)||'auto'; themeSelect.value=saved; applyTheme(saved); })();
   themeSelect.addEventListener('change',()=>{ const v=themeSelect.value; localStorage.setItem(THEME_KEY,v); applyTheme(v); });
 
-  /* ---------- Load & precedence: external > local (if preferred) > defaults ---------- */
+  /* ---------- Load rates: external > local (if preferred) > defaults ---------- */
   async function fetchExternalRates() {
     try {
       const res = await fetch('rates.json', { cache: 'no-store' });
@@ -374,9 +374,7 @@
         const j = await res.json();
         if (j?.years?.length) return j;
       }
-    } catch (e) {
-      console.warn('rates.json not loaded:', e);
-    }
+    } catch (e) { console.warn('rates.json not loaded:', e); }
     return null;
   }
   function getLocalRates() {
@@ -401,20 +399,10 @@
   async function loadActiveRates() {
     const preferLocal = localStorage.getItem(LS_PREFER_LOCAL_KEY) === '1';
     const local = getLocalRates();
-    if (preferLocal && local) {
-      console.log('Using localStorage rates (preferred).');
-      return local;
-    }
+    if (preferLocal && local) return local;
     const external = await fetchExternalRates();
-    if (external) {
-      console.log('Using external rates.json.');
-      return external;
-    }
-    if (local) {
-      console.log('Using localStorage rates (no external).');
-      return local;
-    }
-    console.log('Using embedded defaultRates.');
+    if (external) return external;
+    if (local) return local;
     return defaultRates;
   }
 
@@ -491,9 +479,6 @@
   btnAdd.addEventListener('click',()=>addItem('Other'));
   btnClearVals.addEventListener('click',clearEntries);
 
-  // initial two rows
-  addItem('Basic'); addItem('HCA');
-
   /* ---------- Admin wiring ---------- */
   function refreshAdminText(){ if(ratesCurrent) ratesCurrent.value=JSON.stringify(state.rates || {}, null, 2); }
   function applyRatesObject(newRates){
@@ -504,34 +489,6 @@
     state.year  = chooseActiveYear(state.rates);
     refreshAdminText(); renderAll();
   }
-  btnImport?.addEventListener('click', () => {
-    try {
-      const obj = JSON.parse(ratesPaste.value);
-      applyRatesObject(obj);
-      setLocalRates(obj); // prefer local for this browser
-      ratesPaste.value = '';
-      alert('Rates imported and applied.');
-    } catch (e) {
-      alert('Import failed: ' + e.message);
-    }
-  });
-  btnExport?.addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(state.rates || {}, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'las-optout-rates.json'; a.click();
-    URL.revokeObjectURL(url);
-  });
-  btnReset?.addEventListener('click', async () => {
-    if (!confirm('Reset to external/default rates and forget locally stored rates?')) return;
-    clearLocalRatesPreference();
-    state.rates = await loadActiveRates();
-    state.year  = chooseActiveYear(state.rates);
-    refreshAdminText(); renderAll();
-    alert('Reset complete. Using external/default rates.');
-  });
-
-  /* Show Admin/ANDI with ?admin=1; auto-open admin panel */
   const params  = new URLSearchParams(location.search);
   const isAdmin = params.get('admin') === '1';
   const wantsA11y = params.get('a11y') === '1';
@@ -548,17 +505,44 @@
     btnAdmin.setAttribute('aria-expanded', String(hidden));
   });
 
-  /* ANDI loader (guarded) */
+  btnImport?.addEventListener('click', () => {
+    try {
+      const obj = JSON.parse(ratesPaste.value);
+      applyRatesObject(obj);
+      setLocalRates(obj);
+      ratesPaste.value = '';
+      alert('Rates imported and applied.');
+    } catch (e) {
+      alert('Import failed: ' + e.message);
+    }
+  });
+  btnExport?.addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(state.rates || {}, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'las-optout-rates.json'; a.click();
+    URL.revokeObjectURL(url);
+  });
+  document.getElementById('resetRates')?.addEventListener('click', async () => {
+    if (!confirm('Reset to external/default rates and forget locally stored rates?')) return;
+    clearLocalRatesPreference();
+    state.rates = await loadActiveRates();
+    state.year  = chooseActiveYear(state.rates);
+    refreshAdminText(); renderAll();
+    alert('Reset complete. Using external/default rates.');
+  });
+
+  /* ANDI loader */
   function loadANDI(){
     if (window.ANDI) { try { window.ANDI.init(); } catch(e){} return; }
     const s = document.createElement('script');
     s.src = 'andi/andi.js';
-    s.onload = () => { if (a11yBadge) a11yBadge.style.display = 'inline-block'; try { window.ANDI.init(); } catch(e){} };
+    s.onload = () => { const b=document.getElementById('a11yBadge'); if (b) b.style.display = 'inline-block'; try { window.ANDI.init(); } catch(e){} };
     s.onerror = () => alert('Could not load ANDI. Check the andi/ folder path.');
     document.body.appendChild(s);
   }
-  btnANDI?.addEventListener('click', loadANDI);
-  if (isAdmin || wantsA11y) { if (a11yBadge) a11yBadge.style.display = 'inline-block'; loadANDI(); }
+  document.getElementById('btnANDI')?.addEventListener('click', loadANDI);
+  if (isAdmin || wantsA11y) { const b=document.getElementById('a11yBadge'); if (b) b.style.display = 'inline-block'; loadANDI(); }
 
   /* ---------- Print (Illustration + Benefits) ---------- */
   function enablePrintIllustration(){ document.documentElement.classList.add('print-illustration'); }
@@ -568,13 +552,13 @@
     setTimeout(()=>window.print(),50);
     setTimeout(disablePrintIllustration, 2000);
   }
-  btnPrintIllo?.addEventListener('click', printIllustrationNow);
+  document.getElementById('btnPrintIllo')?.addEventListener('click', printIllustrationNow);
   window.addEventListener('afterprint', disablePrintIllustration);
-  // Optional URL flag: ?print=illustration
   if ((params.get('print')||'').toLowerCase()==='illustration'){ setTimeout(printIllustrationNow, 300); }
 
   /* ---------- Render ---------- */
   function renderAll(){
+    if (!state.year){ return; } // guard until rates loaded
     const monthlyGross=state.items.reduce((s,it)=> it.useRate ? s+((+it.rate||0)*(+it.hours||0)) : s+(+it.amount||0), 0);
     document.getElementById('totalPay').textContent=fmt(monthlyGross);
 
@@ -584,9 +568,9 @@
     const monthlyNhs=(annualGross*nhsRate)/12;
 
     const monthEnd=new Date(); monthEnd.setMonth(monthEnd.getMonth()+1,0);
-    const overSPA=(ageOnDate(elDob.value,monthEnd)??0)>=66;
+    const overSPA=(ageOnDate(document.getElementById('dob').value,monthEnd)??0)>=66;
 
-    const parsed=parseTaxCode(elTax.value);
+    const parsed=parseTaxCode(document.getElementById('taxCode').value);
     const aniStay=Math.max(0,annualGross-annualGross*nhsRate);
     const taxableStay=Math.max(0,monthlyGross-monthlyNhs);
 
@@ -633,16 +617,28 @@
     const employerAnnual=annualGross*(state.year.nhs.employerRateHint||0);
     document.getElementById('employerPension').textContent='≈ '+fmt(employerAnnual)+'/yr';
 
-    const accrual=annualGross/54; // 2015 CARE 1/54th (illustrative)
+    const accrual=annualGross/54;
     document.getElementById('accrual54').textContent=fmt(accrual)+'/yr';
 
     refreshAdminText();
   }
 
-  /* ---------- Init (load rates & render) ---------- */
+  /* ---------- Init (load rates first, then build UI) ---------- */
   (async function init(){
+    // Load rates and set active year first
     state.rates = await loadActiveRates();
     state.year  = chooseActiveYear(state.rates);
+    refreshAdminText();
+
+    // Only now create initial rows (avoids early render crash)
+    addItem('Basic');
+    addItem('HCA');
+
+    // Wire inputs after controls exist
+    document.getElementById('dob').addEventListener('input',renderAll);
+    document.getElementById('taxCode').addEventListener('input',renderAll);
+
+    // First paint
     renderAll();
   })();
   </script>
