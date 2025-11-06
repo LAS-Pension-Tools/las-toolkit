@@ -64,27 +64,26 @@
     input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
     input[type=number]{ -moz-appearance:textfield; appearance:textfield }
 
-     /* PRINT (Illustration-only @ 80%) */
-   @page{size:A4;margin:12mm;}
-   @media print{
-  html.print-illustration .header,
-  html.print-illustration #inputs,
-  html.print-illustration #admin,
-  html.print-illustration #disclaimer,
-  html.print-illustration footer { display:none!important; }
+    /* PRINT (Payslip + Benefits on one page @ 80%) */
+    @page{size:A4;margin:12mm;}
+    @media print{
+      html.print-illustration .header,
+      html.print-illustration #inputs,
+      html.print-illustration #admin,
+      html.print-illustration #disclaimer,
+      html.print-illustration footer { display:none!important; }
 
-  html.print-illustration #payslipPanel,
-  html.print-illustration #benefitsPanel { display:block!important; }
+      html.print-illustration #payslipPanel,
+      html.print-illustration #benefitsPanel { display:block!important; }
 
-  html.print-illustration #payslipPanel,
-  html.print-illustration #benefitsPanel { break-inside: avoid; page-break-inside: avoid; }
+      html.print-illustration #payslipPanel,
+      html.print-illustration #benefitsPanel { break-inside: avoid; page-break-inside: avoid; }
 
-  html.print-illustration .wrap{
-    transform:scale(.8); transform-origin:top left; width:calc(100%/.8);
-  }
-  html.print-illustration body{ zoom:.8; }
-}
-
+      html.print-illustration .wrap{
+        transform:scale(.8); transform-origin:top left; width:calc(100%/.8);
+      }
+      html.print-illustration body{ zoom:.8; }
+    }
   </style>
 </head>
 <body>
@@ -107,12 +106,14 @@
           </select>
         </div>
 
-          <button id="btnPrintIllo" class="btn primary" type="button" aria-label="Print payslip illustration">Print illustration</button>
-      <button id="btnAdmin" class="btn hide" type="button" aria-expanded="false" aria-controls="admin">Admin</button>
-      <button id="btnANDI" class="btn hide" type="button" aria-describedby="andiNote">Run ANDI Accessibility Checker</button>
-    </div>
-    <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA accessibility tool (ANDI). No data sent externally.</p>
-  </header>
+        <!-- NEW: visible badge target + safer print label -->
+        <span id="a11yBadge" class="a11y-badge" aria-live="polite">Accessibility Mode Enabled</span>
+        <button id="btnPrintIllo" class="btn primary" type="button" aria-label="Print payslip and benefits">Print (Payslip + Benefits)</button>
+        <button id="btnAdmin" class="btn hide" type="button" aria-expanded="false" aria-controls="admin">Admin</button>
+        <button id="btnANDI" class="btn hide" type="button" aria-describedby="andiNote">Run ANDI Accessibility Checker</button>
+      </div>
+      <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA accessibility tool (ANDI). No data sent externally.</p>
+    </header>
 
     <!-- Disclaimer -->
     <section id="disclaimer" class="panel" aria-label="Disclaimer">
@@ -218,23 +219,24 @@
           <div id="employerPension" style="font-size:18px; font-weight:800">≈ £0.00/yr</div>
           <div class="small muted">Not deducted from pay but foregone if you opt out.</div>
         </div>
-
-        <div class="panel">
-          <h3 style="margin:0 0 6px 0">Benefits you will be giving up by opting out of the 2015 NHS Pension Scheme (CARE 1/54th)</h3>
-          <ul class="small" style="margin:0 0 0 18px">
-            <li>Based on your current pensionable earnings, you would give up an <b>annual pension accrual</b> of around <b><span id="accrual54">£0.00/yr</span></b> for life after retirement.</li>
-            <li>To illustrate the value of the NHS pension you would be giving up, buying similar benefits on the “open market” might cost around <b>£10,100</b> for each year you give up accruing benefits.</li>
-            <li>An annual pension payable for life after retirement.</li>
-            <li>Tax-free cash lump sum on retirement for those with 1995 Section membership (optional for other 2015 members).</li>
-            <li>Death-in-service life assurance lump sum to nominated people or an organisation.</li>
-            <li>Pension benefits payable to dependants, including children.</li>
-            <li>Ill-health retirement benefits.</li>
-            <li>Tax relief on pension contributions.</li>
-          </ul>
-          <p>See the NHS Pension Scheme Guide at <a href="https://www.nhsbsa.nhs.uk/sites/default/files/2024-05/2015%20Members%20Guide%20%28V13%29%2005.2024.pdf" target="_blank" rel="noopener">nhsbsa.nhs.uk/nhs-pensions</a>.</p>
-          <p class="small muted" style="margin-top:4px">This is an illustration and excludes revaluation, survivor benefit calculations, early/late retirement factors and personal tax circumstances.</p>
-        </div>
       </div>
+    </section>
+
+    <!-- Benefits (now has an id so it prints too) -->
+    <section id="benefitsPanel" class="panel" aria-label="Benefits of staying in">
+      <h3 style="margin:0 0 6px 0">Benefits you will be giving up by opting out of the 2015 NHS Pension Scheme (CARE 1/54th)</h3>
+      <ul class="small" style="margin:0 0 0 18px">
+        <li>Based on your current pensionable earnings, you would give up an <b>annual pension accrual</b> of around <b><span id="accrual54">£0.00/yr</span></b> for life after retirement.</li>
+        <li>To illustrate the value of the NHS pension you would be giving up, buying similar benefits on the “open market” might cost around <b>£10,100</b> for each year you give up accruing benefits.</li>
+        <li>An annual pension payable for life after retirement.</li>
+        <li>Tax-free cash lump sum on retirement for those with 1995 Section membership (optional for other 2015 members).</li>
+        <li>Death-in-service life assurance lump sum to nominated people or an organisation.</li>
+        <li>Pension benefits payable to dependants, including children.</li>
+        <li>Ill-health retirement benefits.</li>
+        <li>Tax relief on pension contributions.</li>
+      </ul>
+      <p>See the NHS Pension Scheme Guide at <a href="https://www.nhsbsa.nhs.uk/sites/default/files/2024-05/2015%20Members%20Guide%20%28V13%29%2005.2024.pdf" target="_blank" rel="noopener">nhsbsa.nhs.uk/nhs-pensions</a>.</p>
+      <p class="small muted" style="margin-top:4px">This is an illustration and excludes revaluation, survivor benefit calculations, early/late retirement factors and personal tax circumstances.</p>
     </section>
 
     <!-- Admin -->
@@ -502,12 +504,12 @@
   const params=new URLSearchParams(location.search);
   const isAdmin=params.get('admin')==='1';
   const wantsA11y=params.get('a11y')==='1';
+  const autoPrint=params.get('print')==='illustration';
 
   if(isAdmin){
     btnAdmin.classList.remove('hide');
     btnANDI.classList.remove('hide');
     andiNote.classList.remove('hide'); andiNote.setAttribute('aria-hidden','false');
-    // open admin by default in admin mode
     adminSec.classList.remove('hide');
     btnAdmin.setAttribute('aria-expanded','true');
   }
@@ -521,12 +523,19 @@
     if(window.ANDI){ try{ window.ANDI.init(); }catch(e){} return; }
     const s=document.createElement('script');
     s.src='andi/andi.js';
-    s.onload=()=>{ a11yBadge.style.display='inline-block'; try{ window.ANDI.init(); }catch(e){} };
+    s.onload=()=>{ if(a11yBadge) a11yBadge.style.display='inline-block'; try{ window.ANDI.init(); }catch(e){} };
     s.onerror=()=>alert('Could not load ANDI. Check the andi/ folder path.');
     document.body.appendChild(s);
   }
   btnANDI?.addEventListener('click', loadANDI);
-  if(isAdmin || wantsA11y){ a11yBadge.style.display='inline-block'; loadANDI(); }
+
+  if(isAdmin || wantsA11y){ if(a11yBadge) a11yBadge.style.display='inline-block'; loadANDI(); }
+
+  if(autoPrint){
+    enablePrintFlags();
+    setTimeout(()=>window.print(), 100);
+    setTimeout(disablePrintFlags, 2500);
+  }
 
   // First paint
   renderAll();
