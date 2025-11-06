@@ -1,662 +1,582 @@
 <!doctype html>
 <html lang="en-GB">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NHS Pension Opt-Out Calculator (England only)</title>
-  <meta name="description" content="Monthly payslip illustration — stay in vs opt out. NI inferred from DOB.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>NHS Pension Opt-Out Calculator (England only)</title>
+<meta name="description" content="Monthly payslip illustration — stay in vs opt out. NI inferred from DOB.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>'">
 
-  <style>
-   :root{
-  --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
+<style>
+/* ---------------- Tokens */
+:root{
+  --brand:#023020;
+  --text:#111; --muted:#4A5568;
+  --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
+  --ok:#1b8555; --warn:#9F3131;
   --heading:800; --scale:1;
 }
-
-html.theme-light{
-  --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; --heading:800; --scale:1;
+html,body{margin:0;padding:0}
+*{box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:var(--bg); color:var(--text); line-height:1.5;
+  font-size:calc(16px*var(--scale));
 }
+.wrap{max-width:980px;margin:0 auto;padding:20px}
 
-/* Dark but contrast-safe (meets WCAG AA) */
+/* ---------------- Themes */
+html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; --focus:#0B69A3; --heading:800; --scale:1; }
+
+/* Dark with white “bounding” borders */
 html.theme-dark{
-  --bg:#0f1214; --panel:#121618; --text:#F5F7F9; --muted:#D1D7DE; --border:#2C343A; --focus:#77B3FF; --heading:800; --scale:1;
+  --bg:#0f1214; --panel:#121618; --text:#F5F7F9; --muted:#D1D7DE;
+  --border:rgba(255,255,255,.75); --focus:#86B9FF; --heading:800; --scale:1;
 }
 
-/* High contrast + Large text */
 html.theme-hc-large{
-  --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading:900; --scale:1.12;
+  --bg:#fff; --panel:#fff; --text:#000; --muted:#000;
+  --border:#000; --focus:#003a7a; --heading:900; --scale:1.12;
 }
 
-/* Apply size scaling */
-body{ font-size:calc(16px*var(--scale)); }
+/* ---------------- Shell */
+.header{
+  background:var(--brand); color:#fff; padding:16px; border-radius:12px;
+  display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+}
+.header h1{margin:0;font-size:22px;font-weight:var(--heading)}
+.a11y-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.a11y-group{display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.12);padding:6px;border-radius:10px}
+.a11y-label{font-size:12px;color:#fff;opacity:.9}
+#a11yBadge{display:none;padding:4px 8px;border-radius:8px;background:#2e7d32;color:#fff;font-size:12px;font-weight:700}
 
-    .wrap{ max-width:980px; margin:0 auto; padding:20px }
+/* ---------------- UI */
+.panel{background:var(--panel);border:2px solid var(--border);border-radius:12px;padding:16px;margin-top:16px}
+.grid2{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:860px){ .grid2{grid-template-columns:1fr 1fr} }
 
-    .header{ background:var(--brand); color:#fff; padding:16px; border-radius:12px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap }
-    .header h1{ margin:0; font-size:22px; font-weight:var(--heading) }
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:8px;align-items:end}
+.cs1{grid-column:span 1}.cs2{grid-column:span 2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}
+label>span.small{display:block;font-size:12px;margin-bottom:4px;color:var(--muted)}
+#items{display:grid;row-gap:12px}
 
-    .a11y-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
-    .a11y-group{ display:flex; gap:6px; align-items:center; background:rgba(255,255,255,.12); padding:6px; border-radius:10px }
-    .a11y-label{ font-size:12px; color:#fff; opacity:.9 }
-    .a11y-badge{ display:none; padding:4px 8px; border-radius:8px; background:#2e7d32; color:#fff; font-size:12px; font-weight:700 }
+input,select,textarea{width:100%;border:2px solid var(--border);background:var(--panel);color:var(--text);border-radius:8px;padding:9px 10px;font-weight:600}
+input:focus,select:focus,textarea:focus,button:focus{outline:4px solid var(--focus);outline-offset:2px}
+input::placeholder{color:var(--muted);opacity:.75}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{appearance:textfield;-moz-appearance:textfield}
 
-    .panel{ background:var(--panel); border:2px solid var(--border); border-radius:12px; padding:16px; margin-top:16px }
-    .grid2{ display:grid; grid-template-columns:1fr; gap:14px }
-    @media(min-width:860px){ .grid2{ grid-template-columns:1fr 1fr } }
+.btn{appearance:none;background:var(--panel);color:var(--brand);border:3px solid var(--brand);padding:9px 12px;border-radius:10px;font-weight:800;cursor:pointer}
+.btn:hover{background:#F0F7F4}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.icon{width:42px;height:42px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:20px}
 
-    .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:8px; align-items:end }
-    .cs1{grid-column:span 1}.cs2{grid-column:span 2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}
-    label>span.small{ display:block; font-size:12px; margin-bottom:4px; color:var(--muted) }
+.small{font-size:12px}.muted{color:var(--muted)}.space{display:flex;justify-content:space-between;align-items:center}
+.hide{display:none}.text-green{color:var(--ok)}.text-red{color:var(--warn)}
 
-    #items{ display:grid; row-gap:14px }
+.payslip{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:860px){.payslip{grid-template-columns:1fr 1fr}}
+.card{border:2px solid var(--border);border-radius:12px;padding:12px}
+.tot{border-top:2px solid var(--border);padding-top:8px;margin-top:8px;font-weight:800}
+.kpi{border:2px solid var(--border);border-radius:12px;padding:12px}
+.note{border:3px solid var(--border);border-left:10px solid var(--brand);border-radius:10px;padding:10px 12px;background:var(--panel)}
 
-    input,select,textarea{
-      width:100%; border:2px solid var(--border); background:var(--panel); color:var(--text);
-      border-radius:8px; padding:9px 10px; font-weight:600
-    }
-    input:focus,select:focus,textarea:focus,button:focus{ outline:4px solid var(--focus); outline-offset:2px }
-    input::placeholder{ color:var(--muted); opacity:.75 }
-
-    .btn{ appearance:none; background:var(--panel); color:var(--brand); border:3px solid var(--brand); padding:9px 12px; border-radius:10px; font-weight:800; cursor:pointer }
-    .btn:hover{ background:#F0F7F4 }
-    .btn.primary{ background:var(--brand); color:#fff }
-    .btn.icon{ width:42px; height:42px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:20px }
-
-    .small{ font-size:12px } .muted{ color:var(--muted) } .space{ display:flex; justify-content:space-between; align-items:center }
-    .hide{ display:none } .text-green{ color:var(--ok) } .text-red{ color:var(--warn) }
-
-    .payslip{ display:grid; grid-template-columns:1fr; gap:12px }
-    @media(min-width:860px){ .payslip{ grid-template-columns:1fr 1fr } }
-    .card{ border:2px solid var(--border); border-radius:12px; padding:12px }
-    .tot{ border-top:2px solid var(--border); padding-top:8px; margin-top:8px; font-weight:800 }
-    .kpi{ border:2px solid var(--border); border-radius:12px; padding:12px }
-    .note{ border:3px solid var(--border); border-left:10px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel) }
-
-    /* Hide number spinners */
-    input[type=number]::-webkit-outer-spin-button,
-    input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
-    input[type=number]{ -moz-appearance:textfield; appearance:textfield }
-
-    /* PRINT: Illustration + Benefits on one page (~80%) */
-    @page{ size:A4; margin:12mm; }
-    @media print{
-      html.print-illustration .header,
-      html.print-illustration #inputs,
-      html.print-illustration #admin,
-      html.print-illustration #disclaimer,
-      html.print-illustration footer{ display:none !important; }
-
-      html.print-illustration #payslipPanel,
-      html.print-illustration #benefitsPanel{ display:block !important; }
-
-      html.print-illustration #payslipPanel,
-      html.print-illustration #benefitsPanel{
-        break-inside: avoid; page-break-inside: avoid;
-      }
-
-      html.print-illustration .wrap{
-        transform:scale(.80); transform-origin:top left; width:calc(100%/.80);
-      }
-      html.print-illustration body{ zoom:.80; }
-    }
-  </style>
+/* ---------------- Print: illustration only @80% on A4 */
+@page{ size:A4; margin:12mm; }
+@media print{
+  html.print-illustration .header,
+  html.print-illustration #inputs,
+  html.print-illustration #admin,
+  html.print-illustration #disclaimer,
+  html.print-illustration footer{ display:none !important; }
+  html.print-illustration #payslipPanel{ display:block !important; }
+  html.print-illustration .wrap{ transform:scale(.8); transform-origin:top left; width:calc(100%/.8); }
+  html.print-illustration body{ zoom:.8; }
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header class="header">
-      <div>
-        <h1>NHS Pension Opt-Out Calculator (England only)</h1>
-        <p class="small" style="margin:0">Monthly payslip illustration — <b>stay in</b> vs <b>opt out</b>. NI inferred from <b>DOB</b>.</p>
+<div class="wrap">
+  <header class="header">
+    <div>
+      <h1>NHS Pension Opt-Out Calculator (England only)</h1>
+      <p class="small" style="margin:0">Monthly payslip illustration — <b>stay in</b> vs <b>opt out</b>. NI inferred from <b>DOB</b>.</p>
+    </div>
+
+    <div class="a11y-bar">
+      <span id="a11yBadge">A11Y</span>
+      <div class="a11y-group">
+        <span class="a11y-label">Theme</span>
+        <select id="themeSelect" title="Theme">
+          <option value="auto">Auto</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark (high contrast)</option>
+          <option value="hc-large">High contrast (Large)</option>
+        </select>
       </div>
 
-      <div class="a11y-bar">
-        <div class="a11y-group">
-          <span class="a11y-label">Theme</span>
-         <select id="themeSelect" title="Theme">
-  <option value="auto">Auto</option>
-  <option value="light">Light</option>
-  <option value="dark">Dark (high contrast)</option>
-  <option value="hc-large">High contrast (Large)</option>
-</select>
-        </div>
+      <button id="btnPrintIllo" class="btn primary" type="button" aria-label="Print payslip illustration">Print illustration</button>
+      <button id="btnAdmin" class="btn hide" type="button" aria-expanded="false" aria-controls="admin">Admin</button>
+      <button id="btnANDI" class="btn hide" type="button" aria-describedby="andiNote">Run ANDI Accessibility Checker</button>
+    </div>
+    <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA accessibility tool (ANDI). No data sent externally.</p>
+  </header>
 
-        <button id="btnPrintIllo" class="btn primary" type="button" aria-label="Print payslip illustration">Print illustration</button>
-        <button id="btnAdmin" class="btn hide" type="button" aria-expanded="false" aria-controls="admin">Admin</button>
-        <button id="btnANDI" class="btn hide" type="button" aria-describedby="andiNote">Run ANDI Accessibility Checker</button>
-        <span id="a11yBadge" class="a11y-badge" aria-live="polite">Accessibility Mode Enabled</span>
-      </div>
-      <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA accessibility tool (ANDI). No data sent externally.</p>
-    </header>
+  <!-- Disclaimer -->
+  <section id="disclaimer" class="panel" aria-label="Disclaimer">
+    <div class="note small">
+      <b>Illustration, not payroll.</b> ESR uses YTD (cumulative) PAYE/NI, rounding and other deductions, so results will differ.
+      <span>For personalised information, check NHS Pensions or the <b>LAS Pensions Department</b>.</span>
+    </div>
+  </section>
 
-    <!-- Disclaimer -->
-    <section id="disclaimer" class="panel" aria-label="Disclaimer">
-      <div class="note small">
-        <b>Illustration, not payroll.</b> ESR uses YTD (cumulative) PAYE/NI, rounding and other deductions, so results will differ.
-        <span>For personalised information, check NHS Pensions or the <b>LAS Pensions Department</b>.</span>
-      </div>
-    </section>
+  <!-- Inputs -->
+  <section id="inputs" class="panel grid2" aria-label="Inputs">
+    <div>
+      <h2 style="margin-top:0;font-weight:var(--heading)">Pensionable pay (monthly)</h2>
 
-    <!-- Inputs -->
-    <section id="inputs" class="panel grid2" aria-label="Inputs">
-      <div>
-        <h2 style="margin-top:0; font-weight:var(--heading)">Pensionable pay (monthly)</h2>
-        <div id="items" aria-live="polite"></div>
-        <div class="actions" style="margin-top:8px">
-          <button id="addItem" class="btn" type="button">+ Add item</button>
-          <button id="clearEntries" class="btn" type="button">Clear</button>
-        </div>
-        <div class="space" style="border-top:2px solid var(--border); padding-top:10px; margin-top:10px">
-          <div class="muted">Total monthly pensionable pay</div>
-          <div id="totalPay" style="font-weight:800">£0.00</div>
-        </div>
+      <div id="items" aria-live="polite"></div>
+
+      <div class="actions" style="margin-top:8px">
+        <button id="addItem" class="btn" type="button">+ Add item</button>
+        <button id="clearEntries" class="btn" type="button">Clear</button>
       </div>
 
-      <div>
-        <h2 style="margin-top:0; font-weight:var(--heading)">Your details</h2>
-        <div class="row">
-          <label class="cs6"><span class="small">Date of birth</span>
-            <input id="dob" type="date" />
-          </label>
-          <label class="cs6"><span class="small">Tax code (optional)</span>
-            <input id="taxCode" type="text" placeholder="1257L, BR, D0, D1, NT" value="1257L"/>
-          </label>
-        </div>
-        <p class="small muted" style="margin-top:8px">Assumes NHS “net pay arrangement”.</p>
+      <div class="space" style="border-top:2px solid var(--border);padding-top:10px;margin-top:10px">
+        <div class="muted">Total monthly pensionable pay</div>
+        <div id="totalPay" style="font-weight:800">£0.00</div>
       </div>
-    </section>
+    </div>
 
-    <!-- Payslip -->
-    <section id="payslipPanel" class="panel" aria-label="Payslip illustration">
-      <h2 style="margin-top:0; font-weight:var(--heading)">Payslip illustration (monthly)</h2>
-      <div class="note small" style="margin-bottom:10px">
-        <ul style="margin:0 0 0 16px">
-          <li><b>Payments</b> shows each pensionable item you entered.</li>
-          <li><b>Deductions</b> show NHS Pension, PAYE and NI. The PAYE line shows taxable pay used.</li>
-        </ul>
+    <div>
+      <h2 style="margin-top:0;font-weight:var(--heading)">Your details</h2>
+      <div class="row">
+        <label class="cs6"><span class="small">Date of birth</span>
+          <input id="dob" type="date" />
+        </label>
+        <label class="cs6"><span class="small">Tax code (optional)</span>
+          <input id="taxCode" type="text" placeholder="1257L, BR, D0, D1, NT" value="1257L"/>
+        </label>
       </div>
-
-      <div class="payslip">
-        <!-- Stay in -->
-        <div class="card">
-          <div style="font-weight:800; margin-bottom:6px">Stay in</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-            <div>
-              <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
-              <div id="stayPayments"></div>
-              <div class="space tot"><div>Total payments</div><div id="stayTotalPayments">£0.00</div></div>
-            </div>
-            <div>
-              <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
-              <div class="space"><div>NHS Pension <span id="nhsRate">(0.0%)</span></div><div id="stayNhs">£0.00</div></div>
-              <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="stayTaxable">£0.00</span>)</span></div><div id="stayTax">£0.00</div></div>
-              <div class="space"><div>National Insurance</div><div id="stayNi">£0.00</div></div>
-              <div class="space tot"><div>Total deductions</div><div id="stayTotalDeds">£0.00</div></div>
-            </div>
-          </div>
-          <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="stayNet">£0.00</div></div>
-        </div>
-
-        <!-- Opt out -->
-        <div class="card">
-          <div style="font-weight:800; margin-bottom:6px">Opt out</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-            <div>
-              <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
-              <div id="outPayments"></div>
-              <div class="space tot"><div>Total payments</div><div id="outTotalPayments">£0.00</div></div>
-            </div>
-            <div>
-              <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
-              <div class="space"><div>NHS Pension</div><div>£0.00</div></div>
-              <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="outTaxable">£0.00</span>)</span></div><div id="outTax">£0.00</div></div>
-              <div class="space"><div>National Insurance</div><div id="outNi">£0.00</div></div>
-              <div class="space tot"><div>Total deductions</div><div id="outTotalDeds">£0.00</div></div>
-            </div>
-          </div>
-          <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="outNet">£0.00</div></div>
-        </div>
-      </div>
-
-      <!-- KPIs -->
-      <div style="display:grid; gap:12px; grid-template-columns:1fr; margin-top:12px">
-        <div class="kpi">
-          <div class="small muted">Difference in take-home (opt-out minus stay-in)</div>
-          <div id="delta" style="font-size:20px; font-weight:800">£0.00</div>
-        </div>
-        <div class="kpi">
-          <div class="small muted">Net annual pay — stay in / opt out</div>
-          <div id="netAnnual" style="font-size:18px; font-weight:800">£0.00 / £0.00</div>
-        </div>
-        <div class="kpi">
-          <div class="small muted">Employer pension (context)</div>
-          <div id="employerPension" style="font-size:18px; font-weight:800">≈ £0.00/yr</div>
-          <div class="small muted">Not deducted from pay but foregone if you opt out.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Benefits -->
-    <section id="benefitsPanel" class="panel" aria-label="Benefits given up if you opt out">
-      <h3 style="margin:0 0 6px 0">Benefits you will be giving up by opting out of the 2015 NHS Pension Scheme (CARE 1/54th)</h3>
-      <ul class="small" style="margin:0 0 0 18px">
-        <li>Based on your current pensionable earnings, you would give up an <b>annual pension accrual</b> of around <b><span id="accrual54">£0.00/yr</span></b> for life after retirement.</li>
-        <li>To illustrate the value of the NHS pension you would be giving up, buying similar benefits on the “open market” might cost around <b>£10,100</b> for each year you give up accruing benefits.</li>
-        <li>An annual pension payable for life after retirement.</li>
-        <li>Tax-free cash lump sum on retirement for those with 1995 Section membership (optional for other 2015 members).</li>
-        <li>Death-in-service life assurance lump sum to nominated people or an organisation.</li>
-        <li>Pension benefits payable to dependants, including children.</li>
-        <li>Ill-health retirement benefits.</li>
-        <li>Tax relief on pension contributions.</li>
-      </ul>
-      <!-- Make this the same size as the list (small) -->
-      <p class="small">See the NHS Pension Scheme Guide at
-        <a href="https://www.nhsbsa.nhs.uk/nhs-pensions" target="_blank" rel="noopener">nhsbsa.nhs.uk/nhs-pensions</a>.
+      <p class="small muted" style="margin-top:6px">
+        If left blank, the calculator assumes a standard tax code (e.g. <b>1257L</b>).
       </p>
-      <p class="small muted" style="margin-top:4px">This is an illustration and excludes revaluation, survivor benefit calculations, early/late retirement factors and personal tax circumstances.</p>
-    </section>
+      <p class="small muted" style="margin-top:8px">Assumes NHS “net pay arrangement”.</p>
+    </div>
+  </section>
 
-    <!-- Admin -->
-    <section id="admin" class="panel hide" aria-label="Admin">
-      <h2 style="margin-top:0">Admin — Rates (paste/edit yearly)</h2>
-      <p class="small muted">Edits save to this browser (localStorage). Import overrides external rates until you reset.</p>
-      <div class="grid2">
-        <div>
-          <label class="small" for="ratesCurrent">Current JSON (active)</label>
-          <textarea id="ratesCurrent" rows="16" readonly
-            style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:2px solid var(--border); border-radius:8px; padding:8px"></textarea>
-          <div class="actions" style="margin-top:8px">
-            <button id="exportRates" class="btn" type="button">Export</button>
-            <button id="resetRates" class="btn" type="button" title="Use external/default rates and forget local">Reset</button>
+  <!-- Payslip -->
+  <section id="payslipPanel" class="panel" aria-label="Payslip illustration">
+    <h2 style="margin-top:0;font-weight:var(--heading)">Payslip illustration (monthly)</h2>
+    <div class="note small" style="margin-bottom:10px">
+      <ul style="margin:0 0 0 16px">
+        <li><b>Payments</b> shows each pensionable item you entered.</li>
+        <li><b>Deductions</b> show NHS Pension, PAYE and NI. The PAYE line shows taxable pay used.</li>
+      </ul>
+    </div>
+
+    <div class="payslip">
+      <!-- Stay in -->
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px">Stay in</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div class="muted" style="font-weight:700;margin-bottom:4px">Payments</div>
+            <div id="stayPayments"></div>
+            <div class="space tot"><div>Total payments</div><div id="stayTotalPayments">£0.00</div></div>
+          </div>
+          <div>
+            <div class="muted" style="font-weight:700;margin-bottom:4px">Deductions</div>
+            <div class="space"><div>NHS Pension <span id="nhsRate">(0.0%)</span></div><div id="stayNhs">£0.00</div></div>
+            <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="stayTaxable">£0.00</span>)</span></div><div id="stayTax">£0.00</div></div>
+            <div class="space"><div>National Insurance</div><div id="stayNi">£0.00</div></div>
+            <div class="space tot"><div>Total deductions</div><div id="stayTotalDeds">£0.00</div></div>
           </div>
         </div>
-        <div>
-          <label class="small" for="ratesPaste">Paste new JSON (full object)</label>
-          <textarea id="ratesPaste" rows="16" placeholder='{"defaultYear":"2025/26","years":[...]}' 
-            style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:2px solid var(--border); border-radius:8px; padding:8px"></textarea>
-          <div class="actions" style="margin-top:8px">
-            <button id="importRates" class="btn" type="button">Import</button>
+        <div class="space" style="margin-top:10px;font-weight:800"><div>Net pay</div><div id="stayNet">£0.00</div></div>
+      </div>
+
+      <!-- Opt out -->
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px">Opt out</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div class="muted" style="font-weight:700;margin-bottom:4px">Payments</div>
+            <div id="outPayments"></div>
+            <div class="space tot"><div>Total payments</div><div id="outTotalPayments">£0.00</div></div>
           </div>
+          <div>
+            <div class="muted" style="font-weight:700;margin-bottom:4px">Deductions</div>
+            <div class="space"><div>NHS Pension</div><div>£0.00</div></div>
+            <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="outTaxable">£0.00</span>)</span></div><div id="outTax">£0.00</div></div>
+            <div class="space"><div>National Insurance</div><div id="outNi">£0.00</div></div>
+            <div class="space tot"><div>Total deductions</div><div id="outTotalDeds">£0.00</div></div>
+          </div>
+        </div>
+        <div class="space" style="margin-top:10px;font-weight:800"><div>Net pay</div><div id="outNet">£0.00</div></div>
+      </div>
+    </div>
+
+    <!-- KPIs & Benefits -->
+    <div style="display:grid;gap:12px;grid-template-columns:1fr;margin-top:12px">
+      <div class="kpi">
+        <div class="small muted">Difference in take-home (opt-out minus stay-in)</div>
+        <div id="delta" style="font-size:20px;font-weight:800">£0.00</div>
+      </div>
+      <div class="kpi">
+        <div class="small muted">Net annual pay — stay in / opt out</div>
+        <div id="netAnnual" style="font-size:18px;font-weight:800">£0.00 / £0.00</div>
+      </div>
+      <div class="kpi">
+        <div class="small muted">Employer pension (context)</div>
+        <div id="employerPension" style="font-size:18px;font-weight:800">≈ £0.00/yr</div>
+        <div class="small muted">Not deducted from pay but foregone if you opt out.</div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin:0 0 6px 0">Benefits you will be giving up by opting out of the 2015 NHS Pension Scheme (CARE 1/54th)</h3>
+        <ul class="small" style="margin:0 0 0 18px">
+          <li>Based on your current pensionable earnings, you would give up an <b>annual pension accrual</b> of around <b><span id="accrual54">£0.00/yr</span></b> for life after retirement.</li>
+          <li>To illustrate the value of the NHS pension you would be giving up, buying similar benefits on the “open market” might cost around <b>£10,100</b> for each year you give up accruing benefits.</li>
+          <li>An annual pension payable for life after retirement.</li>
+          <li>Tax-free cash lump sum on retirement for those with 1995 Section membership (optional for other 2015 members).</li>
+          <li>Death-in-service life assurance lump sum to nominated people or an organisation.</li>
+          <li>Pension benefits payable to dependants, including children.</li>
+          <li>Ill-health retirement benefits.</li>
+          <li>Tax relief on pension contributions.</li>
+        </ul>
+        <p class="small" style="margin-top:6px">
+          See the NHS Pension Scheme Guide at
+          <a href="https://www.nhsbsa.nhs.uk/nhs-pensions" target="_blank" rel="noopener">nhsbsa.nhs.uk/nhs-pensions</a>.
+        </p>
+        <p class="small muted" style="margin-top:4px">This is an illustration and excludes revaluation, survivor benefit calculations, early/late retirement factors and personal tax circumstances.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Notes -->
+  <section class="panel" aria-label="Notes">
+    <h3 style="margin:0 0 6px 0">Notes</h3>
+    <ul class="small" style="margin:0 0 0 18px">
+      <li>Supported tax codes: L (e.g. 1257L), K, BR, D0, D1, NT and 0T.</li>
+      <li>Personal Allowance taper for Adjusted Net Income over £100,000 is applied.</li>
+      <li>Does not apply higher Personal Allowance rules for those born before 6 April 1948.</li>
+      <li>Compares take-home with/without scheme contributions (PAYE + NI effects included).</li>
+      <li>Does not consider Annual Allowance/Lifetime Allowance tax charges.</li>
+    </ul>
+  </section>
+
+  <!-- Admin -->
+  <section id="admin" class="panel hide" aria-label="Admin">
+    <h2 style="margin-top:0">Admin — Rates (paste/edit yearly)</h2>
+    <p class="small muted">Edits save to this browser (localStorage). Export and commit when ready.</p>
+    <div class="grid2">
+      <div>
+        <label class="small">Current JSON</label>
+        <textarea id="ratesCurrent" rows="16" readonly style="width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:2px solid var(--border);border-radius:8px;padding:8px"></textarea>
+        <div class="actions" style="margin-top:8px">
+          <button id="exportRates" class="btn" type="button">Export</button>
         </div>
       </div>
-    </section>
+      <div>
+        <label class="small">Paste new JSON</label>
+        <textarea id="ratesPaste" rows="16" placeholder='{ "years":[ ... ], "defaultYear":"2025/26" }' style="width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:2px solid var(--border);border-radius:8px;padding:8px"></textarea>
+        <div class="actions" style="margin-top:8px">
+          <button id="importRates" class="btn" type="button">Import</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <footer class="small muted" style="margin:12px 0 24px">
-      HMRC PAYE & NI 2025/26; NHSBSA member tiers 2025/26. For guidance only.
-    </footer>
-  </div>
+  <footer class="small muted" style="margin:12px 0 24px">
+    HMRC PAYE & NI 2025/26; NHSBSA member tiers 2025/26. For guidance only.
+  </footer>
+</div>
 
-  <script>
-  /* ---------- Embedded defaults (fallback only) ---------- */
-  // Use HMRC-style rounding: round taxable-for-period down to whole pounds before banding
-const PAYE_WHOLE_POUNDS = true;
-    const defaultRates = {
-    defaultYear: "2025/26",
-    years: [{
-      label: "2025/26",
-      tax: {
-        personalAllowance: 12570,
-        higherRateThreshold: 37700,
-        additionalRateThreshold: 125140,
-        bands: { ENG_NI: [ {upper:37700,rate:.20},{upper:125140,rate:.40},{upper:null,rate:.45} ] }
-      },
-      ni: { monthly: { LEL: 542, PT: 1048, UEL: 4189 }, employeeRates: { main: .08, upper: .02 } },
-      nhs: {
-        tiers: [
-          { min: 0, max: 13259, rate: 0.052 },
-          { min: 13260, max: 27797, rate: 0.065 },
-          { min: 27798, max: 33868, rate: 0.083 },
-          { min: 33869, max: 50845, rate: 0.098 },
-          { min: 50846, max: 65190, rate: 0.107 },
-          { min: 65191, max: null,  rate: 0.125 }
-        ],
-        employerRateHint: 0.237
-      }
-    }]
-  };
+<script>
+/* ---------------- Rates (default; overridable via Admin) */
+const defaultRates = {
+  defaultYear: "2025/26",
+  years: [{
+    label: "2025/26",
+    tax: {
+      personalAllowance: 12570,
+      higherRateThreshold: 37700,
+      additionalRateThreshold: 125140,
+      bands: { ENG_NI: [ {upper:37700,rate:.20},{upper:125140,rate:.40},{upper:null,rate:.45} ] }
+    },
+    ni: { monthly: { LEL: 542, PT: 1048, UEL: 4189 }, employeeRates: { main: .08, upper: .02 } },
+    nhs: {
+      tiers: [
+        { min: 0, max: 13259, rate: 0.052 },
+        { min: 13260, max: 27797, rate: 0.065 },
+        { min: 27798, max: 33868, rate: 0.083 },
+        { min: 33869, max: 50845, rate: 0.098 },
+        { min: 50846, max: 65190, rate: 0.107 },
+        { min: 65191, max: null,  rate: 0.125 }
+      ],
+      employerRateHint: 0.237
+    }
+  }]
+};
 
-  /* ---------- Constants & helpers ---------- */
-  const LS_RATES_KEY = 'las_optout_rates_v1';
-  const LS_PREFER_LOCAL_KEY = 'las_optout_rates_prefer_local';
-  const THEME_KEY='las_optout_theme';
+/* ---------------- Helpers */
+const PAYE_WHOLE_POUNDS = true; // HMRC rounding on taxable-for-period
+const GBP = new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'});
+const fmt = n => GBP.format((+n)||0);
+const pct = n => `${(n*100).toFixed(1)}%`;
+function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
 
-  const GBP = new Intl.NumberFormat('en-GB',{style:'currency', currency:'GBP'});
-  const fmt = n => GBP.format((+n)||0);
-  const pct = n => `${(n*100).toFixed(1)}%`;
+function loadRates(){
+  try{
+    const raw=localStorage.getItem('las_optout_rates_v1');
+    if(!raw) return defaultRates;
+    const p=JSON.parse(raw);
+    return p?.years?.length ? p : defaultRates;
+  }catch{return defaultRates;}
+}
+function saveRates(r){ localStorage.setItem('las_optout_rates_v1', JSON.stringify(r,null,2)); }
 
-  function parseTaxCode(code){
-    const c=(code||'').toUpperCase().trim();
-    if(!c) return {mode:'STANDARD', allowance:12570};
-    if(['BR','D0','D1','NT'].includes(c)) return {mode:c};
-    const m=c.match(/(\d{3,4})[A-Z]*/);
-    if(m) return {mode:'STANDARD', allowance:parseInt(m[1],10)*10};
-    return {mode:'STANDARD', allowance:12570};
-  }
-  function ageOnDate(dob,on){ if(!dob) return null; const b=new Date(dob); if(isNaN(b)) return null; let a=on.getFullYear()-b.getFullYear(); const m=on.getMonth()-b.getMonth(); if(m<0||(m===0&&on.getDate()<b.getDate())) a--; return a; }
-  function nhsRateFor(annual,nhs){ const t=nhs.tiers.find(x=>annual>=x.min && (x.max===null||annual<=x.max)); return t?t.rate:0; }
- function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+function parseTaxCode(code){
+  const c=(code||'').toUpperCase().trim();
+  if(!c) return {mode:'STANDARD',allowance:12570};
+  if(['BR','D0','D1','NT','0T'].includes(c)) return {mode:c,allowance:12570};
+  const m=c.match(/(\d{3,4})[A-Z]*/);
+  if(m) return {mode:'STANDARD',allowance:parseInt(m[1],10)*10};
+  return {mode:'STANDARD',allowance:12570};
+}
+function ageOnDate(dob,on){ if(!dob) return null; const b=new Date(dob); if(isNaN(b)) return null; let a=on.getFullYear()-b.getFullYear(); const m=on.getMonth()-b.getMonth(); if(m<0||(m===0&&on.getDate()<b.getDate())) a--; return a; }
+function nhsRateFor(annual,nhs){ const t=nhs.tiers.find(x=>annual>=x.min && (x.max===null||annual<=x.max)); return t?t.rate:0; }
 
-function calcPAYE(monthlyTaxable, annualAdjustedNet, tcfg, parsedCode){
-  // Personal Allowance (with taper for ANI > £100k)
-  const pa0 = parsedCode.mode==='STANDARD' ? parsedCode.allowance : 0;
-  const taper = Math.max(0, Math.floor((Math.max(annualAdjustedNet,0) - 100000) / 2));
-  const pa = parsedCode.mode==='STANDARD' ? Math.max(0, pa0 - taper) : 0;
+function calcPAYE(monthlyTaxable, annualAdjustedNet, tcfg, parsed){
+  const pa0 = parsed.mode==='STANDARD' ? parsed.allowance : 0;
+  const taper = Math.max(0, Math.floor((Math.max(annualAdjustedNet,0)-100000)/2));
+  const pa = parsed.mode==='STANDARD' ? Math.max(0, pa0 - taper) : 0;
 
-  // Special codes
-  if (parsedCode.mode==='NT') return 0;
-  if (parsedCode.mode==='BR') return round2(monthlyTaxable * 0.20);
-  if (parsedCode.mode==='D0') return round2(monthlyTaxable * 0.40);
-  if (parsedCode.mode==='D1') return round2(monthlyTaxable * 0.45);
+  if(parsed.mode==='NT') return 0;
+  if(parsed.mode==='BR') return round2(monthlyTaxable * .20);
+  if(parsed.mode==='D0') return round2(monthlyTaxable * .40);
+  if(parsed.mode==='D1') return round2(monthlyTaxable * .45);
+  if(parsed.mode==='0T'){ /* no free pay */ }
 
-  // Taxable for period after free pay
-  let taxable = Math.max(0, monthlyTaxable - (pa/12));
-
-  // HMRC style: floor to whole pounds before banding (this often removes the ~£0.35 drift)
-  if (PAYE_WHOLE_POUNDS) taxable = Math.floor(taxable);
+  let taxable = Math.max(0, monthlyTaxable - (parsed.mode==='0T' ? 0 : pa/12));
+  if(PAYE_WHOLE_POUNDS) taxable = Math.floor(taxable);
 
   const bands = tcfg.bands.ENG_NI;
-  let remaining = taxable;
-  let tax = 0, lowerA = 0;
-
-  for (const b of bands){
-    const upperA = (b.upper == null ? Infinity : b.upper);
-    const sizeM = (upperA - lowerA) / 12;
-    const slice = Math.max(0, Math.min(remaining, sizeM));
+  let remaining = taxable, tax = 0, lowerA = 0;
+  for(const b of bands){
+    const upperA = (b.upper==null?Infinity:b.upper);
+    const perMonthBand = (upperA - lowerA)/12;
+    const slice = Math.max(0, Math.min(remaining, perMonthBand));
     tax += slice * b.rate;
     remaining -= slice;
     lowerA = upperA;
-    if (remaining <= 0) break;
+    if(remaining<=0) break;
   }
-  if (remaining > 0) tax += remaining * bands[bands.length-1].rate;
+  if(remaining>0) tax += remaining * bands[bands.length-1].rate;
 
   return round2(tax);
 }
-  /* ---------- Theme ---------- */
-  const themeSelect=document.getElementById('themeSelect');
-  function applyTheme(v){
-  document.documentElement.className = ''; // clear
-  if (v==='light') document.documentElement.classList.add('theme-light');
-  else if (v==='dark') document.documentElement.classList.add('theme-dark');
-  else if (v==='hc-large') document.documentElement.classList.add('theme-hc-large');
-  // 'auto' = no extra class (respects user OS preference + default tokens)
+function calcNI(mGross,ncfg,overSPA){
+  if(overSPA) return 0;
+  const {PT,UEL}=ncfg.monthly;
+  if(mGross<=PT) return 0;
+  const between=Math.max(0,Math.min(mGross,UEL)-PT);
+  const above=Math.max(0,mGross-UEL);
+  return round2(between*ncfg.employeeRates.main + above*ncfg.employeeRates.upper);
 }
-  (function initTheme(){ const saved=localStorage.getItem(THEME_KEY)||'auto'; themeSelect.value=saved; applyTheme(saved); })();
-  themeSelect.addEventListener('change',()=>{ const v=themeSelect.value; localStorage.setItem(THEME_KEY,v); applyTheme(v); });
 
-  /* ---------- Load rates: external > local (if preferred) > defaults ---------- */
-  async function fetchExternalRates() {
-    try {
-      const res = await fetch('rates.json', { cache: 'no-store' });
-      if (res.ok) {
-        const j = await res.json();
-        if (j?.years?.length) return j;
-      }
-    } catch (e) { console.warn('rates.json not loaded:', e); }
-    return null;
+/* ---------------- Theme */
+const THEME_KEY='las_optout_theme';
+const themeSelect=document.getElementById('themeSelect');
+function applyTheme(v){
+  document.documentElement.className='';
+  if(v==='light') document.documentElement.classList.add('theme-light');
+  else if(v==='dark') document.documentElement.classList.add('theme-dark');
+  else if(v==='hc-large') document.documentElement.classList.add('theme-hc-large');
+}
+(function initTheme(){ const saved=localStorage.getItem(THEME_KEY)||'auto'; themeSelect.value=saved; applyTheme(saved); })();
+themeSelect.addEventListener('change',()=>{ const v=themeSelect.value; localStorage.setItem(THEME_KEY,v); applyTheme(v); });
+
+/* ---------------- State & DOM */
+const state={ items:[], rates:loadRates(), year:null }; state.year=state.rates.years[0];
+
+const elItems=document.getElementById('items');
+const btnAdd=document.getElementById('addItem');
+const btnClearVals=document.getElementById('clearEntries');
+const elDob=document.getElementById('dob');
+const elTax=document.getElementById('taxCode');
+
+let idSeq=0;
+function itemRow(it){
+  const row=document.createElement('div'); row.className='row'; row.dataset.id=it.id;
+
+  const name=document.createElement('input');
+  name.className='cs4'; name.placeholder='Basic / HCA / Other'; name.value=it.label||'';
+  name.setAttribute('aria-label','Pay item label');
+  name.addEventListener('input',()=>{ it.label=name.value; renderAll(); });
+
+  const wrap=document.createElement('div'); wrap.className='cs3'; wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
+  const chk=document.createElement('input'); chk.type='checkbox'; chk.checked=!!it.useRate; chk.id=`toggle-${it.id}`;
+  const lab=document.createElement('label'); lab.setAttribute('for',chk.id); lab.className='small'; lab.textContent='rate × hours';
+  wrap.append(chk,lab);
+
+  const rate=document.createElement('input'); rate.type='number'; rate.className='cs2'; rate.step='0.01'; rate.min='0'; rate.inputMode='decimal'; rate.placeholder='£'; rate.value=it.rate ?? '';
+  rate.setAttribute('aria-label','Hourly rate');
+  const hours=document.createElement('input'); hours.type='number'; hours.className='cs2'; hours.step='0.01'; hours.min='0'; hours.inputMode='decimal'; hours.placeholder='hours'; hours.value=it.hours ?? '';
+  hours.setAttribute('aria-label','Hours');
+  const amount=document.createElement('input'); amount.type='number'; amount.className='cs6'; amount.step='0.01'; amount.min='0'; amount.inputMode='decimal'; amount.placeholder='£'; amount.value=it.amount ?? '';
+  amount.setAttribute('aria-label','Amount');
+
+  const preview=document.createElement('div'); preview.className='cs1 small'; preview.style.textAlign='right'; preview.style.opacity='.7';
+  const remove=document.createElement('button'); remove.className='cs1 btn icon'; remove.type='button'; remove.textContent='×'; remove.setAttribute('aria-label',`Remove ${it.label||'pay item'}`);
+
+  function toggle(){
+    it.useRate = chk.checked;
+    if(it.useRate){ rate.classList.remove('hide'); hours.classList.remove('hide'); amount.classList.add('hide'); const v=(+it.rate||0)*(+it.hours||0); preview.textContent=v?fmt(v):''; }
+    else{ rate.classList.add('hide'); hours.classList.add('hide'); amount.classList.remove('hide'); preview.textContent=''; }
   }
-  function getLocalRates() {
-    try {
-      const raw = localStorage.getItem(LS_RATES_KEY);
-      if (!raw) return null;
-      const j = JSON.parse(raw);
-      return j?.years?.length ? j : null;
-    } catch { return null; }
+  chk.addEventListener('change',()=>{ toggle(); renderAll(); });
+  rate.addEventListener('input',()=>{ it.rate=parseFloat(rate.value||''); renderAll(); });
+  hours.addEventListener('input',()=>{ it.hours=parseFloat(hours.value||''); renderAll(); });
+  amount.addEventListener('input',()=>{ it.amount=parseFloat(amount.value||''); renderAll(); });
+  remove.addEventListener('click',()=>{ state.items=state.items.filter(x=>x.id!==it.id); rebuildItems(); renderAll(); });
+
+  toggle();
+  row.append(name,wrap,rate,hours,amount,preview,remove);
+  return row;
+}
+function rebuildItems(){ elItems.innerHTML=''; state.items.forEach(it=>elItems.appendChild(itemRow(it))); }
+function addItem(label='Other'){ const it={id:'it-'+(idSeq++), label, useRate:false, rate:null, hours:null, amount:null}; state.items.push(it); elItems.appendChild(itemRow(it)); renderAll(); }
+function clearEntries(){ state.items.forEach(it=>{ it.rate=null; it.hours=null; it.amount=null; }); rebuildItems(); renderAll(); }
+
+btnAdd.addEventListener('click',()=>addItem('Other'));
+btnClearVals.addEventListener('click',clearEntries);
+
+/* initial default rows (once) */
+addItem('Basic'); addItem('HCA');
+
+/* ---------------- Render */
+function renderAll(){
+  const monthlyGross=state.items.reduce((s,it)=> it.useRate ? s+((+it.rate||0)*(+it.hours||0)) : s+(+it.amount||0), 0);
+  document.getElementById('totalPay').textContent=fmt(monthlyGross);
+
+  const annualGross=monthlyGross*12;
+  const nhsRate=nhsRateFor(annualGross,state.year.nhs);
+  document.getElementById('nhsRate').textContent='('+pct(nhsRate)+')';
+  const monthlyNhs=(annualGross*nhsRate)/12;
+
+  const monthEnd=new Date(); monthEnd.setMonth(monthEnd.getMonth()+1,0);
+  const overSPA=(ageOnDate(elDob.value,monthEnd)??0)>=66;
+
+  const parsed=parseTaxCode(elTax.value);
+  const aniStay=Math.max(0,annualGross-annualGross*nhsRate);       // ANI approximation (salary - member contribs)
+  const taxableStay=Math.max(0,monthlyGross-monthlyNhs);
+
+  const taxStay=calcPAYE(taxableStay,aniStay,state.year.tax,parsed);
+  const taxOut =calcPAYE(monthlyGross,annualGross,state.year.tax,parsed);
+  const niStay=calcNI(monthlyGross,state.year.ni,overSPA);
+  const niOut =calcNI(monthlyGross,state.year.ni,overSPA);
+
+  const netStay=monthlyGross-monthlyNhs-taxStay-niStay;
+  const netOut =monthlyGross-taxOut-niOut;
+  const delta  =netOut-netStay;
+
+  function fill(container){
+    container.innerHTML='';
+    state.items.forEach(it=>{
+      const v=it.useRate ? (+it.rate||0)*(+it.hours||0) : (+it.amount||0);
+      if(!v) return;
+      const row=document.createElement('div'); row.className='space'; row.innerHTML=`<div>${it.label||''}</div><div>${fmt(v)}</div>`;
+      container.appendChild(row);
+    });
   }
-  function setLocalRates(obj) {
-    localStorage.setItem(LS_RATES_KEY, JSON.stringify(obj, null, 2));
-    localStorage.setItem(LS_PREFER_LOCAL_KEY, '1');
-  }
-  function clearLocalRatesPreference() {
-    localStorage.removeItem(LS_RATES_KEY);
-    localStorage.removeItem(LS_PREFER_LOCAL_KEY);
-  }
-  function chooseActiveYear(rates) {
-    return rates.years.find(y => y.label === rates.defaultYear) || rates.years[0];
-  }
-  async function loadActiveRates() {
-    const preferLocal = localStorage.getItem(LS_PREFER_LOCAL_KEY) === '1';
-    const local = getLocalRates();
-    if (preferLocal && local) return local;
-    const external = await fetchExternalRates();
-    if (external) return external;
-    if (local) return local;
-    return defaultRates;
-  }
+  fill(document.getElementById('stayPayments'));
+  fill(document.getElementById('outPayments'));
 
-  /* ---------- State & DOM ---------- */
-  const state = { items: [], rates: null, year: null };
+  document.getElementById('stayTotalPayments').textContent=fmt(monthlyGross);
+  document.getElementById('outTotalPayments').textContent =fmt(monthlyGross);
 
-  const elItems=document.getElementById('items');
-  const btnAdd=document.getElementById('addItem');
-  const btnClearVals=document.getElementById('clearEntries');
-  const elDob=document.getElementById('dob');
-  const elTax=document.getElementById('taxCode');
+  document.getElementById('stayNhs').textContent=fmt(monthlyNhs);
+  document.getElementById('stayTax').textContent=fmt(taxStay);
+  document.getElementById('stayNi').textContent =fmt(niStay);
+  document.getElementById('stayTotalDeds').textContent=fmt(monthlyNhs+taxStay+niStay);
+  document.getElementById('stayNet').textContent=fmt(netStay);
+  document.getElementById('stayTaxable').textContent=fmt(taxableStay);
 
-  const adminSec      = document.getElementById('admin');
-  const btnAdmin      = document.getElementById('btnAdmin');
-  const btnANDI       = document.getElementById('btnANDI');
-  const a11yBadge     = document.getElementById('a11yBadge');
-  const ratesCurrent  = document.getElementById('ratesCurrent');
-  const ratesPaste    = document.getElementById('ratesPaste');
-  const btnImport     = document.getElementById('importRates');
-  const btnExport     = document.getElementById('exportRates');
-  const btnReset      = document.getElementById('resetRates');
+  document.getElementById('outTax').textContent=fmt(taxOut);
+  document.getElementById('outNi').textContent =fmt(niOut);
+  document.getElementById('outTotalDeds').textContent=fmt(taxOut+niOut);
+  document.getElementById('outNet').textContent=fmt(netOut);
+  document.getElementById('outTaxable').textContent=fmt(monthlyGross);
 
-  const btnPrintIllo  = document.getElementById('btnPrintIllo');
+  const elDelta=document.getElementById('delta'); elDelta.textContent=fmt(delta); elDelta.className='text-'+(delta>=0?'green':'red');
+  document.getElementById('netAnnual').textContent=fmt(netStay*12)+' / '+fmt(netOut*12);
 
-  /* ---------- Items UI ---------- */
-  let idSeq=0;
-  function itemRow(it){
-    const row=document.createElement('div'); row.className='row'; row.dataset.id=it.id;
+  const employerAnnual=annualGross*(state.year.nhs.employerRateHint||0);
+  document.getElementById('employerPension').textContent='≈ '+fmt(employerAnnual)+'/yr';
 
-    const name=document.createElement('input');
-    name.className='cs4'; name.placeholder='Basic / HCA / Other'; name.value=it.label||'';
-    name.setAttribute('aria-label','Pay item label');
-    name.addEventListener('input',()=>{ it.label=name.value; renderAll(); });
+  const accrual=annualGross/54;
+  document.getElementById('accrual54').textContent=fmt(accrual)+'/yr';
 
-    const wrap=document.createElement('div'); wrap.className='cs3'; wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
-    const chk=document.createElement('input'); chk.type='checkbox'; chk.checked=!!it.useRate; chk.id=`toggle-${it.id}`;
-    const lab=document.createElement('label'); lab.setAttribute('for',chk.id); lab.className='small'; lab.textContent='rate × hours';
-    wrap.append(chk,lab);
+  refreshAdminText();
+}
+elDob.addEventListener('input',renderAll);
+elTax.addEventListener('input',renderAll);
 
-    const rate=document.createElement('input'); rate.type='number'; rate.className='cs2'; rate.step='0.01'; rate.min='0'; rate.inputMode='decimal'; rate.placeholder='£'; rate.value=(it.rate ?? '');
-    rate.setAttribute('aria-label','Hourly rate');
-    const hours=document.createElement('input'); hours.type='number'; hours.className='cs2'; hours.step='0.01'; hours.min='0'; hours.inputMode='decimal'; hours.placeholder='hours'; hours.value=(it.hours ?? '');
-    hours.setAttribute('aria-label','Hours');
-    const amount=document.createElement('input'); amount.type='number'; amount.className='cs6'; amount.step='0.01'; amount.min='0'; amount.inputMode='decimal'; amount.placeholder='£'; amount.value=(it.amount ?? '');
-    amount.setAttribute('aria-label','Amount');
+/* ---------------- Admin / ANDI / Print */
+const adminSec=document.getElementById('admin');
+const btnAdmin=document.getElementById('btnAdmin');
+const btnANDI=document.getElementById('btnANDI');
+const andiNote=document.getElementById('andiNote');
+const a11yBadge=document.getElementById('a11yBadge');
+const btnPrintIllo=document.getElementById('btnPrintIllo');
 
-    const preview=document.createElement('div'); preview.className='cs1 small'; preview.style.textAlign='right'; preview.style.opacity='.7';
-    const remove=document.createElement('button'); remove.className='cs1 btn icon'; remove.type='button'; remove.textContent='×'; remove.setAttribute('aria-label',`Remove ${it.label||'pay item'}`);
+const btnExport=document.getElementById('exportRates');
+const btnImport=document.getElementById('importRates');
+const ratesCurrent=document.getElementById('ratesCurrent');
+const ratesPaste=document.getElementById('ratesPaste');
 
-    function toggle(){
-      it.useRate = chk.checked;
-      if(it.useRate){
-        rate.classList.remove('hide'); hours.classList.remove('hide'); amount.classList.add('hide');
-        const v=(+it.rate||0)*(+it.hours||0); preview.textContent=v?fmt(v):'';
-      } else {
-        rate.classList.add('hide'); hours.classList.add('hide'); amount.classList.remove('hide');
-        preview.textContent='';
-      }
-    }
-    chk.addEventListener('change',()=>{ toggle(); renderAll(); });
-    rate.addEventListener('input',()=>{ it.rate=parseFloat(rate.value||''); renderAll(); });
-    hours.addEventListener('input',()=>{ it.hours=parseFloat(hours.value||''); renderAll(); });
-    amount.addEventListener('input',()=>{ it.amount=parseFloat(amount.value||''); renderAll(); });
-    remove.addEventListener('click',()=>{ state.items=state.items.filter(x=>x.id!==it.id); rebuildItems(); renderAll(); });
+function refreshAdminText(){ if(ratesCurrent) ratesCurrent.value=JSON.stringify(state.rates,null,2); }
+btnExport?.addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(state.rates,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url); });
+btnImport?.addEventListener('click',()=>{ try{ const p=JSON.parse(ratesPaste.value); if(!p?.years?.length) throw new Error('Malformed JSON'); state.rates=p; state.year=p.years[0]; saveRates(p); ratesPaste.value=''; refreshAdminText(); renderAll(); alert('Rates imported.'); }catch(e){ alert('Import failed: '+e.message); }});
 
-    toggle();
-    row.append(name,wrap,rate,hours,amount,preview,remove);
-    return row;
-  }
-  function rebuildItems(){ elItems.innerHTML=''; state.items.forEach(it=>elItems.appendChild(itemRow(it))); }
-  function addItem(label='Other'){ const it={id:'it-'+(idSeq++), label, useRate:false, rate:null, hours:null, amount:null}; state.items.push(it); elItems.appendChild(itemRow(it)); renderAll(); }
-  function clearEntries(){ state.items.forEach(it=>{ it.rate=null; it.hours=null; it.amount=null; }); rebuildItems(); renderAll(); }
+function enablePrintFlags(){ document.documentElement.classList.add('print-illustration'); }
+function disablePrintFlags(){ document.documentElement.classList.remove('print-illustration'); }
+window.addEventListener('afterprint', disablePrintFlags);
+btnPrintIllo.addEventListener('click',()=>{ enablePrintFlags(); setTimeout(()=>window.print(),50); setTimeout(disablePrintFlags,2000); });
 
-  btnAdd.addEventListener('click',()=>addItem('Other'));
-  btnClearVals.addEventListener('click',clearEntries);
+const params=new URLSearchParams(location.search);
+const isAdmin=params.get('admin')==='1';
+const wantsA11y=params.get('a11y')==='1';
 
-  /* ---------- Admin wiring ---------- */
-  function refreshAdminText(){ if(ratesCurrent) ratesCurrent.value=JSON.stringify(state.rates || {}, null, 2); }
-  function applyRatesObject(newRates){
-    if (!newRates || !Array.isArray(newRates.years) || newRates.years.length === 0) {
-      throw new Error('Malformed JSON: missing years[]');
-    }
-    state.rates = newRates;
-    state.year  = chooseActiveYear(state.rates);
-    refreshAdminText(); renderAll();
-  }
-  const params  = new URLSearchParams(location.search);
-  const isAdmin = params.get('admin') === '1';
-  const wantsA11y = params.get('a11y') === '1';
+if(isAdmin){
+  btnAdmin.classList.remove('hide');
+  btnANDI.classList.remove('hide');
+  andiNote.classList.remove('hide'); andiNote.setAttribute('aria-hidden','false');
+  adminSec.classList.remove('hide');
+  btnAdmin.setAttribute('aria-expanded','true');
+}
+btnAdmin?.addEventListener('click',()=>{
+  const hidden=adminSec.classList.contains('hide');
+  adminSec.classList.toggle('hide');
+  btnAdmin.setAttribute('aria-expanded', String(hidden));
+});
 
-  if (isAdmin) {
-    btnAdmin?.classList.remove('hide');
-    btnANDI?.classList.remove('hide');
-    adminSec?.classList.remove('hide');
-    btnAdmin?.setAttribute('aria-expanded', 'true');
-  }
-  btnAdmin?.addEventListener('click', () => {
-    const hidden = adminSec.classList.contains('hide');
-    adminSec.classList.toggle('hide');
-    btnAdmin.setAttribute('aria-expanded', String(hidden));
-  });
+function loadANDI(){
+  if(window.ANDI){ try{ window.ANDI.init(); }catch(e){} return; }
+  const s=document.createElement('script');
+  s.src='andi/andi.js';
+  s.onload=()=>{ a11yBadge.style.display='inline-block'; try{ window.ANDI.init(); }catch(e){} };
+  s.onerror=()=>alert('Could not load ANDI. Check the andi/ folder path.');
+  document.body.appendChild(s);
+}
+btnANDI?.addEventListener('click', loadANDI);
+if(isAdmin || wantsA11y){ a11yBadge.style.display='inline-block'; loadANDI(); }
 
-  btnImport?.addEventListener('click', () => {
-    try {
-      const obj = JSON.parse(ratesPaste.value);
-      applyRatesObject(obj);
-      setLocalRates(obj);
-      ratesPaste.value = '';
-      alert('Rates imported and applied.');
-    } catch (e) {
-      alert('Import failed: ' + e.message);
-    }
-  });
-  btnExport?.addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(state.rates || {}, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'las-optout-rates.json'; a.click();
-    URL.revokeObjectURL(url);
-  });
-  document.getElementById('resetRates')?.addEventListener('click', async () => {
-    if (!confirm('Reset to external/default rates and forget locally stored rates?')) return;
-    clearLocalRatesPreference();
-    state.rates = await loadActiveRates();
-    state.year  = chooseActiveYear(state.rates);
-    refreshAdminText(); renderAll();
-    alert('Reset complete. Using external/default rates.');
-  });
-
-  /* ANDI loader */
-  function loadANDI(){
-    if (window.ANDI) { try { window.ANDI.init(); } catch(e){} return; }
-    const s = document.createElement('script');
-    s.src = 'andi/andi.js';
-    s.onload = () => { const b=document.getElementById('a11yBadge'); if (b) b.style.display = 'inline-block'; try { window.ANDI.init(); } catch(e){} };
-    s.onerror = () => alert('Could not load ANDI. Check the andi/ folder path.');
-    document.body.appendChild(s);
-  }
-  document.getElementById('btnANDI')?.addEventListener('click', loadANDI);
-  if (isAdmin || wantsA11y) { const b=document.getElementById('a11yBadge'); if (b) b.style.display = 'inline-block'; loadANDI(); }
-
-  /* ---------- Print (Illustration + Benefits) ---------- */
-  function enablePrintIllustration(){ document.documentElement.classList.add('print-illustration'); }
-  function disablePrintIllustration(){ document.documentElement.classList.remove('print-illustration'); }
-  function printIllustrationNow(){
-    enablePrintIllustration();
-    setTimeout(()=>window.print(),50);
-    setTimeout(disablePrintIllustration, 2000);
-  }
-  document.getElementById('btnPrintIllo')?.addEventListener('click', printIllustrationNow);
-  window.addEventListener('afterprint', disablePrintIllustration);
-  if ((params.get('print')||'').toLowerCase()==='illustration'){ setTimeout(printIllustrationNow, 300); }
-
-  /* ---------- Render ---------- */
-  function renderAll(){
-    if (!state.year){ return; } // guard until rates loaded
-    const monthlyGross=state.items.reduce((s,it)=> it.useRate ? s+((+it.rate||0)*(+it.hours||0)) : s+(+it.amount||0), 0);
-    document.getElementById('totalPay').textContent=fmt(monthlyGross);
-
-    const annualGross=monthlyGross*12;
-    const nhsRate=nhsRateFor(annualGross,state.year.nhs);
-    document.getElementById('nhsRate').textContent='('+pct(nhsRate)+')';
-    const monthlyNhs=(annualGross*nhsRate)/12;
-
-    const monthEnd=new Date(); monthEnd.setMonth(monthEnd.getMonth()+1,0);
-    const overSPA=(ageOnDate(document.getElementById('dob').value,monthEnd)??0)>=66;
-
-    const parsed=parseTaxCode(document.getElementById('taxCode').value);
-    const aniStay=Math.max(0,annualGross-annualGross*nhsRate);
-    const taxableStay=Math.max(0,monthlyGross-monthlyNhs);
-
-    const taxStay=calcPAYE(taxableStay,aniStay,state.year.tax,parsed);
-    const taxOut =calcPAYE(monthlyGross,annualGross,state.year.tax,parsed);
-    const niStay=calcNI(monthlyGross,state.year.ni,overSPA);
-    const niOut =calcNI(monthlyGross,state.year.ni,overSPA);
-
-    const netStay=monthlyGross-monthlyNhs-taxStay-niStay;
-    const netOut =monthlyGross-taxOut-niOut;
-    const delta  =netOut-netStay;
-
-    function fill(container){
-      container.innerHTML='';
-      state.items.forEach(it=>{
-        const v=it.useRate ? (+it.rate||0)*(+it.hours||0) : (+it.amount||0);
-        if(!v) return;
-        const row=document.createElement('div'); row.className='space'; row.innerHTML=`<div>${it.label||''}</div><div>${fmt(v)}</div>`;
-        container.appendChild(row);
-      });
-    }
-    fill(document.getElementById('stayPayments'));
-    fill(document.getElementById('outPayments'));
-
-    document.getElementById('stayTotalPayments').textContent=fmt(monthlyGross);
-    document.getElementById('outTotalPayments').textContent =fmt(monthlyGross);
-
-    document.getElementById('stayNhs').textContent=fmt(monthlyNhs);
-    document.getElementById('stayTax').textContent=fmt(taxStay);
-    document.getElementById('stayNi').textContent =fmt(niStay);
-    document.getElementById('stayTotalDeds').textContent=fmt(monthlyNhs+taxStay+niStay);
-    document.getElementById('stayNet').textContent=fmt(netStay);
-    document.getElementById('stayTaxable').textContent=fmt(taxableStay);
-
-    document.getElementById('outTax').textContent=fmt(taxOut);
-    document.getElementById('outNi').textContent =fmt(niOut);
-    document.getElementById('outTotalDeds').textContent=fmt(taxOut+niOut);
-    document.getElementById('outNet').textContent=fmt(netOut);
-    document.getElementById('outTaxable').textContent=fmt(monthlyGross);
-
-    const elDelta=document.getElementById('delta'); elDelta.textContent=fmt(delta); elDelta.className='text-'+(delta>=0?'green':'red');
-    document.getElementById('netAnnual').textContent=fmt(netStay*12)+' / '+fmt(netOut*12);
-
-    const employerAnnual=annualGross*(state.year.nhs.employerRateHint||0);
-    document.getElementById('employerPension').textContent='≈ '+fmt(employerAnnual)+'/yr';
-
-    const accrual=annualGross/54;
-    document.getElementById('accrual54').textContent=fmt(accrual)+'/yr';
-
-    refreshAdminText();
-  }
-
-  /* ---------- Init (load rates first, then build UI) ---------- */
-  (async function init(){
-    // Load rates and set active year first
-    state.rates = await loadActiveRates();
-    state.year  = chooseActiveYear(state.rates);
-    refreshAdminText();
-
-    // Only now create initial rows (avoids early render crash)
-    addItem('Basic');
-    addItem('HCA');
-
-    // Wire inputs after controls exist
-    document.getElementById('dob').addEventListener('input',renderAll);
-    document.getElementById('taxCode').addEventListener('input',renderAll);
-
-    // First paint
-    renderAll();
-  })();
-  </script>
+/* first paint */
+renderAll();
+</script>
 </body>
 </html>
