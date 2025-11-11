@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>NHS Pension Opt-Out Calculator (England only)</title>
 <meta name="description" content="Monthly payslip illustration — stay in vs opt out. NI inferred from DOB.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>'">
 
 <style>
   :root{
@@ -16,7 +16,7 @@
     :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
   }
   html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; }
-  html.theme-dark { --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#ffffff33; }
+  html.theme-dark { --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#ffffff33; } /* lighter borders in dark */
   html.theme-hc-large{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading:900; --scale:1.12; }
 
   *{ box-sizing:border-box }
@@ -303,7 +303,7 @@ function saveRates(r){ localStorage.setItem('las_optout_rates_v1', JSON.stringif
 function parseTaxCode(code){
   const c=(code||'').toUpperCase().trim();
   if(!c) return {mode:'STANDARD', allowance:12570};
-  if(['BR','D0','D1','NT','0T','OT'].includes(c)) return {mode:c};
+  if(['BR','D0','D1','NT','0T'].includes(c)) return {mode:c};
   const m=c.match(/(\d{3,4})[A-Z]*/);
   if(m) return {mode:'STANDARD', allowance:parseInt(m[1],10)*10};
   return {mode:'STANDARD', allowance:12570};
@@ -329,7 +329,7 @@ function calcPAYE_annualised(monthlyTaxable, annualNetForTaper, tcfg, parsed){
   if (parsed.mode === 'BR') return +(monthlyTaxable * 0.20).toFixed(2);
   if (parsed.mode === 'D0') return +(monthlyTaxable * 0.40).toFixed(2);
   if (parsed.mode === 'D1') return +(monthlyTaxable * 0.45).toFixed(2);
-  if (parsed.mode === '0T' || parsed.mode==='OT'){ // no allowance
+  if (parsed.mode === '0T'){ // 0T: no allowance
     const annualTax = bandTax(monthlyTaxable*12, 0, tcfg.bands.ENG_NI);
     return +(annualTax/12).toFixed(2);
   }
