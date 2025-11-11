@@ -1,438 +1,506 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LAS Contribution Rate Checker</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23023020'/><text x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'>£</text></svg>">
-<style>
-:root{
-  --las:#023020; --las2:#036635; --ink:#222; --muted:#666; --line:#e6e8ec;
-  --ok:#1a7f37; --warn:#b54708; --bad:#b42318;
-}
-*{box-sizing:border-box}
-body{margin:0;background:linear-gradient(135deg,#f5f7fa,#c3cfe2);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink)}
-.wrap{max-width:960px;margin:24px auto;padding:0 16px}
-.card{background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.08);overflow:hidden}
-header{background:linear-gradient(135deg,var(--las),var(--las2));color:#fff;padding:22px 24px}
-header h1{margin:0;font-size:20px}
-header p{margin:6px 0 0;font-size:14px;opacity:.9}
-.content{padding:20px}
-.grid{display:grid;gap:14px;grid-template-columns:repeat(12,1fr)}
-.col-6{grid-column:span 6}.col-12{grid-column:span 12}
-@media(max-width:760px){.col-6{grid-column:span 12}}
-label{display:block;font-weight:600;font-size:14px;margin:6px 0}
-input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
-small{color:var(--muted)}
-.hr{height:1px;background:var(--line);margin:12px 0}
-.btn{background:#fff;border:2px solid var(--las);color:var(--las);padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
-.btn:hover{background:var(--las);color:#fff}
-.result{border-left:4px solid var(--las);background:#fafbfc;padding:14px;border-radius:10px}
-.table{width:100%;border-collapse:collapse;margin-top:10px}
-.table th,.table td{border-bottom:1px solid var(--line);padding:8px;text-align:left;font-size:14px}
-.pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700}
-.ok{background:#e9f7ef;color:var(--ok);border:1px solid #b7e2c6}
-.warn{background:#fff4e5;color:var(--warn);border:1px solid #ffd29b}
-.bad{background:#feeceb;color:var(--bad);border:1px solid #fac5c2}
-.muted{color:var(--muted)}
-.note{background:#e8f4f0;border:1px solid #a3d4c7;color:#053b2d;border-radius:10px;padding:12px;font-size:13px}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>NHS Refund Eligibility Tool</title>
+
+  <!-- Favicon -->
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23023020'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3E%C2%A3%3C/text%3E%3C/svg%3E"
+  />
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      max-width: 650px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #023020 0%, #036635 100%);
+      color: #fff;
+      padding: 30px;
+      text-align: center;
+    }
+    .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+    .header p { opacity: 0.9; font-size: 14px; }
+
+    .progress-bar { height: 4px; background: #e0e0e0; position: relative; overflow: hidden; }
+    .progress-fill { height: 100%; background: #023020; width: 0; transition: width 0.3s ease; }
+
+    .content { padding: 30px; min-height: 300px; }
+    .step { display: none; animation: fadeIn 0.3s ease; }
+    .step.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+
+    .question { margin-bottom: 25px; }
+    .question h2 { color: #023020; font-size: 20px; margin-bottom: 10px; }
+    .question p { color: #666; font-size: 15px; }
+
+    .button-group { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+    button {
+      background: #fff;
+      color: #023020;
+      border: 2px solid #023020;
+      padding: 15px 25px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      position: relative;
+    }
+    button:hover, button:focus { background: #023020; color: #fff; transform: translateX(5px); }
+    button:focus { outline: 3px solid #036635; outline-offset: 2px; }
+    button[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+    .result { background: #f8f9fa; border-left: 4px solid #023020; padding: 20px; border-radius: 8px; margin-top: 20px; }
+    .result h3 { color: #023020; margin-bottom: 10px; font-size: 18px; }
+    .result p { color: #333; margin-bottom: 10px; }
+    .result ul { margin-left: 20px; color: #555; }
+    .result ul li { margin-bottom: 8px; }
+
+    .navigation { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; }
+    .nav-button { background: transparent; color: #023020; border: 1px solid #ddd; padding: 10px 20px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .nav-button:hover { background: #f8f9fa; transform: none; }
+
+    .breadcrumbs { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 14px; color: #666; flex-wrap: wrap; }
+    .breadcrumb { display: flex; align-items: center; gap: 8px; }
+    .breadcrumb.active { color: #023020; font-weight: 600; }
+    .arrow { font-size: 18px; }
+
+    .info-box { background: #e8f4f0; border: 1px solid #a3d4c7; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 14px; }
+    .info-box strong { color: #023020; }
+
+    @media (max-width: 480px) {
+      .header h1 { font-size: 20px; }
+      .content { padding: 20px; }
+      button { padding: 12px 20px; font-size: 15px; }
+    }
+
+    a { color: #023020; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card" role="region" aria-label="LAS Contribution Rate Checker">
-    <header>
-      <h1>LAS Contribution Rate Checker</h1>
-      <p>Check the correct NHS Pension contribution rate and any arrears/refund across a period or in-year change.</p>
-    </header>
+  <div class="container" role="application" aria-label="NHS Refund Eligibility Tool">
+    <div class="header">
+      <h1>LAS Pensions Hub - Decision Tool</h1>
+      <p>NHS Pension Scheme guidance tool</p>
+    </div>
+
+    <div class="progress-bar" aria-hidden="true">
+      <div class="progress-fill" id="progressBar"></div>
+    </div>
+
     <div class="content">
-      <div class="grid">
-        <div class="col-6">
-          <label for="year">Scheme year</label>
-          <select id="year">
-            <!-- recent first -->
-            <option value="2025-26" selected>2025/26 (01 Apr 2025 – 31 Mar 2026)</option>
-            <option value="2024-25">2024/25 (01 Apr 2024 – 31 Mar 2025)</option>
-            <option value="2023-24">2023/24 (11-tier)</option>
-            <option value="2022-23">2022/23 (auto: 7-tier → 11-tier from 01 Oct 2022)</option>
-            <option value="2021-22">2021/22 (7-tier, WTE)</option>
-            <option value="2020-21">2020/21 (7-tier, WTE)</option>
-            <option value="2019-20">2019/20 (7-tier, WTE)</option>
-            <option value="2018-19">2018/19 (7-tier, WTE)</option>
-            <option value="2017-18">2017/18 (7-tier, WTE)</option>
-            <option value="2016-17">2016/17 (7-tier, WTE)</option>
-            <option value="2015-16">2015/16 (7-tier, WTE)</option>
-          </select>
-          <small id="basis" class="muted">Tiering basis varies by year; defaults below.</small>
-        </div>
+      <div id="breadcrumbs" class="breadcrumbs" aria-label="Progress through questionnaire"></div>
 
-        <div class="col-6">
-          <label for="start">Period start date</label>
-          <input id="start" placeholder="dd/mm/yyyy or yyyy-mm-dd">
-          <small class="muted">New starters: the actual start date within the scheme year.</small>
+      <!-- Step 1: Initial Choice -->
+      <div class="step active" data-step="1" aria-live="polite">
+        <div class="question">
+          <h2>What would you like to know about?</h2>
+          <p>Select the option that best describes your situation</p>
         </div>
+        <div class="button-group" role="group" aria-label="Initial options">
+          <button onclick="app.handleChoice('opt-out')" aria-describedby="opt-out-desc">
+            <strong>Opting Out</strong>
+            <div id="opt-out-desc" style="font-size: 14px; color: #666; font-weight: normal;">Learn about leaving the pension scheme</div>
+          </button>
 
-        <div class="col-6">
-          <label for="end">Period end date</label>
-          <input id="end" placeholder="dd/mm/yyyy or yyyy-mm-dd">
-          <small class="muted">Defaults to 31 March of the selected year if blank.</small>
-        </div>
+          <button onclick="app.handleChoice('refund')" aria-describedby="refund-desc">
+            <strong>Getting a Refund</strong>
+            <div id="refund-desc" style="font-size: 14px; color: #666; font-weight: normal;">Check if you're eligible for contribution refunds</div>
+          </button>
 
-        <div class="col-6">
-          <label for="change">In-year pay/role change?</label>
-          <select id="change">
-            <option value="no" selected>No</option>
-            <option value="yes">Yes – split the period</option>
-          </select>
+          <button onclick="app.handleChoice('info')" aria-describedby="info-desc">
+            <strong>General Information</strong>
+            <div id="info-desc" style="font-size: 14px; color: #666; font-weight: normal;">View key forms and contact details</div>
+          </button>
         </div>
+      </div>
 
-        <div class="col-6" id="changeRow" style="display:none">
-          <label for="changeDate">Change date (effective)</label>
-          <input id="changeDate" placeholder="dd/mm/yyyy or yyyy-mm-dd">
-          <small class="muted">We’ll split the period at this date.</small>
+      <!-- Step 2: Opt Out Result -->
+      <div class="step" data-step="2">
+        <div class="result">
+          <h3>✓ Opting Out of the NHS Pension Scheme</h3>
+          <p><strong>Yes, you can opt out at any time.</strong></p>
+          <p>To opt out, you need to:</p>
+          <ul>
+            <li>Complete Form SD502 (Application to Leave the NHS Pension Scheme)</li>
+            <li><strong>Print and sign the original form (wet signature required)</strong></li>
+            <li>Submit to LAS Pensions Department: 220 Waterloo Road, London SE1 8SD</li>
+            <li>LAS will process your opt-out via ESR</li>
+            <li>Keep a photocopy for your records</li>
+          </ul>
+          <div class="info-box">
+            <strong>Important:</strong> Opting out means you'll lose valuable benefits including employer contributions, life assurance, and ill-health retirement cover. The scheme may be more affordable than you think due to tax relief. Consider seeking independent financial advice before making this decision. See the
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/leaving-the-scheme--1" target="_blank" style="color: #023020; font-weight: bold;">Leaving the NHS Pension Scheme</a>
+            page on the LAS Pensions Hub for more information.
+          </div>
+          <p style="margin-top: 20px;">Would you also like to check if you're eligible for a refund?</p>
+          <div class="button-group">
+            <button onclick="app.checkRefundAfterOptOut()">Check Refund Eligibility</button>
+          </div>
+          <p style="margin-top: 15px; font-size: 14px; color: #666;">
+            <strong>Note:</strong> SD502 (opt-out) and RF12 (refund) are separate although linked processes. If eligible for a refund (less than 2 years membership), you can submit Form RF12 at the same time as your SD502 form, but not before. Both forms go to LAS Pensions Department. Only apply for a refund if you don't plan to opt back in within a year.
+          </p>
         </div>
+      </div>
 
-        <div class="col-12 hr"></div>
+      <!-- Step 3: Refund - Check Opt Out -->
+      <div class="step" data-step="3">
+        <div class="question">
+          <h2>Have you already opted out?</h2>
+          <p>You must submit Form SD502 to opt out. You can submit Form RF12 (refund application) at the same time as SD502, but not before</p>
+        </div>
+        <div class="button-group">
+          <button onclick="app.handleOptOutStatus(true)">Yes, I've submitted/am submitting SD502</button>
+          <button onclick="app.handleOptOutStatus(false)">No, I haven't opted out yet</button>
+        </div>
+      </div>
 
-        <div class="col-6">
-          <label for="annual1">Annual pensionable pay (segment 1)</label>
-          <input id="annual1" type="number" inputmode="decimal" placeholder="e.g., 47500">
-          <small id="basis1" class="muted"></small>
-        </div>
-        <div class="col-6">
-          <label for="actualRate1">Actual % deducted (segment 1, optional)</label>
-          <input id="actualRate1" type="number" inputmode="decimal" placeholder="e.g., 9.8">
-        </div>
-
-        <div class="col-6" id="seg2a" style="display:none">
-          <label for="annual2">Annual pensionable pay (segment 2)</label>
-          <input id="annual2" type="number" inputmode="decimal" placeholder="e.g., 50500">
-          <small id="basis2" class="muted"></small>
-        </div>
-        <div class="col-6" id="seg2b" style="display:none">
-          <label for="actualRate2">Actual % deducted (segment 2, optional)</label>
-          <input id="actualRate2" type="number" inputmode="decimal" placeholder="e.g., 10.7">
-        </div>
-
-        <div class="col-12">
-          <div class="note">
-            <strong>Reminders:</strong> Part-time additional hours up to WTE are pensionable; overtime above WTE is not. For 12 months after partial retirement, overtime beyond the agreed hours is non-pensionable. Bank/locum: where annualising isn’t possible, a default 6.5% applies from Apr 2024. Use pensionable earnings appropriate to the selected year.
+      <!-- Step 4: Must Opt Out First -->
+      <div class="step" data-step="4">
+        <div class="result">
+          <h3>⚠️ Action Required</h3>
+          <p><strong>You must opt out first before applying for a refund.</strong></p>
+          <p>Steps to take:</p>
+          <ul>
+            <li>Complete Form SD502 to opt out of the scheme</li>
+            <li><strong>Print and sign with wet signature (originals only accepted)</strong></li>
+            <li>Submit original hard copy to LAS Pensions Department</li>
+            <li>LAS will process your opt-out via ESR</li>
+            <li>If you want a refund and won't opt back in within a year, you can submit Form RF12 at the same time as SD502, but not before</li>
+          </ul>
+          <div class="info-box">
+            <strong>Note:</strong> Your opt-out will take effect from the 1st of the month following receipt of your SD502 form. SD502 and RF12 are separate although linked processes. We cannot accept photocopies, scans, or digital signatures. See the
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/leaving-the-scheme--1" target="_blank" style="color: #023020; font-weight: bold;">LAS Pensions Hub</a>
+            for full instructions.
           </div>
         </div>
+      </div>
 
-        <div class="col-12">
-          <button class="btn" id="calc" type="button" onclick="window.LAS_CALC_run && window.LAS_CALC_run()">Calculate</button>
+      <!-- Step 5: Check Membership Duration -->
+      <div class="step" data-step="5">
+        <div class="question">
+          <h2>How long have you been a scheme member?</h2>
+          <p>Include all periods of qualifying NHS Pension Scheme membership, including any prior Trust employment. You must have <strong>less than 2 years</strong> of qualifying membership to be eligible for a refund.</p>
+        </div>
+        <div class="button-group">
+          <button onclick="app.handleMembershipDuration('less-than-2')">Less than 2 years total</button>
+          <button onclick="app.handleMembershipDuration('almost-2')">Almost 2 years (will be 2 years next month)</button>
+          <button onclick="app.handleMembershipDuration('more-than-2')">More than 2 years total</button>
         </div>
       </div>
 
-      <div class="hr"></div>
-      <div id="out"></div>
+      <!-- Step 6: Eligible for Refund -->
+      <div class="step" data-step="6">
+        <div class="result">
+          <h3>✓ You May Be Eligible for a Refund</h3>
+          <p><strong>Based on your membership duration, you can apply for a refund.</strong></p>
+          <p>Next steps:</p>
+          <ul>
+            <li>Complete Form RF12 (Application for Refund of Pension Contributions)</li>
+            <li><strong>Must be original with wet signature - no photocopies accepted</strong></li>
+            <li>Submit to: LAS Pensions Department, 220 Waterloo Road, London SE1 8SD</li>
+            <li>Can be submitted at the same time as SD502 (but not before)</li>
+            <li>LAS will submit your RF12 application online to NHS Pensions</li>
+            <li>NHS Pensions will write to you directly with their decision</li>
+            <li>If approved, payment will be made directly to your bank account</li>
+          </ul>
+          <div class="info-box">
+            <strong>Important:</strong> Only apply for a refund if you don't plan to opt back into the scheme within a year. Refunds are subject to tax and National Insurance deductions. Refunds are only available if you haven't transferred your pension benefits to another scheme. See the
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/refunds-of-nhs-pension-contributions--4" target="_blank" style="color: #023020; font-weight: bold;">LAS Pensions Hub</a>
+            for full instructions.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7: Urgent Deadline -->
+      <div class="step" data-step="7">
+        <div class="result">
+          <h3>⏰ Urgent Action Required</h3>
+          <p><strong>You may be eligible, but you must act quickly!</strong></p>
+          <p>Critical deadline:</p>
+          <ul>
+            <li>Complete Form SD502 (opt-out) immediately</li>
+            <li>If you want a refund and won't be opting back in within a year, also complete Form RF12</li>
+            <li><strong>Must be originals with wet signatures - no photocopies or emails accepted</strong></li>
+            <li>Print and post them TODAY or TOMORROW to LAS Pensions Department</li>
+            <li><strong>Forms MUST reach LAS before you reach 2 years membership</strong></li>
+            <li>RF12 cannot be processed before SD502</li>
+            <li>LAS will submit RF12 online to NHS Pensions who make the final refund decision</li>
+            <li>NHS Pensions will write to you directly with their decision</li>
+          </ul>
+          <div class="info-box" style="background: #fee; border-color: #fcc;">
+            <strong>Warning:</strong> If your form arrives after you reach 2 years of membership, your refund will be automatically rejected. There are no exceptions to this rule. Forms cannot be submitted by email. Only apply for a refund if you don't plan to opt back in within a year. See the
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/refunds-of-nhs-pension-contributions--4" target="_blank" style="color: #c00; font-weight: bold;">LAS Pensions Hub</a>
+            for full instructions.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 8: Not Eligible -->
+      <div class="step" data-step="8">
+        <div class="result">
+          <h3>✗ Not Eligible for Refund</h3>
+          <p><strong>Members with more than 2 years of service cannot receive refunds.</strong></p>
+          <p>Your options:</p>
+          <ul>
+            <li><strong>Deferred benefits:</strong> Your pension will be preserved and payable at retirement age</li>
+            <li>Transfer to another registered pension scheme</li>
+            <li>NHS Pensions will write to you once LAS confirms your opt-out status</li>
+          </ul>
+          <div class="info-box">
+            <strong>Recommendation:</strong> Contact the LAS Pensions Department at
+            <a href="tel:02032674866" style="color: #023020;">020 3267 4866</a> or
+            <a href="mailto:londamb.Pensions@nhs.net" style="color: #023020;">londamb.Pensions@nhs.net</a>
+            to discuss your options, or seek independent financial advice. See the LAS Pensions Hub for more information about deferred benefits.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 9: General Information -->
+      <div class="step" data-step="9">
+        <div class="result">
+          <h3>📋 Key Information & Resources</h3>
+          <p><strong>Essential Forms:</strong></p>
+          <ul>
+            <li><strong>SD502:</strong> Application to Leave the NHS Pension Scheme (Opt-out)
+              <ul style="font-size: 14px; margin-top: 5px;">
+                <li>Submit to LAS Pensions Department</li>
+                <li>LAS processes your opt-out via ESR</li>
+                <li>Separate process from refund application</li>
+              </ul>
+            </li>
+            <li><strong>RF12:</strong> Application for Refund of Pension Contributions
+              <ul style="font-size: 14px; margin-top: 5px;">
+                <li>Submit to LAS Pensions Department</li>
+                <li>Can be submitted with SD502, but not before</li>
+                <li>LAS submits online to NHS Pensions</li>
+                <li>NHS Pensions makes final decision and contacts you directly</li>
+              </ul>
+            </li>
+          </ul>
+          <p><strong>Where to Send Forms:</strong></p>
+          <div class="info-box">
+            <strong>ALL forms go to LAS Pensions Department:</strong><br /><br />
+            London Ambulance Service NHS Trust<br />
+            220 Waterloo Road<br />
+            London SE1 8SD<br /><br />
+            <strong>SD502 (Opt-out):</strong> LAS processes via ESR<br />
+            <strong>RF12 (Refund):</strong> Can be sent with SD502 (but not before). LAS submits RF12 online to NHS Pensions<br /><br />
+            <strong>⚠️ Forms NOT accepted by email - original hard copies with wet signatures only</strong>
+          </div>
+          <p><strong>Contact Details:</strong></p>
+          <ul>
+            <li><strong>LAS Pensions Department:</strong>
+              <ul>
+                <li>Tel: <a href="tel:02032674866" style="color: #023020;">020 3267 4866</a></li>
+                <li>Email: <a href="mailto:londamb.Pensions@nhs.net" style="color: #023020;">londamb.Pensions@nhs.net</a></li>
+                <li>Can discuss your pension options and process questions</li>
+              </ul>
+            </li>
+            <li><strong>NHS Pensions (NHSBSA):</strong>
+              <ul>
+                <li>Tel: <a href="tel:03003301346" style="color: #023020;">0300 330 1346</a></li>
+                <li>Email: <a href="mailto:nhsbsa.pensionsmember@nhsbsa.nhs.uk" style="color: #023020;">nhsbsa.pensionsmember@nhsbsa.nhs.uk</a></li>
+                <li>Hours: Monday–Friday, 8am–6pm</li>
+                <li>General scheme information only</li>
+              </ul>
+            </li>
+            <li><strong>For personalised financial advice:</strong> Consider seeking independent financial advice</li>
+          </ul>
+          <div class="info-box">
+            <strong>Before submitting forms:</strong> Ensure your current address is updated via Employee Self-Service to avoid delays. For help updating details, contact: <a href="mailto:londamb.MYESR@nhs.net" style="color: #023020;">londamb.MYESR@nhs.net</a><br /><br />
+            <strong>For detailed instructions:</strong> Please see the relevant pages on the LAS Pensions Hub intranet:
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/leaving-the-scheme--1" target="_blank" style="color: #023020; font-weight: bold;">Leaving the NHS Pension Scheme</a>
+            and
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/refunds-of-nhs-pension-contributions--4" target="_blank" style="color: #023020; font-weight: bold;">Refunds of NHS Pension Contributions</a>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="navigation" id="navigation">
+        <button class="nav-button" onclick="app.goBack()" id="backButton"><span class="arrow">←</span> Back</button>
+        <button class="nav-button" onclick="app.reset()">Start Over</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-/* =========================
-   RATES (inline, no fetch)
-   ========================= */
-const RATES = {
-  // 7-tier (same thresholds 2015/16–2021/22), WTE basis
-  "2015-16": { basis:"WTE", table:"7", bands:[
-    {min:0, max:15431.99, rate:0.050},
-    {min:15432.00, max:21477.99, rate:0.056},
-    {min:21478.00, max:26823.99, rate:0.071},
-    {min:26824.00, max:47845.99, rate:0.093},
-    {min:47846.00, max:70630.99, rate:0.125},
-    {min:70631.00, max:111376.99, rate:0.135},
-    {min:111377.00, max:Infinity, rate:0.145}
-  ]},
-  "2016-17": null, "2017-18": null, "2018-19": null, "2019-20": null, "2020-21": null, "2021-22": null,
-  // 2022/23: auto boundary — before 01 Oct 2022: 7-tier; from 01 Oct: 11-tier
-  "2022-23": { basis:"ACTUAL", table:"MIXED_22_23", boundaries:["2022-10-01"] },
-  // 2023/24: 11-tier, actual basis
-  "2023-24": { basis:"ACTUAL", table:"11", bands:[
-    {min:0, max:13246.99, rate:0.051},
-    {min:13247.00, max:17673.99, rate:0.057},
-    {min:17674.00, max:24022.99, rate:0.061},
-    {min:24023.00, max:25146.99, rate:0.068},
-    {min:25147.00, max:29635.99, rate:0.077},
-    {min:29636.00, max:30638.99, rate:0.088},
-    {min:30639.00, max:45996.99, rate:0.098},
-    {min:45997.00, max:51708.99, rate:0.100},
-    {min:51709.00, max:58972.99, rate:0.116},
-    {min:58973.00, max:75632.99, rate:0.125},
-    {min:75633.00, max:Infinity, rate:0.135}
-  ]},
-  // 2024/25: 6-tier, actual basis
-  "2024-25": { basis:"ACTUAL", table:"6", bands:[
-    {min:0, max:13259.99, rate:0.052},
-    {min:13260.00, max:26831.99, rate:0.065},
-    {min:26832.00, max:32691.99, rate:0.083},
-    {min:32692.00, max:49078.99, rate:0.098},
-    {min:49079.00, max:62924.99, rate:0.107},
-    {min:62925.00, max:Infinity, rate:0.125}
-  ]},
-  // 2025/26: 6-tier (uplifted thresholds), actual basis
-  "2025-26": { basis:"ACTUAL", table:"6", bands:[
-    {min:0, max:13259.99, rate:0.052},
-    {min:13260.00, max:27797.99, rate:0.065},
-    {min:27798.00, max:33868.99, rate:0.083},
-    {min:33869.00, max:50845.99, rate:0.098},
-    {min:50846.00, max:65190.99, rate:0.107},
-    {min:65191.00, max:Infinity, rate:0.125}
-  ]}
-};
-// fill 2016–2021 with same 7-tier table
-["2016-17","2017-18","2018-19","2019-20","2020-21","2021-22"].forEach(y=>{
-  RATES[y] = { basis:"WTE", table:"7", bands: RATES["2015-16"].bands };
-});
+  <script>
+    const app = {
+      currentStep: 1,
+      history: [],
+      steps: {
+        1: { title: 'Start', progress: 0 },
+        2: { title: 'Opt Out Info', progress: 100 },
+        3: { title: 'Refund Check', progress: 33 },
+        4: { title: 'Must Opt Out', progress: 100 },
+        5: { title: 'Membership Duration', progress: 66 },
+        6: { title: 'Eligible', progress: 100 },
+        7: { title: 'Urgent', progress: 100 },
+        8: { title: 'Not Eligible', progress: 100 },
+        9: { title: 'Information', progress: 100 }
+      },
 
-// The two base tables we reference for 2022/23 split:
-const TABLE7 = RATES["2015-16"].bands;
-const TABLE11_2324 = RATES["2023-24"].bands;
+      init() {
+        this.updateBreadcrumbs();
+        this.updateProgressBar();
+        this.updateNavigation();
+      },
 
-/* =========================
-   Helpers
-   ========================= */
-// date parse: yyyy-mm-dd, dd/mm/yyyy, dd-mm-yyyy
-function parseDateFlexible(v){
-  if(!v) return null;
-  const s = String(v).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s+"T00:00:00");
-  let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (m) return new Date(m[3]+"-"+m[2]+"-"+m[1]+"T00:00:00");
-  m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-  if (m) return new Date(m[3]+"-"+m[2]+"-"+m[1]+"T00:00:00");
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d;
-}
-function toYMD(d){ return d.toISOString().slice(0,10); }
-function toUK(d){ return d.toLocaleDateString("en-GB",{day:"2-digit",month:"2-digit",year:"numeric"}); }
-function daysBetween(a,b){ return Math.max(0, Math.round((b - a)/(24*3600*1000))+1); }
-function £(n){ return "£"+(Math.round(n*100)/100).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function pct(n){ return (Math.round(n*10)/10).toFixed(1)+"%"; }
-function yearBounds(key){
-  const [a,b] = key.split("-").map(x=>parseInt(x,10));
-  const y1 = a;
-  const y2 = b < 100 ? 2000+b : b;
-  return { start: new Date(y1+"-04-01T00:00:00"), end: new Date(y2+"-03-31T00:00:00") };
-}
-function basisOf(key){ return RATES[key].basis; }
+      handleChoice(choice) {
+        this.history.push(this.currentStep);
+        switch (choice) {
+          case 'opt-out':
+            this.goToStep(2);
+            break;
+          case 'refund':
+            this.goToStep(3);
+            break;
+          case 'info':
+            this.goToStep(9);
+            break;
+        }
+      },
 
-function findBand(bands, annual){
-  for (const band of bands){
-    if (annual >= band.min && annual <= band.max) return band;
-  }
-  return bands[bands.length-1];
-}
+      checkRefundAfterOptOut() {
+        this.history.push(this.currentStep);
+        this.goToStep(5);
+      },
 
-function splitByBoundaries(start, end, boundaries){
-  // boundaries = array of ISO yyyy-mm-dd strings (cut points)
-  const cuts = (boundaries||[]).map(x=>new Date(x+"T00:00:00"))
-     .filter(d=>d>start && d<=end).sort((a,b)=>a-b);
-  const segs = [];
-  let curStart = start;
-  for (const cut of cuts){
-    const prevEnd = new Date(cut); prevEnd.setDate(prevEnd.getDate()-1);
-    if (prevEnd >= curStart) segs.push({start:curStart, end:prevEnd});
-    curStart = cut;
-  }
-  if (curStart <= end) segs.push({start:curStart, end:end});
-  return segs;
-}
+      handleOptOutStatus(hasOptedOut) {
+        this.history.push(this.currentStep);
+        if (hasOptedOut) {
+          this.goToStep(5);
+        } else {
+          this.goToStep(4);
+        }
+      },
 
-/* Decide which table applies on a specific date for 2022/23 */
-function tableForDate_22_23(d){
-  const boundary = new Date("2022-10-01T00:00:00");
-  return (d >= boundary) ? TABLE11_2324 : TABLE7;
-}
+      handleMembershipDuration(duration) {
+        this.history.push(this.currentStep);
+        switch (duration) {
+          case 'less-than-2':
+            this.goToStep(6);
+            break;
+          case 'almost-2':
+            this.goToStep(7);
+            break;
+          case 'more-than-2':
+            this.goToStep(8);
+            break;
+        }
+      },
 
-/* Compute one segment (given table) */
-function computeWithBands(bands, annual, actualPct, start, end){
-  const d = daysBetween(start,end);
-  const f = d/365;
-  const segPay = annual * f;
-  const band = findBand(bands, annual);
-  const expected = segPay * band.rate;
-  const actual = (typeof actualPct==="number" && !isNaN(actualPct)) ? segPay * (actualPct/100) : null;
-  const diff = (actual==null) ? null : (actual - expected);
-  return {
-    start, end, days:d, segPay, rate:band.rate,
-    bandMin: band.min, bandMax: isFinite(band.max)?band.max:null,
-    expected, actual, diff
-  };
-}
+      goToStep(stepNumber) {
+        // Hide current step
+        const current = document.querySelector(`.step[data-step="${this.currentStep}"]`);
+        if (current) current.classList.remove('active');
 
-/* Build final list of segments (auto split by structure + optional change date) */
-function buildSegments(yearKey, s, e, changeDate, a1, r1, a2, r2){
-  // start from user-defined outer slices (either [s..e] or [s..c-1, c..e])
-  const outer = [];
-  if (changeDate){
-    const cMinus = new Date(changeDate); cMinus.setDate(cMinus.getDate()-1);
-    if (cMinus >= s) outer.push({start:s, end:cMinus, pay:a1, rate:r1, label:"1"});
-    outer.push({start:changeDate, end:e, pay:a2, rate:r2, label:"2"});
-  } else {
-    outer.push({start:s, end:e, pay:a1, rate:r1, label:"1"});
-  }
+        // Show new step
+        this.currentStep = stepNumber;
+        const next = document.querySelector(`.step[data-step="${stepNumber}"]`);
+        if (next) next.classList.add('active');
 
-  // auto structural splits (only for 2022/23)
-  const config = RATES[yearKey];
-  const autoBoundaries = (yearKey==="2022-23") ? ["2022-10-01"] : [];
+        // Update UI
+        this.updateBreadcrumbs();
+        this.updateProgressBar();
+        this.updateNavigation();
 
-  const finalSegs = [];
-  for (const seg of outer){
-    const sub = splitByBoundaries(seg.start, seg.end, autoBoundaries);
-    for (const p of sub){
-      let bands;
-      if (yearKey==="2022-23"){
-        bands = tableForDate_22_23(p.start);
-      } else {
-        bands = RATES[yearKey].bands;
+        // Accessibility: focus first interactive control in the new step
+        if (next) {
+          const firstInteractive = next.querySelector('button, a, input, select, textarea');
+          if (firstInteractive) setTimeout(() => firstInteractive.focus(), 100);
+        }
+      },
+
+      goBack() {
+        if (this.history.length > 0) {
+          const previousStep = this.history.pop();
+          this.goToStep(previousStep);
+        }
+      },
+
+      reset() {
+        // Hide current
+        const current = document.querySelector(`.step[data-step="${this.currentStep}"]`);
+        if (current) current.classList.remove('active');
+
+        this.history = [];
+        this.currentStep = 1;
+
+        // Show step 1
+        const start = document.querySelector('.step[data-step="1"]');
+        if (start) start.classList.add('active');
+
+        this.updateBreadcrumbs();
+        this.updateProgressBar();
+        this.updateNavigation();
+
+        // Focus first option
+        const firstBtn = start && start.querySelector('button');
+        if (firstBtn) setTimeout(() => firstBtn.focus(), 100);
+      },
+
+      updateBreadcrumbs() {
+        const container = document.getElementById('breadcrumbs');
+        const path = [...this.history, this.currentStep];
+        container.innerHTML = path
+          .map((step, index) => {
+            const isLast = index === path.length - 1;
+            const stepInfo = this.steps[step] || { title: `Step ${step}`, progress: 0 };
+            return `
+              <span class="breadcrumb ${isLast ? 'active' : ''}" ${isLast ? 'aria-current="step"' : ''}>
+                ${stepInfo.title}
+              </span>
+              ${!isLast ? '<span class="arrow" aria-hidden="true">→</span>' : ''}
+            `;
+          })
+          .join('');
+      },
+
+      updateProgressBar() {
+        const progress = (this.steps[this.currentStep] && this.steps[this.currentStep].progress) || 0;
+        document.getElementById('progressBar').style.width = progress + '%';
+      },
+
+      updateNavigation() {
+        const backButton = document.getElementById('backButton');
+        backButton.style.visibility = this.history.length > 0 ? 'visible' : 'hidden';
       }
-      finalSegs.push( computeWithBands(bands, seg.pay, seg.rate, p.start, p.end) );
-    }
-  }
-  return finalSegs;
-}
+    };
 
-function render(segs){
-  const anyActual = segs.some(x=>x.actual!=null);
-  const totalExpected = segs.reduce((s,x)=>s+(x.expected||0),0);
-  const totalActual = anyActual ? segs.reduce((s,x)=>s+(x.actual||0),0) : null;
-  const totalDiff = anyActual ? (totalActual - totalExpected) : null;
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => app.init());
 
-  let pill = '<span class="pill ok">Rates shown</span>';
-  if (anyActual){
-    if (Math.abs(totalDiff) < 0.01) pill = '<span class="pill ok">Correct – no arrears/refund</span>';
-    else if (totalDiff > 0)          pill = '<span class="pill bad">Overpayment – refund '+£(totalDiff)+'</span>';
-    else                             pill = '<span class="pill warn">Underpayment – arrears '+£(-totalDiff)+'</span>';
-  }
-
-  const rows = segs.map((s,i)=>`
-    <tr>
-      <td>Segment ${i+1}</td>
-      <td>${toUK(s.start)} → ${toUK(s.end)} (${s.days} days)</td>
-      <td>${£(s.segPay)}</td>
-      <td>${pct(s.rate*100)}</td>
-      <td>${s.bandMin===0 ? "£0" : £(s.bandMin)} – ${s.bandMax?£(s.bandMax):"£∞"}</td>
-      <td>${£(s.expected)}</td>
-      <td>${s.actual==null?"—":£(s.actual)}</td>
-      <td>${s.diff==null?"—":(s.diff>=0?"+":"")+£(s.diff)}</td>
-    </tr>
-  `).join("");
-
-  return `
-    <div class="result">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <strong>Summary</strong>${pill}
-      </div>
-      <table class="table" aria-label="Calculation breakdown">
-        <thead><tr>
-          <th>Period</th><th>Dates</th><th>Pensionable pay</th><th>Correct rate</th>
-          <th>Tier band</th><th>Expected</th><th>Actual</th><th>Diff</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-        <tfoot><tr>
-          <th colspan="5" style="text-align:right">Totals</th>
-          <th>${£(totalExpected)}</th>
-          <th>${totalActual==null?"—":£(totalActual)}</th>
-          <th>${totalDiff==null?"—":(totalDiff>=0?"+":"")+£(totalDiff)}</th>
-        </tr></tfoot>
-      </table>
-      <p class="muted" style="margin-top:8px">
-        Uses year-appropriate tiering basis (WTE for 2015–22; actual from 2023+). This is guidance; Payroll/ESR is authoritative.
-      </p>
-    </div>
-  `;
-}
-
-/* =========================
-   UI wiring
-   ========================= */
-(function(){
-  const yearSel = document.getElementById('year');
-  const startInp= document.getElementById('start');
-  const endInp  = document.getElementById('end');
-  const changeSel=document.getElementById('change');
-  const changeRow=document.getElementById('changeRow');
-  const changeDateInp=document.getElementById('changeDate');
-
-  const annual1=document.getElementById('annual1');
-  const actualRate1=document.getElementById('actualRate1');
-  const annual2=document.getElementById('annual2');
-  const actualRate2=document.getElementById('actualRate2');
-  const seg2a=document.getElementById('seg2a');
-  const seg2b=document.getElementById('seg2b');
-  const basis = document.getElementById('basis');
-  const basis1= document.getElementById('basis1');
-  const basis2= document.getElementById('basis2');
-  const out   = document.getElementById('out');
-
-  function setDefaults(){
-    const y = yearSel.value;
-    const b = basisOf(y);
-    basis.textContent = (b==="WTE")
-      ? "Tiering uses WTE pay (2015–22 rule)."
-      : (y==="2022-23"
-          ? "Tiering uses actual earnings; auto-splits 01 Oct 2022 (7-tier → 11-tier)."
-          : "Tiering uses actual annual pensionable earnings.");
-    basis1.textContent = basis.textContent;
-    basis2.textContent = basis.textContent;
-    const {start, end} = yearBounds(y);
-    if(!startInp.value) startInp.value = toUK(start);
-    if(!endInp.value)   endInp.value   = toUK(end);
-  }
-  setDefaults();
-
-  yearSel.addEventListener('change', ()=>{
-    startInp.value = ""; endInp.value = "";
-    setDefaults();
-  });
-
-  changeSel.addEventListener('change', ()=>{
-    const on = changeSel.value==='yes';
-    changeRow.style.display = on ? '' : 'none';
-    seg2a.style.display = on ? '' : 'none';
-    seg2b.style.display = on ? '' : 'none';
-  });
-
-  function run(){
-    try{
-      const y = yearSel.value;
-      const bounds = yearBounds(y);
-      let s = parseDateFlexible(startInp.value) || bounds.start;
-      let e = parseDateFlexible(endInp.value)   || bounds.end;
-      if (e < s){ const t=s; s=e; e=t; }
-
-      const hasChange = (changeSel.value==='yes');
-      let c = null, a2 = null, r2 = null;
-
-      if (hasChange){
-        c = parseDateFlexible(changeDateInp.value) || s;
-        if (c < s) c = s;
-        if (c > e) c = e;
-        a2 = parseFloat(annual2.value);
-        r2 = parseFloat(actualRate2.value);
-      }
-
-      const a1 = parseFloat(annual1.value);
-      const r1 = parseFloat(actualRate1.value);
-
-      const msgs=[];
-      if(!(a1>0)) msgs.push("Enter annual pensionable pay for segment 1.");
-      if(hasChange && !(a2>0)) msgs.push("Enter annual pensionable pay for segment 2.");
-      if(msgs.length){ out.innerHTML = '<div class="result"><span class="pill bad">Check inputs</span> '+msgs.join(" ")+'</div>'; return; }
-
-      const segs = buildSegments(y, s, e, hasChange?c:null, a1, isNaN(r1)?null:r1, a2, isNaN(r2)?null:r2);
-      out.innerHTML = render(segs);
-    }catch(err){
-      out.innerHTML = '<div class="result"><span class="pill bad">Error</span> '+(err && err.message ? err.message : 'Unexpected error')+'</div>';
-    }
-  }
-
-  document.getElementById('calc').addEventListener('click', run);
-  window.LAS_CALC_run = run; // fallback for environments that strip listeners
-})();
-</script>
+    // Keyboard navigation: ESC to reset
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') app.reset();
+    });
+  </script>
 </body>
 </html>
