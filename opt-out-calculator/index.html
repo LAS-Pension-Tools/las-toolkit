@@ -1,760 +1,399 @@
-<!doctype html>
-<html lang="en-GB">
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="light">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>NHS Pension Opt-Out Calculator (England only)</title>
-<meta name="description" content="Monthly payslip illustration — stay in vs opt out. NI inferred from DOB.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>'">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>LAS PAYE & Pension Estimator — Month 1 (Optional ESR Mode)</title>
+  <!-- Favicon: £ symbol to match Contribution Rate Checker -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23023020'/%3E%3Ctext x='16' y='22' font-family='Arial, Helvetica, sans-serif' font-size='18' font-weight='700' text-anchor='middle' fill='white'%3E%C2%A3%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --text: #0f1720;
+      --muted: #5b6776;
+      --accent: #023020; /* LAS green */
+      --card-bg: #ffffff; /* White cards */
+      --card-border: #e6e9ef;
+      --input-bg: #ffffff;
+      --input-border: #d7dbe3;
+      --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 20px rgba(16, 24, 40, 0.06);
+    }
+    [data-theme="dark"] {
+      --bg: #0c1116; --text: #eaf0f6; --muted: #98a2af; --accent: #74c69d;
+      --card-bg: #ffffff; --card-border: #e6e9ef; --input-bg: #ffffff; --input-border: #d7dbe3;
+      --shadow: 0 1px 2px rgba(0,0,0,0.25), 0 8px 24px rgba(0,0,0,0.35);
+    }
+    html, body { height: 100%; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+    .header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    .title { display:flex; align-items:center; gap:10px; }
+    .title h1 { font-size:22px; margin:0; color:var(--accent); }
+    .badge { font-size:12px; padding:4px 8px; border:1px solid var(--card-border); border-radius:999px; background:#fff; color:#333; }
 
-<style>
-  :root{
-    --brand:#023020; --text:#111; --muted:#4A5568; --bg:#FAFAFA; --panel:#fff; --border:#D6D9DC; --focus:#0B69A3;
-    --ok:#1b8555; --warn:#9F3131; --heading:800; --scale:1;
-  }
-  @media (prefers-color-scheme: dark){
-    :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
-  }
-  html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; }
-  html.theme-dark { --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#ffffff33; }
-  html.theme-hc-large{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading:900; --scale:1.12; }
+    .card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px; box-shadow:var(--shadow); padding:16px; margin-top:14px; }
+    .card h2 { margin:0 0 12px 0; font-size:18px; color:#111; }
+    .card p.hint { margin:8px 0 0 0; font-size:12px; color:#4b5563; }
 
-  *{ box-sizing:border-box }
-  html,body{ margin:0; padding:0 }
-  body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; font-size:calc(16px*var(--scale)) }
-  .wrap{ max-width:980px; margin:0 auto; padding:20px }
+    .grid { display:grid; grid-template-columns:repeat(12,1fr); gap:12px; }
+    .col-12 { grid-column:span 12; } .col-6 { grid-column:span 6; }
+    .col-4 { grid-column:span 4; } .col-3 { grid-column:span 3; }
+    @media (max-width:860px){ .col-6,.col-4,.col-3 { grid-column:span 12; } }
 
-  .header{ background:var(--brand); color:#fff; padding:16px; border-radius:12px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap }
-  .header h1{ margin:0; font-size:22px; font-weight:var(--heading) }
+    label { display:block; font-size:13px; margin:6px 0; color:#111; }
+    input[type="number"],input[type="text"],input[type="date"],select{
+      width:100%; background:var(--input-bg); color:#111; border:1px solid var(--input-border);
+      border-radius:10px; padding:10px 12px; font-size:14px;
+    }
+    .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .switch{ display:inline-flex; align-items:center; gap:8px; font-size:14px; }
+    .switch input{ transform:scale(1.1); }
+    button{ appearance:none; border:1px solid var(--accent); color:#fff; background:var(--accent); border-radius:12px; padding:10px 14px; font-weight:600; cursor:pointer; }
+    button.secondary{ background:transparent; color:var(--accent); }
 
-  .a11y-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
-  .a11y-group{ display:flex; gap:6px; align-items:center; background:rgba(255,255,255,.12); padding:6px; border-radius:10px }
-  .a11y-label{ font-size:12px; color:#fff; opacity:.95 }
-  .a11y-badge{ display:none; padding:4px 8px; border-radius:8px; background:#2e7d32; color:#fff; font-size:12px; font-weight:700 }
+    table{ width:100%; border-collapse:collapse; margin-top:8px; }
+    th,td{ text-align:left; padding:10px 8px; border-bottom:1px dashed #e5e7eb; }
+    th{ color:#111; font-weight:600; background:#fafafa; }
+    .note{ font-size:12px; color:var(--muted); margin-top:8px; }
 
-  .panel{ background:var(--panel); border:2px solid var(--border); border-radius:12px; padding:16px; margin-top:16px }
-  .grid2{ display:grid; grid-template-columns:1fr; gap:14px } @media(min-width:860px){ .grid2{ grid-template-columns:1fr 1fr } }
-  .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:8px; align-items:end }
-  .cs1{grid-column:span 1}.cs2{grid-column:span 2}.cs3{grid-column:span 3}.cs4{grid-column:span 4}.cs6{grid-column:span 6}.cs12{grid-column:span 12}
-  label>span.small{ display:block; font-size:12px; margin-bottom:4px; color:var(--muted) }
-
-  #items{ display:grid; row-gap:12px }
-
-  input,select,textarea{ width:100%; border:2px solid var(--border); background:var(--panel); color:var(--text); border-radius:8px; padding:9px 10px; font-weight:600 }
-  input:focus,select:focus,textarea:focus,button:focus{ outline:4px solid var(--focus); outline-offset:2px }
-  input::placeholder{ color:var(--muted); opacity:.75 }
-
-  .btn{ appearance:none; background:var(--panel); color:var(--brand); border:3px solid var(--brand); padding:9px 12px; border-radius:10px; font-weight:800; cursor:pointer }
-  .btn:hover{ background:#F0F7F4 }
-  .btn.primary{ background:var(--brand); color:#fff }
-  .btn.icon{ width:42px; height:42px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:20px }
-
-  .small{ font-size:12px } .muted{ color:var(--muted) } .space{ display:flex; justify-content:space-between; align-items:center }
-  .hide{ display:none } .text-green{ color:var(--ok) } .text-red{ color:var(--warn) }
-
-  .payslip{ display:grid; grid-template-columns:1fr; gap:12px } @media(min-width:860px){ .payslip{ grid-template-columns:1fr 1fr } }
-  .card{ border:2px solid var(--border); border-radius:12px; padding:12px }
-  .tot{ border-top:2px solid var(--border); padding-top:8px; margin-top:8px; font-weight:800 }
-  .kpi{ border:2px solid var(--border); border-radius:12px; padding:12px }
-  .note{ border:3px solid var(--border); border-left:10px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel) }
-
-  /* hide number spinners */
-  input[type=number]::-webkit-outer-spin-button,
-  input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
-  input[type=number]{ -moz-appearance:textfield; appearance:textfield }
-
-  /* PRINT (Illustration-only @ 80%) */
-  @page{size:A4;margin:12mm;}
-  @media print{
-    html.print-illustration .header,
-    html.print-illustration #inputs,
-    html.print-illustration #admin,
-    html.print-illustration #disclaimer,
-    html.print-illustration #esrPanel,
-    html.print-illustration footer{display:none!important;}
-    html.print-illustration #payslipPanel{display:block!important;}
-    html.print-illustration .wrap{transform:scale(.8);transform-origin:top left;width:calc(100%/.8);}
-    html.print-illustration body{zoom:.8;}
-  }
-</style>
+    [data-theme="dark"] .card { color:#111; }
+    [data-theme="dark"] .card h2 { color:#111; }
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="header">
-    <div>
-      <h1>NHS Pension Opt-Out Calculator (England only)</h1>
-      <p class="small" style="margin:0">Monthly payslip illustration — <b>stay in</b> vs <b>opt out</b>. NI inferred from <b>DOB</b>.</p>
-    </div>
-
-    <div class="a11y-bar">
-      <div class="a11y-group">
-        <span class="a11y-label">Theme</span>
-        <select id="themeSelect" title="Theme">
-          <option value="auto">Auto</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-          <option value="hc-large">High contrast (Large)</option>
-        </select>
+  <div class="wrap">
+    <div class="header">
+      <div class="title">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="2" y="3" width="20" height="18" rx="3" stroke="#023020" stroke-width="1.6"/>
+          <path d="M7 8h10M7 12h10M7 16h6" stroke="#023020" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <h1>NHS PAYE & Pension Estimator</h1>
+        <span class="badge">Month 1 by default • ESR (cumulative) optional</span>
       </div>
-
-      <button id="btnPrintIllo" class="btn primary" type="button" aria-label="Print payslip illustration">Print illustration</button>
-      <button id="btnAdmin" class="btn hide" type="button" aria-expanded="false" aria-controls="admin">Admin</button>
-      <button id="btnANDI" class="btn hide" type="button" aria-describedby="andiNote">Run ANDI Accessibility Checker</button>
-      <span id="a11yBadge" class="a11y-badge">Admin</span>
-    </div>
-    <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA accessibility tool (ANDI). No data sent externally.</p>
-  </header>
-
-  <!-- Disclaimer -->
-  <section id="disclaimer" class="panel" aria-label="Disclaimer">
-    <div class="note small">
-      <b>Illustration, not payroll.</b> ESR uses YTD (cumulative) PAYE/NI, rounding and other deductions, so results will differ.
-      <span>For personalised information, check NHS Pensions or the <b>LAS Pensions Department</b>.</span>
-    </div>
-  </section>
-
-  <!-- Inputs -->
-  <section id="inputs" class="panel grid2" aria-label="Inputs">
-    <div>
-      <h2 style="margin-top:0; font-weight:var(--heading)">Pensionable pay (monthly)</h2>
-
-      <div id="items" aria-live="polite"></div>
-
-      <div class="actions" style="margin-top:8px">
-        <button id="addItem" class="btn" type="button">+ Add item</button>
-        <button id="clearEntries" class="btn" type="button">Clear</button>
-      </div>
-
-      <div class="space" style="border-top:2px solid var(--border); padding-top:10px; margin-top:10px">
-        <div class="muted">Total monthly pensionable pay</div>
-        <div id="totalPay" style="font-weight:800">£0.00</div>
-      </div>
-    </div>
-
-    <div>
-      <h2 style="margin-top:0; font-weight:var(--heading)">Your details</h2>
       <div class="row">
-        <label class="cs6"><span class="small">Date of birth</span>
-          <input id="dob" type="date" />
-        </label>
-        <label class="cs6"><span class="small">Tax code (optional)</span>
-          <input id="taxCode" type="text" placeholder="1257L, BR, D0, D1, NT" value="" />
-        </label>
+        <label class="switch"><input id="themeToggle" type="checkbox"> Dark mode</label>
       </div>
-      <p class="small muted" style="margin-top:8px">Assumes NHS “net pay arrangement”. If left blank, a standard code (e.g. 1257L) is assumed.</p>
-
-      <!-- ESR toggle + fields -->
-      <div class="row cs12" style="margin-top:8px">
-        <label class="cs12 small" style="display:flex;align-items:center;gap:8px">
-          <input id="esrToggle" type="checkbox" />
-          <span>Show ESR cumulative PAYE (optional)</span>
-        </label>
-      </div>
-
-      <div id="esrFields" class="row hide" aria-hidden="true" style="margin-top:8px">
-        <label class="cs3"><span class="small">Pay period (1–12)</span>
-          <input id="esrPeriod" type="number" min="1" max="12" value="1" />
-        </label>
-        <label class="cs4"><span class="small">Previous taxable pay to date (£)</span>
-          <input id="esrPrevTaxable" type="number" step="0.01" min="0" />
-        </label>
-        <label class="cs4"><span class="small">Previous tax paid to date (£)</span>
-          <input id="esrPrevTaxPaid" type="number" step="0.01" min="0" />
-        </label>
-      </div>
-      <p id="esrHint" class="small muted hide" aria-hidden="true" style="margin-top:8px">
-        Enter the ESR year-to-date figures (to end of last month). We scale bands and free pay to the selected period to estimate this month’s PAYE under cumulative rules.
-      </p>
     </div>
-  </section>
 
-  <!-- Payslip -->
-  <section id="payslipPanel" class="panel" aria-label="Payslip illustration">
-    <h2 style="margin-top:0; font-weight:var(--heading)">Payslip illustration (monthly)</h2>
-    <div class="note small" style="margin-bottom:10px">
-      <ul style="margin:0 0 0 16px">
-        <li><b>Payments</b> shows each pensionable item you entered.</li>
-        <li><b>Deductions</b> show NHS Pension, PAYE and NI. The PAYE line shows taxable pay used.</li>
+    <div class="card">
+      <h2>Inputs</h2>
+      <div class="grid">
+        <div class="col-3">
+          <label for="pensionablePay">Pensionable pay this month (£)</label>
+          <input id="pensionablePay" type="number" inputmode="decimal" step="0.01" min="0" placeholder="e.g. 2,300" />
+        </div>
+        <div class="col-3">
+          <label for="pensionRate">Employee NHS pension rate (%)</label>
+          <input id="pensionRate" type="number" inputmode="decimal" step="0.1" min="0" max="20" placeholder="e.g. 9.8" />
+          <p class="hint">Pension is a <strong>pre-tax deduction</strong> (net pay arrangement). It does <strong>not</strong> reduce NI earnings.</p>
+        </div>
+        <div class="col-3">
+          <label for="taxCode">Tax code</label>
+          <input id="taxCode" type="text" placeholder="e.g. 1257L M1, 241T, 0T, BR, D0, D1, K400" />
+          <p class="hint">Add <strong>M1/W1</strong> to force Month 1. <strong>241T</strong> gives £2,410 annual allowance.</p>
+        </div>
+        <div class="col-3">
+          <label for="dob">Date of birth (for NI)</label>
+          <input id="dob" type="date" />
+          <p class="hint">If you’re over State Pension age (assumed 66), NI is £0.</p>
+        </div>
+
+        <div class="col-12">
+          <label class="switch"><input id="esrMode" type="checkbox"> Use ESR cumulative mode (optional)</label>
+        </div>
+
+        <div id="esrFields" class="col-12" style="display:none;">
+          <div class="grid">
+            <div class="col-3">
+              <label for="period">Pay period number (1–12)</label>
+              <input id="period" type="number" min="1" max="12" value="1" />
+            </div>
+            <div class="col-4">
+              <label for="prevTaxable">Previous taxable pay to date (£)</label>
+              <input id="prevTaxable" type="number" step="0.01" min="0" placeholder="before this month" />
+            </div>
+            <div class="col-4">
+              <label for="prevTaxPaid">Previous tax paid to date (£)</label>
+              <input id="prevTaxPaid" type="number" step="0.01" min="0" placeholder="before this month" />
+            </div>
+          </div>
+          <p class="hint">Use ESR YTD figures to end of last month. Cumulative bands/free pay are scaled to the period.</p>
+        </div>
+
+        <div class="col-12 row">
+          <button id="calcBtn">Calculate</button>
+          <button id="resetBtn" class="secondary" type="button">Reset</button>
+        </div>
+      </div>
+
+      <p class="note">Assumptions: England/Wales PAYE & NI for 2025/26 are set in code and can be edited in <code>TAX_CONFIG</code> and <code>NI_CONFIG</code>. Marriage allowance and student loans are not included. K-codes capped so PAYE ≤ 50% of this month’s gross.</p>
+    </div>
+
+    <div class="card" id="m1_results">
+      <h2>Payslip illustration — Month 1</h2>
+      <div class="grid">
+        <div class="col-6">
+          <h3>Pay</h3>
+          <table><tbody>
+            <tr><td>Pensionable pay (this month)</td><td id="m1_gross">—</td></tr>
+          </tbody></table>
+        </div>
+        <div class="col-6">
+          <h3>Deductions</h3>
+          <table><tbody>
+            <tr><td>Employee pension (pre-tax)</td><td id="r_pension_m1">—</td></tr>
+            <tr><td>PAYE due this month</td><td id="r_tax_m1">—</td></tr>
+            <tr><td>National Insurance (Cat A)</td><td id="r_ni_m1">—</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <table><tbody>
+        <tr><th>Taxable pay this month (after pension)</th><td id="r_taxable_m1">—</td></tr>
+        <tr><th>Estimated net pay</th><td id="m1_net">—</td></tr>
+        <tr><th>Notes</th><td id="r_note_m1">—</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="card" id="esr_results" style="display:none;">
+      <h2>Payslip illustration — ESR cumulative</h2>
+      <div class="grid">
+        <div class="col-6">
+          <h3>Pay</h3>
+          <table><tbody>
+            <tr><td>Pensionable pay (this month)</td><td id="esr_gross">—</td></tr>
+          </tbody></table>
+        </div>
+        <div class="col-6">
+          <h3>Deductions</h3>
+          <table><tbody>
+            <tr><td>Employee pension (pre-tax)</td><td id="r_pension_esr">—</td></tr>
+            <tr><td>PAYE due this month (ESR calc)</td><td id="r_tax_esr">—</td></tr>
+            <tr><td>National Insurance (Cat A)</td><td id="r_ni_esr">—</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <table><tbody>
+        <tr><th>Taxable pay this month (after pension)</th><td id="r_taxable_esr">—</td></tr>
+        <tr><th>Estimated net pay</th><td id="esr_net">—</td></tr>
+        <tr><th>Notes</th><td id="r_note_esr">—</td></tr>
+      </tbody></table>
+      <p class="note">Turn on “Use ESR cumulative mode”, enter period + YTD figures, then Calculate.</p>
+    </div>
+
+    <div class="card">
+      <h2>What changed</h2>
+      <ul>
+        <li><strong>NI restored</strong> (Cat A) and included in net pay. Pension does not reduce NI.</li>
+        <li><strong>DOB</strong> field added; NI set to £0 if over SPA (assumed 66).</li>
+        <li><strong>ESR card</strong> now hidden until you enable the toggle.</li>
+        <li><strong>No JSON needed:</strong> edit rates in <code>TAX_CONFIG</code>/<code>NI_CONFIG</code>.</li>
       </ul>
     </div>
+  </div>
 
-    <div class="payslip">
-      <div class="card">
-        <div style="font-weight:800; margin-bottom:6px">Stay in</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-          <div>
-            <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
-            <div id="stayPayments"></div>
-            <div class="space tot"><div>Total payments</div><div id="stayTotalPayments">£0.00</div></div>
-          </div>
-          <div>
-            <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
-            <div class="space"><div>NHS Pension <span id="nhsRate">(0.0%)</span></div><div id="stayNhs">£0.00</div></div>
-            <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="stayTaxable">£0.00</span>)</span></div><div id="stayTax">£0.00</div></div>
-            <div class="space"><div>National Insurance</div><div id="stayNi">£0.00</div></div>
-            <div class="space tot"><div>Total deductions</div><div id="stayTotalDeds">£0.00</div></div>
-          </div>
-        </div>
-        <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="stayNet">£0.00</div></div>
-      </div>
+  <script>
+    // ---- Configurable PAYE & NI settings (edit here if rates change) ----
+    const TAX_CONFIG = {
+      year: '2025/26',
+      rUK: {
+        personalAllowance: 12570,
+        basicRateUpper: 37700,        // size of basic band
+        additionalRateStart: 125140,  // start of additional rate
+        rates: { basic: 0.20, higher: 0.40, additional: 0.45 }
+      }
+    };
 
-      <div class="card">
-        <div style="font-weight:800; margin-bottom:6px">Opt out</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-          <div>
-            <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
-            <div id="outPayments"></div>
-            <div class="space tot"><div>Total payments</div><div id="outTotalPayments">£0.00</div></div>
-          </div>
-          <div>
-            <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
-            <div class="space"><div>NHS Pension</div><div>£0.00</div></div>
-            <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="outTaxable">£0.00</span>)</span></div><div id="outTax">£0.00</div></div>
-            <div class="space"><div>National Insurance</div><div id="outNi">£0.00</div></div>
-            <div class="space tot"><div>Total deductions</div><div id="outTotalDeds">£0.00</div></div>
-          </div>
-        </div>
-        <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="outNet">£0.00</div></div>
-      </div>
-    </div>
+    // NI (Category A) — monthly thresholds (as you used before)
+    const NI_CONFIG = {
+      monthly: { LEL: 542, PT: 1048, UEL: 4189 },
+      rates:   { main: 0.08, upper: 0.02 },
+      statePensionAge: 66
+    };
 
-    <div style="display:grid; gap:12px; grid-template-columns:1fr; margin-top:12px">
-      <div class="kpi">
-        <div class="small muted">Difference in take-home (opt-out minus stay-in)</div>
-        <div id="delta" style="font-size:20px; font-weight:800">£0.00</div>
-      </div>
-      <div class="kpi">
-        <div class="small muted">Net annual pay — stay in / opt out</div>
-        <div id="netAnnual" style="font-size:18px; font-weight:800">£0.00 / £0.00</div>
-      </div>
-      <div class="kpi">
-        <div class="small muted">Employer pension (context)</div>
-        <div id="employerPension" style="font-size:18px; font-weight:800">≈ £0.00/yr</div>
-        <div class="small muted">Not deducted from pay but foregone if you opt out.</div>
-      </div>
-
-      <div class="panel">
-        <h3 style="margin:0 0 6px 0">Benefits you will be giving up by opting out of the 2015 NHS Pension Scheme (CARE 1/54th)</h3>
-        <ul class="small" style="margin:0 0 0 18px">
-          <li>Based on your current pensionable earnings, you would give up an <b>annual pension accrual</b> of around <b><span id="accrual54">£0.00/yr</span></b> for life after retirement.</li>
-          <li>To illustrate the value of the NHS pension you would be giving up, buying similar benefits on the “open market” might cost around <b>£10,100</b> for each year you give up accruing benefits.</li>
-          <li>An annual pension payable for life after retirement.</li>
-          <li>Tax-free cash lump sum on retirement for those with 1995 Section membership (optional for other 2015 members).</li>
-          <li>Death-in-service life assurance lump sum to nominated people or an organisation.</li>
-          <li>Pension benefits payable to dependants, including children.</li>
-          <li>Ill-health retirement benefits.</li>
-          <li>Tax relief on pension contributions.</li>
-        </ul>
-        <p class="small" style="margin:8px 0 0">See the NHS Pension Scheme Guide at <a href="https://www.nhsbsa.nhs.uk/nhs-pensions" target="_blank" rel="noopener">nhsbsa.nhs.uk/nhs-pensions</a>.</p>
-        <p class="small muted" style="margin-top:4px">This is an illustration and excludes revaluation, survivor benefit calculations, early/late retirement factors and personal tax circumstances.</p>
-      </div>
-
-      <div class="panel small">
-        <b>Notes:</b>
-        <ul style="margin:8px 0 0 18px">
-          <li>Allowed tax codes: L, K, BR, D0, D1, NT and 0T.</li>
-          <li>Personal Allowance taper applied above £100,000 annual income (where relevant).</li>
-          <li>People born before 6 April 1948 who may receive a higher Personal Allowance are not modelled.</li>
-          <li>This compares scheme contributions vs opting out allowing for Income Tax and NI only.</li>
-          <li>Annual/Lifetime Allowance tax charges (if any) are not considered.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- ESR cumulative (read-only, hidden unless toggled) -->
-  <section id="esrPanel" class="panel hide" aria-label="ESR cumulative PAYE (optional)">
-    <h2 style="margin-top:0; font-weight:var(--heading)">ESR cumulative PAYE (optional)</h2>
-    <p class="small muted" style="margin:0 0 10px">
-      Uses ESR year-to-date figures to estimate this month’s PAYE under cumulative rules. Payments are the same;
-      only <b>PAYE</b> can differ from Month-1.
-    </p>
-
-    <div class="payslip">
-      <div class="card">
-        <div style="font-weight:800; margin-bottom:6px">Stay in — ESR</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-          <div>
-            <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
-            <div id="stayPayments_esr"></div>
-            <div class="space tot"><div>Total payments</div><div id="stayTotalPayments_esr">£0.00</div></div>
-          </div>
-          <div>
-            <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
-            <div class="space"><div>NHS Pension <span id="nhsRate_esr">(0.0%)</span></div><div id="stayNhs_esr">£0.00</div></div>
-            <div class="space"><div>PAYE <span class="small muted">(ESR calc; taxable used: <span id="stayTaxable_esr">£0.00</span>)</span></div><div id="stayTax_esr">£0.00</div></div>
-            <div class="space"><div>National Insurance</div><div id="stayNi_esr">£0.00</div></div>
-            <div class="space tot"><div>Total deductions</div><div id="stayTotalDeds_esr">£0.00</div></div>
-          </div>
-        </div>
-        <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="stayNet_esr">£0.00</div></div>
-      </div>
-
-      <div class="card">
-        <div style="font-weight:800; margin-bottom:6px">Opt out — ESR</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-          <div>
-            <div class="muted" style="font-weight:700; margin-bottom:4px">Payments</div>
-            <div id="outPayments_esr"></div>
-            <div class="space tot"><div>Total payments</div><div id="outTotalPayments_esr">£0.00</div></div>
-          </div>
-          <div>
-            <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
-            <div class="space"><div>NHS Pension</div><div>£0.00</div></div>
-            <div class="space"><div>PAYE <span class="small muted">(ESR calc; taxable used: <span id="outTaxable_esr">£0.00</span>)</span></div><div id="outTax_esr">£0.00</div></div>
-            <div class="space"><div>National Insurance</div><div id="outNi_esr">£0.00</div></div>
-            <div class="space tot"><div>Total deductions</div><div id="outTotalDeds_esr">£0.00</div></div>
-          </div>
-        </div>
-        <div class="space" style="margin-top:10px; font-weight:800"><div>Net pay</div><div id="outNet_esr">£0.00</div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Admin -->
-  <section id="admin" class="panel hide" aria-label="Admin">
-    <h2 style="margin-top:0">Admin — Rates (paste/edit yearly)</h2>
-    <p class="small muted">Edits save to this browser (localStorage). Export and commit when ready.</p>
-    <div class="grid2">
-      <div>
-        <label class="small">Current JSON</label>
-        <textarea id="ratesCurrent" rows="16" readonly style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:2px solid var(--border); border-radius:8px; padding:8px"></textarea>
-        <div class="actions" style="margin-top:8px">
-          <button id="exportRates" class="btn" type="button">Export</button>
-        </div>
-      </div>
-      <div>
-        <label class="small">Paste new JSON</label>
-        <textarea id="ratesPaste" rows="16" placeholder='{ "years":[ ... ], "defaultYear":"2025/26" }' style="width:100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; border:2px solid var(--border); border-radius:8px; padding:8px"></textarea>
-        <div class="actions" style="margin-top:8px">
-          <button id="importRates" class="btn" type="button">Import</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="small muted" style="margin:12px 0 24px">
-    HMRC PAYE & NI 2025/26; NHSBSA member tiers 2025/26. For guidance only.
-  </footer>
-</div>
-
-<script>
-/* ---------- Default rates (used unless admin imports) ---------- */
-const defaultRates = {
-  defaultYear: "2025/26",
-  years: [{
-    label: "2025/26",
-    tax: {
-      personalAllowance: 12570,
-      higherRateThreshold: 37700,
-      additionalRateThreshold: 125140,
-      bands: { ENG_NI: [ {upper:37700,rate:.20},{upper:125140,rate:.40},{upper:null,rate:.45} ] }
-    },
-    ni: { monthly: { LEL: 542, PT: 1048, UEL: 4189 }, employeeRates: { main: .08, upper: .02 } },
-    nhs: {
-      tiers: [
-        { min: 0, max: 13259, rate: 0.052 },
-        { min: 13260, max: 27797, rate: 0.065 },
-        { min: 27798, max: 33868, rate: 0.083 },
-        { min: 33869, max: 50845, rate: 0.098 },
-        { min: 50846, max: 65190, rate: 0.107 },
-        { min: 65191, max: null,  rate: 0.125 }
-      ],
-      employerRateHint: 0.237
-    },
-    benefits: { schemeLabel:"2015 NHS Pension Scheme (CARE 1/54th)", accrualFraction:"1/54", annuityFactor:18 }
-  }]
-};
-
-/* ---------- Helpers ---------- */
-const GBP = new Intl.NumberFormat('en-GB',{style:'currency', currency:'GBP'});
-const fmt = n => GBP.format((+n)||0);
-const pct = n => `${(n*100).toFixed(1)}%`;
-function loadRates(){ try{const raw=localStorage.getItem('las_optout_rates_v1'); if(!raw) return defaultRates; const p=JSON.parse(raw); return p?.years?.length?p:defaultRates;}catch{return defaultRates;} }
-function saveRates(r){ localStorage.setItem('las_optout_rates_v1', JSON.stringify(r,null,2)); }
-
-function parseTaxCode(code){
-  const c=(code||'').toUpperCase().trim();
-  if(!c) return {mode:'STANDARD', allowance:12570};
-  if(['BR','D0','D1','NT','0T'].includes(c)) return {mode:c};
-  const m=c.match(/(\d{3,4})[A-Z]*/);
-  if(m) return {mode:'STANDARD', allowance:parseInt(m[1],10)*10};
-  return {mode:'STANDARD', allowance:12570};
-}
-function ageOnDate(dob,on){ if(!dob) return null; const b=new Date(dob); if(isNaN(b)) return null; let a=on.getFullYear()-b.getFullYear(); const m=on.getMonth()-b.getMonth(); if(m<0||(m===0&&on.getDate()<b.getDate())) a--; return a; }
-function nhsRateFor(annual,nhs){ const t=nhs.tiers.find(x=>annual>=x.min && (x.max===null||annual<=x.max)); return t?t.rate:0; }
-function calcNI(mGross,ncfg,overSPA){
-  if(overSPA) return 0; const {PT,UEL}=ncfg.monthly;
-  if(mGross<=PT) return 0;
-  const between=Math.max(0,Math.min(mGross,UEL)-PT);
-  const above=Math.max(0,mGross-UEL);
-  return +(between*ncfg.employeeRates.main + above*ncfg.employeeRates.upper).toFixed(2);
-}
-
-/* HMRC-style PAYE: annualise -> band tax -> /12 -> round */
-function calcPAYE_annualised(monthlyTaxable, annualNetForTaper, tcfg, parsed){
-  const basePA = (parsed.mode==='STANDARD') ? parsed.allowance : 0;
-  const ani     = Math.max(0, annualNetForTaper);
-  const taper   = Math.max(0, Math.floor((Math.max(ani,0) - 100000) / 2)); // whole £
-  const PA      = (parsed.mode==='STANDARD') ? Math.max(0, basePA - taper) : 0;
-
-  if (parsed.mode === 'NT') return 0;
-  if (parsed.mode === 'BR') return +(monthlyTaxable * 0.20).toFixed(2);
-  if (parsed.mode === 'D0') return +(monthlyTaxable * 0.40).toFixed(2);
-  if (parsed.mode === 'D1') return +(monthlyTaxable * 0.45).toFixed(2);
-  if (parsed.mode === '0T'){ // 0T: no allowance
-    const annualTax = bandTax(monthlyTaxable*12, 0, tcfg.bands.ENG_NI);
-    return +(annualTax/12).toFixed(2);
-  }
-
-  const annualTaxable = Math.max(0, (monthlyTaxable * 12) - PA);
-  const annualTax = bandTax(annualTaxable, 0, tcfg.bands.ENG_NI);
-  return +(annualTax / 12).toFixed(2);
-
-  function bandTax(amount, start, bands){
-    let remaining=amount, tax=0, lower=start;
-    for(const b of bands){
-      const upper=(b.upper==null)?Infinity:b.upper;
-      const slice=Math.max(0, Math.min(remaining, upper-lower));
-      tax += slice*b.rate;
-      remaining -= slice;
-      lower = upper;
-      if(remaining<=0) break;
+    function gbp(n){ return (isFinite(n)) ? new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).format(n) : '—'; }
+    function clamp(n, min, max){ return Math.min(Math.max(n, min), max); }
+    function getAgeYears(dobStr){
+      if(!dobStr) return null;
+      const d = new Date(dobStr); if (isNaN(d)) return null;
+      const t = new Date(); let a = t.getFullYear()-d.getFullYear();
+      const m = t.getMonth()-d.getMonth(); if (m<0 || (m===0 && t.getDate()<d.getDate())) a--; return a;
     }
-    if(remaining>0) tax += remaining * bands[bands.length-1].rate;
-    return tax;
-  }
-}
 
-/* ---------- ESR cumulative helpers ---------- */
-function setHidden(el, hidden){
-  if(!el) return;
-  el.classList.toggle('hide', hidden);
-  el.setAttribute('aria-hidden', hidden ? 'true' : 'false');
-}
+    // Tax code parsing
+    function parseTaxCode(raw){
+      const out={ code:'', allowanceAnnual:0, negativeAllowanceAnnual:0, flatRate:null, nonCumulativeFlag:false, kCode:false };
+      if(!raw) return out;
+      let s=String(raw).toUpperCase().replace(/\s+/g,'').trim(); out.code=s;
+      if (/(M1|W1|X)$/.test(s)) { out.nonCumulativeFlag = true; s = s.replace(/(M1|W1|X)$/,''); }
+      if (s==='BR') { out.flatRate=0.20; return out; }
+      if (s==='D0') { out.flatRate=0.40; return out; }
+      if (s==='D1') { out.flatRate=0.45; return out; }
+      if (s==='NT') { out.flatRate=0.00; return out; }
+      if (s==='0T' || s==='OT') { out.allowanceAnnual=0; return out; }
+      if (/^K\d{1,4}$/.test(s)) { out.kCode=true; out.negativeAllowanceAnnual=parseInt(s.slice(1),10)*10||0; return out; }
+      const m=s.match(/^(\d{1,4})([A-Z]*)$/);
+      if(m){ out.allowanceAnnual=(parseInt(m[1],10)||0)*10; return out; }
+      out.allowanceAnnual=0; return out;
+    }
 
-// Expected bands format: [{upper:37700,rate:.20},{upper:125140,rate:.40},{upper:null,rate:.45}]
-function bandTaxYTD(amount, basicUpperYTD, addlStartYTD, rates){
-  let tax=0, lower=0, remaining=amount;
-  const bands=[
-    {upper:basicUpperYTD, rate:rates[0].rate},
-    {upper:addlStartYTD,  rate:rates[1].rate},
-    {upper:Infinity,      rate:rates[2].rate}
-  ];
-  for(const b of bands){
-    const slice=Math.max(0, Math.min(remaining, b.upper-lower));
-    tax += slice*b.rate;
-    remaining -= slice;
-    lower = b.upper;
-    if(remaining<=0) break;
-  }
-  return Math.max(0,tax);
-}
+    // Banded tax helper
+    function bandedTax(taxable, basicBandSize, addlStart, rates){
+      let tax=0;
+      const basicPart=clamp(taxable,0,basicBandSize); tax+=basicPart*rates.basic;
+      const higherPart=clamp(taxable-basicBandSize,0,addlStart-basicBandSize); tax+=higherPart*rates.higher;
+      const addlPart=clamp(taxable-addlStart,0,Infinity); tax+=addlPart*rates.additional;
+      return tax;
+    }
 
-function calcPAYE_esr_thisMonth(currentTaxable, parsed, period, prevTaxableYTD, prevTaxPaidYTD, taxCfg){
-  const p=Math.min(Math.max(parseInt(period||'1',10)||1,1),12);
+    // Month-1 PAYE
+    function month1PAYE(taxableAfterPension, code, grossForCap){
+      const cfg=TAX_CONFIG.rUK;
+      if(code.flatRate!==null) return Math.max(0, taxableAfterPension*code.flatRate);
+      const mAllow=(code.allowanceAnnual||0)/12, mNeg=(code.negativeAllowanceAnnual||0)/12;
+      let adj=Math.max(0, taxableAfterPension - mAllow); if(mNeg>0) adj+=mNeg;
+      const basic=cfg.basicRateUpper/12, addlStart=cfg.additionalRateStart/12;
+      let tax=bandedTax(adj,basic,addlStart,cfg.rates);
+      if(code.kCode){ const cap=0.5*(grossForCap||0); tax=Math.min(tax,cap); }
+      return Math.max(0,tax);
+    }
 
-  // Flat rate codes act on current month only
-  if (['NT','BR','D0','D1'].includes(parsed.mode)){
-    const rate = parsed.mode==='NT'?0: parsed.mode==='BR'?0.20: parsed.mode==='D0'?0.40:0.45;
-    return +(currentTaxable*rate).toFixed(2);
-  }
+    // ESR cumulative PAYE (period-scaled)
+    function esrCumulativePAYE(currTaxable, prevTaxableYTD, prevTaxPaidYTD, period, code, grossForCap){
+      const cfg=TAX_CONFIG.rUK, p=clamp(parseInt(period,10)||1,1,12);
+      if(code.flatRate!==null) return Math.max(0, currTaxable*code.flatRate);
+      const ytdTaxable=(prevTaxableYTD||0)+(currTaxable||0);
+      const ytdFree=(code.allowanceAnnual||0)*(p/12);
+      const ytdNeg=(code.negativeAllowanceAnnual||0)*(p/12);
+      let ytdAdj=Math.max(0, ytdTaxable-ytdFree); if(ytdNeg>0) ytdAdj+=ytdNeg;
+      const basic=cfg.basicRateUpper*(p/12), addlStart=cfg.additionalRateStart*(p/12);
+      let taxYTD=bandedTax(ytdAdj,basic,addlStart,cfg.rates);
+      let thisMonth=taxYTD-(prevTaxPaidYTD||0);
+      if(code.kCode){ const cap=0.5*(grossForCap||0); thisMonth=Math.min(thisMonth,cap); }
+      return Math.max(0,thisMonth);
+    }
 
-  // Standard or 0T cumulative with taper
-  const basePA = (parsed.mode==='STANDARD') ? (parsed.allowance||0) : 0;
-  // Annualise YTD+current to estimate taper
-  const annualised = ((prevTaxableYTD||0) + (currentTaxable||0)) * 12 / p;
-  const taper = Math.max(0, Math.floor((Math.max(annualised,0)-100000)/2));
-  const PA_annual = (parsed.mode==='STANDARD') ? Math.max(0, basePA - taper) : 0; // 0T => 0
+    // NI (Cat A, monthly). Pension does NOT reduce NI base.
+    function monthNI(grossMonthly, dobStr){
+      const age=getAgeYears(dobStr);
+      if(age!==null && age>=NI_CONFIG.statePensionAge) return 0;
+      const {PT,UEL}=NI_CONFIG.monthly, {main,upper}=NI_CONFIG.rates;
+      if(grossMonthly<=PT) return 0;
+      const between=Math.max(0, Math.min(grossMonthly,UEL)-PT);
+      const above=Math.max(0, grossMonthly-UEL);
+      return +(between*main + above*upper).toFixed(2);
+    }
 
-  const ytdTaxable = (prevTaxableYTD||0) + (currentTaxable||0);
-  const freePayYTD = (PA_annual * (p/12));
-  let adjYTD = Math.max(0, ytdTaxable - freePayYTD);
+    // UI wiring
+    const els={
+      themeToggle:document.getElementById('themeToggle'),
+      pensionablePay:document.getElementById('pensionablePay'),
+      pensionRate:document.getElementById('pensionRate'),
+      taxCode:document.getElementById('taxCode'),
+      dob:document.getElementById('dob'),
+      esrMode:document.getElementById('esrMode'),
+      esrFields:document.getElementById('esrFields'),
+      esrCard:document.getElementById('esr_results'),
+      period:document.getElementById('period'),
+      prevTaxable:document.getElementById('prevTaxable'),
+      prevTaxPaid:document.getElementById('prevTaxPaid'),
+      calcBtn:document.getElementById('calcBtn'),
+      resetBtn:document.getElementById('resetBtn'),
+      r:{
+        pension_m1:document.getElementById('r_pension_m1'),
+        pension_esr:document.getElementById('r_pension_esr'),
+        taxable_m1:document.getElementById('r_taxable_m1'),
+        taxable_esr:document.getElementById('r_taxable_esr'),
+        tax_m1:document.getElementById('r_tax_m1'),
+        tax_esr:document.getElementById('r_tax_esr'),
+        ni_m1:document.getElementById('r_ni_m1'),
+        ni_esr:document.getElementById('r_ni_esr'),
+        note_m1:document.getElementById('r_note_m1'),
+        note_esr:document.getElementById('r_note_esr')
+      }
+    };
 
-  const basicYTD = taxCfg.higherRateThreshold * (p/12);
-  const addlYTD  = taxCfg.additionalRateThreshold * (p/12);
-  const taxYTD   = bandTaxYTD(adjYTD, basicYTD, addlYTD, taxCfg.bands.ENG_NI);
-
-  const thisMonth = Math.max(0, taxYTD - (prevTaxPaidYTD||0));
-  return +thisMonth.toFixed(2);
-}
-
-/* ---------- Theme ---------- */
-const THEME_KEY='las_optout_theme';
-const themeSelect=document.getElementById('themeSelect');
-function applyTheme(v){
-  document.documentElement.classList.remove('theme-light','theme-dark','theme-hc-large');
-  if(v==='light') document.documentElement.classList.add('theme-light');
-  else if(v==='dark') document.documentElement.classList.add('theme-dark');
-  else if(v==='hc-large') document.documentElement.classList.add('theme-hc-large');
-}
-(function initTheme(){ const saved=localStorage.getItem(THEME_KEY)||'auto'; themeSelect.value=saved; applyTheme(saved); })();
-themeSelect.addEventListener('change',()=>{ const v=themeSelect.value; localStorage.setItem(THEME_KEY,v); applyTheme(v); });
-
-/* ---------- State & DOM ---------- */
-const state={ items:[], rates:loadRates(), year:null }; state.year=state.rates.years[0];
-
-const elItems=document.getElementById('items');
-const btnAdd=document.getElementById('addItem');
-const btnClearVals=document.getElementById('clearEntries');
-const elDob=document.getElementById('dob');
-const elTax=document.getElementById('taxCode');
-
-/* ESR DOM */
-const esrToggle = document.getElementById('esrToggle');
-const esrFields = document.getElementById('esrFields');
-const esrHint   = document.getElementById('esrHint');
-const esrPanel  = document.getElementById('esrPanel');
-const esrPeriod = document.getElementById('esrPeriod');
-const esrPrevTaxable = document.getElementById('esrPrevTaxable');
-const esrPrevTaxPaid = document.getElementById('esrPrevTaxPaid');
-
-function wireEsrUI(){
-  esrToggle?.addEventListener('change', ()=>{
-    const on = !!esrToggle.checked;
-    setHidden(esrFields, !on);
-    setHidden(esrHint,   !on);
-    setHidden(esrPanel,  !on);
-    renderAll();
-  });
-  [esrPeriod, esrPrevTaxable, esrPrevTaxPaid].forEach(el=>el?.addEventListener('input', renderAll));
-}
-wireEsrUI();
-
-let idSeq=0;
-
-function itemRow(it){
-  const row=document.createElement('div'); row.className='row'; row.dataset.id=it.id;
-
-  const name=document.createElement('input');
-  name.className='cs4'; name.placeholder='Basic / HCA / Other'; name.value=it.label||'';
-  name.setAttribute('aria-label','Pay item label');
-  name.addEventListener('input',()=>{ it.label=name.value; renderAll(); });
-
-  const wrap=document.createElement('div'); wrap.className='cs3'; wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
-  const chk=document.createElement('input'); chk.type='checkbox'; chk.checked=!!it.useRate; chk.id=`toggle-${it.id}`;
-  const lab=document.createElement('label'); lab.setAttribute('for',chk.id); lab.className='small'; lab.textContent='rate × hours';
-  wrap.append(chk,lab);
-
-  const rate=document.createElement('input'); rate.type='number'; rate.className='cs2'; rate.step='0.01'; rate.min='0'; rate.inputMode='decimal'; rate.placeholder='£'; rate.value=(it.rate??'');
-  rate.setAttribute('aria-label','Hourly rate');
-  const hours=document.createElement('input'); hours.type='number'; hours.className='cs2'; hours.step='0.01'; hours.min='0'; hours.inputMode='decimal'; hours.placeholder='hours'; hours.value=(it.hours??'');
-  hours.setAttribute('aria-label','Hours');
-  const amount=document.createElement('input'); amount.type='number'; amount.className='cs6'; amount.step='0.01'; amount.min='0'; amount.inputMode='decimal'; amount.placeholder='£'; amount.value=(it.amount??'');
-  amount.setAttribute('aria-label','Amount');
-
-  const preview=document.createElement('div'); preview.className='cs1 small'; preview.style.textAlign='right'; preview.style.opacity='.7';
-  const remove=document.createElement('button'); remove.className='cs1 btn icon'; remove.type='button'; remove.textContent='×'; remove.setAttribute('aria-label',`Remove ${it.label||'pay item'}`);
-
-  function toggle(){
-    it.useRate = chk.checked;
-    if(it.useRate){ rate.classList.remove('hide'); hours.classList.remove('hide'); amount.classList.add('hide'); const v=(+it.rate||0)*(+it.hours||0); preview.textContent=v?fmt(v):''; }
-    else{ rate.classList.add('hide'); hours.classList.add('hide'); amount.classList.remove('hide'); preview.textContent=''; }
-  }
-  chk.addEventListener('change',()=>{ toggle(); renderAll(); });
-  rate.addEventListener('input',()=>{ it.rate=parseFloat(rate.value||''); renderAll(); });
-  hours.addEventListener('input',()=>{ it.hours=parseFloat(hours.value||''); renderAll(); });
-  amount.addEventListener('input',()=>{ it.amount=parseFloat(amount.value||''); renderAll(); });
-  remove.addEventListener('click',()=>{ state.items=state.items.filter(x=>x.id!==it.id); rebuildItems(); renderAll(); });
-
-  toggle();
-  row.append(name,wrap,rate,hours,amount,preview,remove);
-  return row;
-}
-
-function rebuildItems(){ elItems.innerHTML=''; state.items.forEach(it=>elItems.appendChild(itemRow(it))); }
-function addItem(label='Other'){ const it={id:'it-'+(idSeq++), label, useRate:false, rate:null, hours:null, amount:null}; state.items.push(it); elItems.appendChild(itemRow(it)); renderAll(); }
-function clearEntries(){ state.items.forEach(it=>{ it.rate=null; it.hours=null; it.amount=null; }); rebuildItems(); renderAll(); }
-
-btnAdd.addEventListener('click',()=>addItem('Other'));
-btnClearVals.addEventListener('click',clearEntries);
-
-// initial rows once
-addItem('Basic'); addItem('HCA');
-
-/* ---------- Render ---------- */
-function renderAll(){
-  const monthlyGross=state.items.reduce((s,it)=> it.useRate ? s+((+it.rate||0)*(+it.hours||0)) : s+(+it.amount||0), 0);
-  document.getElementById('totalPay').textContent=fmt(monthlyGross);
-
-  const annualGross=monthlyGross*12;
-  const nhsRate=nhsRateFor(annualGross,state.year.nhs);
-  document.getElementById('nhsRate').textContent='('+pct(nhsRate)+')';
-  const monthlyNhs=(annualGross*nhsRate)/12;
-
-  const monthEnd=new Date(); monthEnd.setMonth(monthEnd.getMonth()+1,0);
-  const overSPA=(ageOnDate(elDob.value,monthEnd)??0)>=66;
-
-  const parsed=parseTaxCode(elTax.value);
-  const aniStay=Math.max(0,annualGross-annualGross*nhsRate);
-  const taxableStay=Math.max(0,monthlyGross-monthlyNhs);
-
-  const taxStay=calcPAYE_annualised(taxableStay, aniStay, state.year.tax, parsed);
-  const taxOut =calcPAYE_annualised(monthlyGross, annualGross, state.year.tax, parsed);
-  const niStay=calcNI(monthlyGross,state.year.ni,overSPA);
-  const niOut =calcNI(monthlyGross,state.year.ni,overSPA);
-
-  const netStay=monthlyGross-monthlyNhs-taxStay-niStay;
-  const netOut =monthlyGross-taxOut-niOut;
-  const delta  =netOut-netStay;
-
-  function fill(container){
-    container.innerHTML='';
-    state.items.forEach(it=>{
-      const v=it.useRate ? (+it.rate||0)*(+it.hours||0) : (+it.amount||0);
-      if(!v) return;
-      const row=document.createElement('div'); row.className='space'; row.innerHTML=`<div>${it.label||''}</div><div>${fmt(v)}</div>`;
-      container.appendChild(row);
+    els.themeToggle.addEventListener('change',(e)=>{
+      document.documentElement.setAttribute('data-theme', e.target.checked ? 'dark' : 'light');
     });
-  }
-  fill(document.getElementById('stayPayments'));
-  fill(document.getElementById('outPayments'));
+    els.esrMode.addEventListener('change',(e)=>{
+      const on=e.target.checked; els.esrFields.style.display=on?'block':'none'; els.esrCard.style.display=on?'block':'none';
+    });
+    els.resetBtn.addEventListener('click',()=>{
+      els.pensionablePay.value=''; els.pensionRate.value=''; els.taxCode.value=''; els.dob.value='';
+      els.esrMode.checked=false; els.esrFields.style.display='none'; els.esrCard.style.display='none';
+      els.period.value=1; els.prevTaxable.value=''; els.prevTaxPaid.value='';
+      document.getElementById('m1_gross').textContent='—'; document.getElementById('m1_net').textContent='—';
+      document.getElementById('esr_gross').textContent='—'; document.getElementById('esr_net').textContent='—';
+      for(const k in els.r) els.r[k].textContent='—';
+    });
 
-  document.getElementById('stayTotalPayments').textContent=fmt(monthlyGross);
-  document.getElementById('outTotalPayments').textContent =fmt(monthlyGross);
+    els.calcBtn.addEventListener('click', ()=>{
+      const gross = parseFloat(els.pensionablePay.value) || 0;
+      const rate  = (parseFloat(els.pensionRate.value) || 0) / 100;
+      const code  = parseTaxCode(els.taxCode.value);
+      const dobStr= els.dob.value || null;
 
-  document.getElementById('stayNhs').textContent=fmt(monthlyNhs);
-  document.getElementById('stayTax').textContent=fmt(taxStay);
-  document.getElementById('stayNi').textContent =fmt(niStay);
-  document.getElementById('stayTotalDeds').textContent=fmt(monthlyNhs+taxStay+niStay);
-  document.getElementById('stayNet').textContent=fmt(netStay);
-  document.getElementById('stayTaxable').textContent=fmt(taxableStay);
+      const pension = Math.max(0, gross*rate);
+      const taxableAfterPension = Math.max(0, gross - pension);
 
-  document.getElementById('outTax').textContent=fmt(taxOut);
-  document.getElementById('outNi').textContent =fmt(niOut);
-  document.getElementById('outTotalDeds').textContent=fmt(taxOut+niOut);
-  document.getElementById('outNet').textContent=fmt(netOut);
-  document.getElementById('outTaxable').textContent=fmt(monthlyGross);
+      const taxM1 = month1PAYE(taxableAfterPension, code, gross);
+      const niM1  = monthNI(gross, dobStr);
 
-  const elDelta=document.getElementById('delta'); elDelta.textContent=fmt(delta); elDelta.className='text-'+(delta>=0?'green':'red');
-  document.getElementById('netAnnual').textContent=fmt(netStay*12)+' / '+fmt(netOut*12);
+      // Outputs — Month 1
+      els.r.pension_m1.textContent = gbp(pension);
+      els.r.taxable_m1.textContent = gbp(taxableAfterPension);
+      els.r.tax_m1.textContent     = gbp(taxM1);
+      els.r.ni_m1.textContent      = gbp(niM1);
+      document.getElementById('m1_gross').textContent = gbp(gross);
+      document.getElementById('m1_net').textContent   = gbp(gross - pension - taxM1 - niM1);
 
-  const employerAnnual=annualGross*(state.year.nhs.employerRateHint||0);
-  document.getElementById('employerPension').textContent='≈ '+fmt(employerAnnual)+'/yr';
+      // ESR cumulative (optional)
+      if (els.esrMode.checked) {
+        const period = parseInt(els.period.value,10) || 1;
+        const prevTaxable = parseFloat(els.prevTaxable.value) || 0;
+        const prevTaxPaid = parseFloat(els.prevTaxPaid.value) || 0;
+        const taxESR = esrCumulativePAYE(taxableAfterPension, prevTaxable, prevTaxPaid, period, code, gross);
 
-  const accrual=annualGross/54;
-  document.getElementById('accrual54').textContent=fmt(accrual)+'/yr';
+        els.r.pension_esr.textContent = gbp(pension);
+        els.r.taxable_esr.textContent = gbp(taxableAfterPension);
+        els.r.tax_esr.textContent     = gbp(taxESR);
+        els.r.ni_esr.textContent      = gbp(niM1); // NI same in ESR mode
+        document.getElementById('esr_gross').textContent = gbp(gross);
+        document.getElementById('esr_net').textContent   = gbp(gross - pension - taxESR - niM1);
+        els.r.note_esr.textContent = 'ESR cumulative: bands & free pay scaled to period; subtracts tax already paid.';
+      } else {
+        els.r.pension_esr.textContent = '—';
+        els.r.taxable_esr.textContent = '—';
+        els.r.tax_esr.textContent     = '—';
+        els.r.ni_esr.textContent      = '—';
+        els.r.note_esr.textContent    = '—';
+      }
 
-  refreshAdminText();
+      // Month-1 notes
+      const notes=[];
+      if (code.flatRate!==null){
+        if (code.code==='BR') notes.push('BR: all taxable at 20%.');
+        if (code.code==='D0') notes.push('D0: all taxable at 40%.');
+        if (code.code==='D1') notes.push('D1: all taxable at 45%.');
+        if (code.code==='NT') notes.push('NT: no PAYE due.');
+      } else {
+        if (code.kCode) notes.push('K code: negative free pay added; 50% PAYE cap applied.');
+        if (/\d+T$/.test(code.code)) notes.push('T code: allowance from digits (e.g., 241T → £2,410).');
+        if (/\d+L$/.test(code.code)) notes.push('1257L → £12,570 allowance (example).');
+        if (code.nonCumulativeFlag) notes.push('Non-cumulative flag detected (M1/W1/X).');
+      }
+      notes.push('NI assumes Category A. Pension does not reduce NI.');
+      els.r.note_m1.textContent = notes.join(' ');
+    });
 
-  /* ----- ESR cumulative (optional) ----- */
-  const esrOn = !!(esrToggle && esrToggle.checked);
-  setHidden(esrPanel, !esrOn);
-  setHidden(esrFields, !esrOn);
-  setHidden(esrHint, !esrOn);
-
-  if (esrOn){
-    const period = parseInt(esrPeriod.value||'1',10)||1;
-    const prevTx = parseFloat(esrPrevTaxable.value||'0');
-    const prevPd = parseFloat(esrPrevTaxPaid.value||'0');
-
-    const taxStay_esr = calcPAYE_esr_thisMonth(taxableStay, parseTaxCode(elTax.value), period, prevTx, prevPd, state.year.tax);
-    const taxOut_esr  = calcPAYE_esr_thisMonth(monthlyGross, parseTaxCode(elTax.value), period, prevTx, prevPd, state.year.tax);
-
-    // mirror NI (ESR uses cumulative tax only)
-    const niStay_esr=niStay, niOut_esr=niOut;
-
-    const fillESR = (container)=>{ container.innerHTML=''; state.items.forEach(it=>{
-      const v=it.useRate ? (+it.rate||0)*(+it.hours||0) : (+it.amount||0);
-      if(!v) return;
-      const row=document.createElement('div'); row.className='space'; row.innerHTML=`<div>${it.label||''}</div><div>${fmt(v)}</div>`;
-      container.appendChild(row);
-    }); };
-
-    fillESR(document.getElementById('stayPayments_esr'));
-    fillESR(document.getElementById('outPayments_esr'));
-
-    document.getElementById('stayTotalPayments_esr').textContent=fmt(monthlyGross);
-    document.getElementById('outTotalPayments_esr').textContent =fmt(monthlyGross);
-
-    document.getElementById('nhsRate_esr').textContent='('+pct(nhsRate)+')';
-    document.getElementById('stayNhs_esr').textContent=fmt(monthlyNhs);
-    document.getElementById('stayTax_esr').textContent=fmt(taxStay_esr);
-    document.getElementById('stayNi_esr').textContent =fmt(niStay_esr);
-    document.getElementById('stayTotalDeds_esr').textContent=fmt(monthlyNhs+taxStay_esr+niStay_esr);
-    document.getElementById('stayNet_esr').textContent=fmt(monthlyGross-monthlyNhs-taxStay_esr-niStay_esr);
-    document.getElementById('stayTaxable_esr').textContent=fmt(taxableStay);
-
-    document.getElementById('outTax_esr').textContent=fmt(taxOut_esr);
-    document.getElementById('outNi_esr').textContent =fmt(niOut_esr);
-    document.getElementById('outTotalDeds_esr').textContent=fmt(taxOut_esr+niOut_esr);
-    document.getElementById('outNet_esr').textContent=fmt(monthlyGross-taxOut_esr-niOut_esr);
-    document.getElementById('outTaxable_esr').textContent=fmt(monthlyGross);
-  }
-}
-elDob.addEventListener('input',renderAll);
-elTax.addEventListener('input',renderAll);
-
-/* ---------- Admin / ANDI / Print ---------- */
-const adminSec=document.getElementById('admin');
-const btnAdmin=document.getElementById('btnAdmin');
-const btnANDI=document.getElementById('btnANDI');
-const andiNote=document.getElementById('andiNote');
-const a11yBadge=document.getElementById('a11yBadge');
-const btnPrintIllo=document.getElementById('btnPrintIllo');
-
-const btnExport=document.getElementById('exportRates');
-const btnImport=document.getElementById('importRates');
-const ratesCurrent=document.getElementById('ratesCurrent');
-const ratesPaste=document.getElementById('ratesPaste');
-
-function refreshAdminText(){ if(ratesCurrent) ratesCurrent.value=JSON.stringify(state.rates,null,2); }
-btnExport?.addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(state.rates,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='las-optout-rates.json'; a.click(); URL.revokeObjectURL(url); });
-btnImport?.addEventListener('click',()=>{ try{ const p=JSON.parse(ratesPaste.value); if(!p?.years?.length) throw new Error('Malformed JSON'); state.rates=p; state.year=p.years[0]; saveRates(p); ratesPaste.value=''; refreshAdminText(); renderAll(); alert('Rates imported.'); }catch(e){ alert('Import failed: '+e.message); }});
-
-function enablePrintFlags(){ document.documentElement.classList.add('print-illustration'); }
-function disablePrintFlags(){ document.documentElement.classList.remove('print-illustration'); }
-window.addEventListener('afterprint', disablePrintFlags);
-btnPrintIllo.addEventListener('click',()=>{ enablePrintFlags(); setTimeout(()=>window.print(),50); setTimeout(disablePrintFlags, 2000); });
-
-/* --- ADMIN UNLOCK: robust & persistent --- */
-function showAdmin(){
-  a11yBadge.style.display='inline-block';
-  btnAdmin?.classList.remove('hide');
-  btnANDI?.classList.remove('hide');
-  andiNote?.classList.remove('hide');
-  andiNote?.setAttribute('aria-hidden','false');
-  adminSec?.classList.remove('hide');
-  btnAdmin?.setAttribute('aria-expanded','true');
-  localStorage.setItem('las_optout_admin','1');
-  refreshAdminText();
-}
-function adminQueryPresent(){ return /(^|[?#&])admin(=1|=true|(?=&|#|$)|$)/i.test(location.href); }
-const isAdmin = adminQueryPresent() || localStorage.getItem('las_optout_admin')==='1';
-if (isAdmin) showAdmin();
-
-btnAdmin?.addEventListener('click', ()=>{
-  const hidden = adminSec.classList.contains('hide');
-  adminSec.classList.toggle('hide');
-  btnAdmin.setAttribute('aria-expanded', String(hidden));
-});
-
-// Keyboard unlocks
-document.addEventListener('keydown', (e)=>{
-  if (e.altKey && e.key.toLowerCase() === 'a'){ showAdmin(); }
-});
-
-// Type "admin" anywhere
-let _admBuf = '';
-document.addEventListener('keypress', (e)=>{
-  _admBuf = (_admBuf + (e.key||'')).slice(-5);
-  if (_admBuf.toLowerCase()==='admin') showAdmin();
-});
-
-/* ANDI loader (admin only / when requested) */
-function loadANDI(){
-  if(window.ANDI){ try{ window.ANDI.init(); }catch(e){} return; }
-  const s=document.createElement('script');
-  s.src='andi/andi.js';
-  s.onload=()=>{ a11yBadge.style.display='inline-block'; try{ window.ANDI.init(); }catch(e){} };
-  s.onerror=()=>alert('Could not load ANDI. Check the andi/ folder path.');
-  document.body.appendChild(s);
-}
-btnANDI?.addEventListener('click', loadANDI);
-if (isAdmin) { a11yBadge.style.display='inline-block'; }
-
-/* First paint */
-renderAll();
-</script>
+    // Quick defaults
+    (function init(){
+      els.pensionablePay.value = '';
+      els.pensionRate.value = '9.8';
+      els.taxCode.value = '1257L M1';
+    })();
+  </script>
 </body>
 </html>
