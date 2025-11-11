@@ -1,54 +1,438 @@
 <!doctype html>
 <html lang="en-GB">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex,nofollow,noarchive" />
-    <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#023020" />
-    <title>LAS Contribution Rate Checker</title>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAS Contribution Rate Checker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23023020'/><text x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'>£</text></svg>">
+<style>
+:root{
+  --las:#023020; --las2:#036635; --ink:#222; --muted:#666; --line:#e6e8ec;
+  --ok:#1a7f37; --warn:#b54708; --bad:#b42318;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(135deg,#f5f7fa,#c3cfe2);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink)}
+.wrap{max-width:960px;margin:24px auto;padding:0 16px}
+.card{background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.08);overflow:hidden}
+header{background:linear-gradient(135deg,var(--las),var(--las2));color:#fff;padding:22px 24px}
+header h1{margin:0;font-size:20px}
+header p{margin:6px 0 0;font-size:14px;opacity:.9}
+.content{padding:20px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(12,1fr)}
+.col-6{grid-column:span 6}.col-12{grid-column:span 12}
+@media(max-width:760px){.col-6{grid-column:span 12}}
+label{display:block;font-weight:600;font-size:14px;margin:6px 0}
+input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+small{color:var(--muted)}
+.hr{height:1px;background:var(--line);margin:12px 0}
+.btn{background:#fff;border:2px solid var(--las);color:var(--las);padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+.btn:hover{background:var(--las);color:#fff}
+.result{border-left:4px solid var(--las);background:#fafbfc;padding:14px;border-radius:10px}
+.table{width:100%;border-collapse:collapse;margin-top:10px}
+.table th,.table td{border-bottom:1px solid var(--line);padding:8px;text-align:left;font-size:14px}
+.pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700}
+.ok{background:#e9f7ef;color:var(--ok);border:1px solid #b7e2c6}
+.warn{background:#fff4e5;color:var(--warn);border:1px solid #ffd29b}
+.bad{background:#feeceb;color:var(--bad);border:1px solid #fac5c2}
+.muted{color:var(--muted)}
+.note{background:#e8f4f0;border:1px solid #a3d4c7;color:#053b2d;border-radius:10px;padding:12px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" role="region" aria-label="LAS Contribution Rate Checker">
+    <header>
+      <h1>LAS Contribution Rate Checker</h1>
+      <p>Check the correct NHS Pension contribution rate and any arrears/refund across a period or in-year change.</p>
+    </header>
+    <div class="content">
+      <div class="grid">
+        <div class="col-6">
+          <label for="year">Scheme year</label>
+          <select id="year">
+            <!-- recent first -->
+            <option value="2025-26" selected>2025/26 (01 Apr 2025 – 31 Mar 2026)</option>
+            <option value="2024-25">2024/25 (01 Apr 2024 – 31 Mar 2025)</option>
+            <option value="2023-24">2023/24 (11-tier)</option>
+            <option value="2022-23">2022/23 (auto: 7-tier → 11-tier from 01 Oct 2022)</option>
+            <option value="2021-22">2021/22 (7-tier, WTE)</option>
+            <option value="2020-21">2020/21 (7-tier, WTE)</option>
+            <option value="2019-20">2019/20 (7-tier, WTE)</option>
+            <option value="2018-19">2018/19 (7-tier, WTE)</option>
+            <option value="2017-18">2017/18 (7-tier, WTE)</option>
+            <option value="2016-17">2016/17 (7-tier, WTE)</option>
+            <option value="2015-16">2015/16 (7-tier, WTE)</option>
+          </select>
+          <small id="basis" class="muted">Tiering basis varies by year; defaults below.</small>
+        </div>
 
-    <!-- Tiny boot styles so inputs remain readable even before main CSS loads -->
-    <style>
-      :root { color-scheme: light dark; }
-      html,body{margin:0;padding:0}
-      body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#0f1214;color:#EDEFF1}
-      @media (prefers-color-scheme: light){ body{background:#FAFAFA;color:#111} }
-      /* If old scaffold HTML is still on this page, hide it (safe-guard) */
-      .legacy-calculator,.old-calculator,.employment-group,.calc-notes{display:none!important}
-      /* Make any stray native fields legible pre-CSS */
-      select,input,textarea{background:transparent;color:inherit;border:1px solid currentColor}
-      #app{min-height:120px}
-      noscript{display:block;margin:16px auto;max-width:980px;padding:12px;border:2px solid #b00020;border-radius:10px;background:#fff3f3;color:#b00020}
-    </style>
+        <div class="col-6">
+          <label for="start">Period start date</label>
+          <input id="start" placeholder="dd/mm/yyyy or yyyy-mm-dd">
+          <small class="muted">New starters: the actual start date within the scheme year.</small>
+        </div>
 
-    <!-- Main stylesheet for the app -->
-    <link rel="stylesheet" href="./assets/styles.css?v=2025-10-20d" />
-  </head>
-  <body>
-    <!-- The JS app renders everything inside here -->
-    <div id="app"></div>
+        <div class="col-6">
+          <label for="end">Period end date</label>
+          <input id="end" placeholder="dd/mm/yyyy or yyyy-mm-dd">
+          <small class="muted">Defaults to 31 March of the selected year if blank.</small>
+        </div>
 
-    <noscript>This tool needs JavaScript enabled.</noscript>
+        <div class="col-6">
+          <label for="change">In-year pay/role change?</label>
+          <select id="change">
+            <option value="no" selected>No</option>
+            <option value="yes">Yes – split the period</option>
+          </select>
+        </div>
 
-    <!-- Calculator logic -->
-    <script src="./assets/app.js?v=2025-10-20d" defer></script>
+        <div class="col-6" id="changeRow" style="display:none">
+          <label for="changeDate">Change date (effective)</label>
+          <input id="changeDate" placeholder="dd/mm/yyyy or yyyy-mm-dd">
+          <small class="muted">We’ll split the period at this date.</small>
+        </div>
 
-    <!-- Lightweight sanity check: if app.js didn’t load, show a helpful message -->
-    <script>
-      window.addEventListener('DOMContentLoaded', function () {
-        setTimeout(function () {
-          if (!window.LAS_CRC_VERSION) {
-            document.getElementById('app').innerHTML =
-              '<div style="max-width:980px;margin:16px auto;padding:12px;border:2px solid #b00020;border-radius:10px;'+
-              'background:#fff3f3;color:#b00020">'+
-              '<strong>Problem:</strong> The calculator did not load. Check that '+
-              '<code>/contribution-rate-checker/assets/app.js</code> and '+
-              '<code>/contribution-rate-checker/assets/styles.css</code> exist and paths are correct.'+
-              '</div>';
-          }
-        }, 800);
-      });
-    </script>
-  </body>
+        <div class="col-12 hr"></div>
+
+        <div class="col-6">
+          <label for="annual1">Annual pensionable pay (segment 1)</label>
+          <input id="annual1" type="number" inputmode="decimal" placeholder="e.g., 47500">
+          <small id="basis1" class="muted"></small>
+        </div>
+        <div class="col-6">
+          <label for="actualRate1">Actual % deducted (segment 1, optional)</label>
+          <input id="actualRate1" type="number" inputmode="decimal" placeholder="e.g., 9.8">
+        </div>
+
+        <div class="col-6" id="seg2a" style="display:none">
+          <label for="annual2">Annual pensionable pay (segment 2)</label>
+          <input id="annual2" type="number" inputmode="decimal" placeholder="e.g., 50500">
+          <small id="basis2" class="muted"></small>
+        </div>
+        <div class="col-6" id="seg2b" style="display:none">
+          <label for="actualRate2">Actual % deducted (segment 2, optional)</label>
+          <input id="actualRate2" type="number" inputmode="decimal" placeholder="e.g., 10.7">
+        </div>
+
+        <div class="col-12">
+          <div class="note">
+            <strong>Reminders:</strong> Part-time additional hours up to WTE are pensionable; overtime above WTE is not. For 12 months after partial retirement, overtime beyond the agreed hours is non-pensionable. Bank/locum: where annualising isn’t possible, a default 6.5% applies from Apr 2024. Use pensionable earnings appropriate to the selected year.
+          </div>
+        </div>
+
+        <div class="col-12">
+          <button class="btn" id="calc" type="button" onclick="window.LAS_CALC_run && window.LAS_CALC_run()">Calculate</button>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <div id="out"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================
+   RATES (inline, no fetch)
+   ========================= */
+const RATES = {
+  // 7-tier (same thresholds 2015/16–2021/22), WTE basis
+  "2015-16": { basis:"WTE", table:"7", bands:[
+    {min:0, max:15431.99, rate:0.050},
+    {min:15432.00, max:21477.99, rate:0.056},
+    {min:21478.00, max:26823.99, rate:0.071},
+    {min:26824.00, max:47845.99, rate:0.093},
+    {min:47846.00, max:70630.99, rate:0.125},
+    {min:70631.00, max:111376.99, rate:0.135},
+    {min:111377.00, max:Infinity, rate:0.145}
+  ]},
+  "2016-17": null, "2017-18": null, "2018-19": null, "2019-20": null, "2020-21": null, "2021-22": null,
+  // 2022/23: auto boundary — before 01 Oct 2022: 7-tier; from 01 Oct: 11-tier
+  "2022-23": { basis:"ACTUAL", table:"MIXED_22_23", boundaries:["2022-10-01"] },
+  // 2023/24: 11-tier, actual basis
+  "2023-24": { basis:"ACTUAL", table:"11", bands:[
+    {min:0, max:13246.99, rate:0.051},
+    {min:13247.00, max:17673.99, rate:0.057},
+    {min:17674.00, max:24022.99, rate:0.061},
+    {min:24023.00, max:25146.99, rate:0.068},
+    {min:25147.00, max:29635.99, rate:0.077},
+    {min:29636.00, max:30638.99, rate:0.088},
+    {min:30639.00, max:45996.99, rate:0.098},
+    {min:45997.00, max:51708.99, rate:0.100},
+    {min:51709.00, max:58972.99, rate:0.116},
+    {min:58973.00, max:75632.99, rate:0.125},
+    {min:75633.00, max:Infinity, rate:0.135}
+  ]},
+  // 2024/25: 6-tier, actual basis
+  "2024-25": { basis:"ACTUAL", table:"6", bands:[
+    {min:0, max:13259.99, rate:0.052},
+    {min:13260.00, max:26831.99, rate:0.065},
+    {min:26832.00, max:32691.99, rate:0.083},
+    {min:32692.00, max:49078.99, rate:0.098},
+    {min:49079.00, max:62924.99, rate:0.107},
+    {min:62925.00, max:Infinity, rate:0.125}
+  ]},
+  // 2025/26: 6-tier (uplifted thresholds), actual basis
+  "2025-26": { basis:"ACTUAL", table:"6", bands:[
+    {min:0, max:13259.99, rate:0.052},
+    {min:13260.00, max:27797.99, rate:0.065},
+    {min:27798.00, max:33868.99, rate:0.083},
+    {min:33869.00, max:50845.99, rate:0.098},
+    {min:50846.00, max:65190.99, rate:0.107},
+    {min:65191.00, max:Infinity, rate:0.125}
+  ]}
+};
+// fill 2016–2021 with same 7-tier table
+["2016-17","2017-18","2018-19","2019-20","2020-21","2021-22"].forEach(y=>{
+  RATES[y] = { basis:"WTE", table:"7", bands: RATES["2015-16"].bands };
+});
+
+// The two base tables we reference for 2022/23 split:
+const TABLE7 = RATES["2015-16"].bands;
+const TABLE11_2324 = RATES["2023-24"].bands;
+
+/* =========================
+   Helpers
+   ========================= */
+// date parse: yyyy-mm-dd, dd/mm/yyyy, dd-mm-yyyy
+function parseDateFlexible(v){
+  if(!v) return null;
+  const s = String(v).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s+"T00:00:00");
+  let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) return new Date(m[3]+"-"+m[2]+"-"+m[1]+"T00:00:00");
+  m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (m) return new Date(m[3]+"-"+m[2]+"-"+m[1]+"T00:00:00");
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+function toYMD(d){ return d.toISOString().slice(0,10); }
+function toUK(d){ return d.toLocaleDateString("en-GB",{day:"2-digit",month:"2-digit",year:"numeric"}); }
+function daysBetween(a,b){ return Math.max(0, Math.round((b - a)/(24*3600*1000))+1); }
+function £(n){ return "£"+(Math.round(n*100)/100).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function pct(n){ return (Math.round(n*10)/10).toFixed(1)+"%"; }
+function yearBounds(key){
+  const [a,b] = key.split("-").map(x=>parseInt(x,10));
+  const y1 = a;
+  const y2 = b < 100 ? 2000+b : b;
+  return { start: new Date(y1+"-04-01T00:00:00"), end: new Date(y2+"-03-31T00:00:00") };
+}
+function basisOf(key){ return RATES[key].basis; }
+
+function findBand(bands, annual){
+  for (const band of bands){
+    if (annual >= band.min && annual <= band.max) return band;
+  }
+  return bands[bands.length-1];
+}
+
+function splitByBoundaries(start, end, boundaries){
+  // boundaries = array of ISO yyyy-mm-dd strings (cut points)
+  const cuts = (boundaries||[]).map(x=>new Date(x+"T00:00:00"))
+     .filter(d=>d>start && d<=end).sort((a,b)=>a-b);
+  const segs = [];
+  let curStart = start;
+  for (const cut of cuts){
+    const prevEnd = new Date(cut); prevEnd.setDate(prevEnd.getDate()-1);
+    if (prevEnd >= curStart) segs.push({start:curStart, end:prevEnd});
+    curStart = cut;
+  }
+  if (curStart <= end) segs.push({start:curStart, end:end});
+  return segs;
+}
+
+/* Decide which table applies on a specific date for 2022/23 */
+function tableForDate_22_23(d){
+  const boundary = new Date("2022-10-01T00:00:00");
+  return (d >= boundary) ? TABLE11_2324 : TABLE7;
+}
+
+/* Compute one segment (given table) */
+function computeWithBands(bands, annual, actualPct, start, end){
+  const d = daysBetween(start,end);
+  const f = d/365;
+  const segPay = annual * f;
+  const band = findBand(bands, annual);
+  const expected = segPay * band.rate;
+  const actual = (typeof actualPct==="number" && !isNaN(actualPct)) ? segPay * (actualPct/100) : null;
+  const diff = (actual==null) ? null : (actual - expected);
+  return {
+    start, end, days:d, segPay, rate:band.rate,
+    bandMin: band.min, bandMax: isFinite(band.max)?band.max:null,
+    expected, actual, diff
+  };
+}
+
+/* Build final list of segments (auto split by structure + optional change date) */
+function buildSegments(yearKey, s, e, changeDate, a1, r1, a2, r2){
+  // start from user-defined outer slices (either [s..e] or [s..c-1, c..e])
+  const outer = [];
+  if (changeDate){
+    const cMinus = new Date(changeDate); cMinus.setDate(cMinus.getDate()-1);
+    if (cMinus >= s) outer.push({start:s, end:cMinus, pay:a1, rate:r1, label:"1"});
+    outer.push({start:changeDate, end:e, pay:a2, rate:r2, label:"2"});
+  } else {
+    outer.push({start:s, end:e, pay:a1, rate:r1, label:"1"});
+  }
+
+  // auto structural splits (only for 2022/23)
+  const config = RATES[yearKey];
+  const autoBoundaries = (yearKey==="2022-23") ? ["2022-10-01"] : [];
+
+  const finalSegs = [];
+  for (const seg of outer){
+    const sub = splitByBoundaries(seg.start, seg.end, autoBoundaries);
+    for (const p of sub){
+      let bands;
+      if (yearKey==="2022-23"){
+        bands = tableForDate_22_23(p.start);
+      } else {
+        bands = RATES[yearKey].bands;
+      }
+      finalSegs.push( computeWithBands(bands, seg.pay, seg.rate, p.start, p.end) );
+    }
+  }
+  return finalSegs;
+}
+
+function render(segs){
+  const anyActual = segs.some(x=>x.actual!=null);
+  const totalExpected = segs.reduce((s,x)=>s+(x.expected||0),0);
+  const totalActual = anyActual ? segs.reduce((s,x)=>s+(x.actual||0),0) : null;
+  const totalDiff = anyActual ? (totalActual - totalExpected) : null;
+
+  let pill = '<span class="pill ok">Rates shown</span>';
+  if (anyActual){
+    if (Math.abs(totalDiff) < 0.01) pill = '<span class="pill ok">Correct – no arrears/refund</span>';
+    else if (totalDiff > 0)          pill = '<span class="pill bad">Overpayment – refund '+£(totalDiff)+'</span>';
+    else                             pill = '<span class="pill warn">Underpayment – arrears '+£(-totalDiff)+'</span>';
+  }
+
+  const rows = segs.map((s,i)=>`
+    <tr>
+      <td>Segment ${i+1}</td>
+      <td>${toUK(s.start)} → ${toUK(s.end)} (${s.days} days)</td>
+      <td>${£(s.segPay)}</td>
+      <td>${pct(s.rate*100)}</td>
+      <td>${s.bandMin===0 ? "£0" : £(s.bandMin)} – ${s.bandMax?£(s.bandMax):"£∞"}</td>
+      <td>${£(s.expected)}</td>
+      <td>${s.actual==null?"—":£(s.actual)}</td>
+      <td>${s.diff==null?"—":(s.diff>=0?"+":"")+£(s.diff)}</td>
+    </tr>
+  `).join("");
+
+  return `
+    <div class="result">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>Summary</strong>${pill}
+      </div>
+      <table class="table" aria-label="Calculation breakdown">
+        <thead><tr>
+          <th>Period</th><th>Dates</th><th>Pensionable pay</th><th>Correct rate</th>
+          <th>Tier band</th><th>Expected</th><th>Actual</th><th>Diff</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr>
+          <th colspan="5" style="text-align:right">Totals</th>
+          <th>${£(totalExpected)}</th>
+          <th>${totalActual==null?"—":£(totalActual)}</th>
+          <th>${totalDiff==null?"—":(totalDiff>=0?"+":"")+£(totalDiff)}</th>
+        </tr></tfoot>
+      </table>
+      <p class="muted" style="margin-top:8px">
+        Uses year-appropriate tiering basis (WTE for 2015–22; actual from 2023+). This is guidance; Payroll/ESR is authoritative.
+      </p>
+    </div>
+  `;
+}
+
+/* =========================
+   UI wiring
+   ========================= */
+(function(){
+  const yearSel = document.getElementById('year');
+  const startInp= document.getElementById('start');
+  const endInp  = document.getElementById('end');
+  const changeSel=document.getElementById('change');
+  const changeRow=document.getElementById('changeRow');
+  const changeDateInp=document.getElementById('changeDate');
+
+  const annual1=document.getElementById('annual1');
+  const actualRate1=document.getElementById('actualRate1');
+  const annual2=document.getElementById('annual2');
+  const actualRate2=document.getElementById('actualRate2');
+  const seg2a=document.getElementById('seg2a');
+  const seg2b=document.getElementById('seg2b');
+  const basis = document.getElementById('basis');
+  const basis1= document.getElementById('basis1');
+  const basis2= document.getElementById('basis2');
+  const out   = document.getElementById('out');
+
+  function setDefaults(){
+    const y = yearSel.value;
+    const b = basisOf(y);
+    basis.textContent = (b==="WTE")
+      ? "Tiering uses WTE pay (2015–22 rule)."
+      : (y==="2022-23"
+          ? "Tiering uses actual earnings; auto-splits 01 Oct 2022 (7-tier → 11-tier)."
+          : "Tiering uses actual annual pensionable earnings.");
+    basis1.textContent = basis.textContent;
+    basis2.textContent = basis.textContent;
+    const {start, end} = yearBounds(y);
+    if(!startInp.value) startInp.value = toUK(start);
+    if(!endInp.value)   endInp.value   = toUK(end);
+  }
+  setDefaults();
+
+  yearSel.addEventListener('change', ()=>{
+    startInp.value = ""; endInp.value = "";
+    setDefaults();
+  });
+
+  changeSel.addEventListener('change', ()=>{
+    const on = changeSel.value==='yes';
+    changeRow.style.display = on ? '' : 'none';
+    seg2a.style.display = on ? '' : 'none';
+    seg2b.style.display = on ? '' : 'none';
+  });
+
+  function run(){
+    try{
+      const y = yearSel.value;
+      const bounds = yearBounds(y);
+      let s = parseDateFlexible(startInp.value) || bounds.start;
+      let e = parseDateFlexible(endInp.value)   || bounds.end;
+      if (e < s){ const t=s; s=e; e=t; }
+
+      const hasChange = (changeSel.value==='yes');
+      let c = null, a2 = null, r2 = null;
+
+      if (hasChange){
+        c = parseDateFlexible(changeDateInp.value) || s;
+        if (c < s) c = s;
+        if (c > e) c = e;
+        a2 = parseFloat(annual2.value);
+        r2 = parseFloat(actualRate2.value);
+      }
+
+      const a1 = parseFloat(annual1.value);
+      const r1 = parseFloat(actualRate1.value);
+
+      const msgs=[];
+      if(!(a1>0)) msgs.push("Enter annual pensionable pay for segment 1.");
+      if(hasChange && !(a2>0)) msgs.push("Enter annual pensionable pay for segment 2.");
+      if(msgs.length){ out.innerHTML = '<div class="result"><span class="pill bad">Check inputs</span> '+msgs.join(" ")+'</div>'; return; }
+
+      const segs = buildSegments(y, s, e, hasChange?c:null, a1, isNaN(r1)?null:r1, a2, isNaN(r2)?null:r2);
+      out.innerHTML = render(segs);
+    }catch(err){
+      out.innerHTML = '<div class="result"><span class="pill bad">Error</span> '+(err && err.message ? err.message : 'Unexpected error')+'</div>';
+    }
+  }
+
+  document.getElementById('calc').addEventListener('click', run);
+  window.LAS_CALC_run = run; // fallback for environments that strip listeners
+})();
+</script>
+</body>
 </html>
