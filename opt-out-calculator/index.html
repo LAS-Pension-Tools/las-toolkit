@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>NHS Pension Opt-Out Calculator (England only)</title>
 <meta name="description" content="Monthly payslip illustration — stay in vs opt out. NI inferred from DOB.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23023020'/><text x='50' y='62' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>£</text></svg>'">
+<!-- NEW favicon (IO monogram) – different from the rate checker -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='0' y='0' width='100' height='100' rx='20' fill='%23023020'/><text x='32' y='65' font-family='Arial' font-size='50' font-weight='700' text-anchor='middle' fill='white'>I</text><text x='70' y='65' font-family='Arial' font-size='50' font-weight='700' text-anchor='middle' fill='white'>O</text></svg>">
 
 <style>
   :root{
@@ -16,7 +17,7 @@
     :root{ --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#2C343A; }
   }
   html.theme-light{ --bg:#FAFAFA; --panel:#fff; --text:#111; --muted:#4A5568; --border:#D6D9DC; }
-  html.theme-dark { --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#ffffff33; } /* lighter borders in dark */
+  html.theme-dark { --bg:#0f1214; --panel:#121618; --text:#EDEFF1; --muted:#C7CFD6; --border:#ffffff33; }
   html.theme-hc-large{ --bg:#fff; --panel:#fff; --text:#000; --muted:#000; --border:#000; --focus:#003a7a; --heading:900; --scale:1.12; }
 
   *{ box-sizing:border-box }
@@ -58,12 +59,11 @@
   .kpi{ border:2px solid var(--border); border-radius:12px; padding:12px }
   .note{ border:3px solid var(--border); border-left:10px solid var(--brand); border-radius:10px; padding:10px 12px; background:var(--panel) }
 
-  /* hide number spinners */
   input[type=number]::-webkit-outer-spin-button,
   input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
   input[type=number]{ -moz-appearance:textfield; appearance:textfield }
 
-  /* PRINT (Illustration-only @ 80%) */
+  /* PRINT: payslip + benefits only, at 80% */
   @page{size:A4;margin:12mm;}
   @media print{
     html.print-illustration .header,
@@ -71,7 +71,8 @@
     html.print-illustration #admin,
     html.print-illustration #disclaimer,
     html.print-illustration footer{display:none!important;}
-    html.print-illustration #payslipPanel{display:block!important;}
+    html.print-illustration #payslipPanel,
+    html.print-illustration #benefitsPanel{display:block!important;}
     html.print-illustration .wrap{transform:scale(.8);transform-origin:top left;width:calc(100%/.8);}
     html.print-illustration body{zoom:.8;}
   }
@@ -79,7 +80,7 @@
 </head>
 <body>
 <div class="wrap">
-  <header class="header">
+  <header class="header" id="top">
     <div>
       <h1>NHS Pension Opt-Out Calculator (England only)</h1>
       <p class="small" style="margin:0">Monthly payslip illustration — <b>stay in</b> vs <b>opt out</b>. NI inferred from <b>DOB</b>.</p>
@@ -97,18 +98,17 @@
       </div>
 
       <button id="btnPrintIllo" class="btn primary" type="button" aria-label="Print payslip illustration">Print illustration</button>
+      <button id="btnReset" class="btn" type="button">Reset</button>
       <button id="btnAdmin" class="btn hide" type="button" aria-expanded="false" aria-controls="admin">Admin</button>
-      <button id="btnANDI" class="btn hide" type="button" aria-describedby="andiNote">Run ANDI Accessibility Checker</button>
       <span id="a11yBadge" class="a11y-badge">Admin</span>
     </div>
-    <p id="andiNote" class="small hide" aria-hidden="true" style="margin:0.5rem 0 0">Launches the SSA accessibility tool (ANDI). No data sent externally.</p>
   </header>
 
   <!-- Disclaimer -->
   <section id="disclaimer" class="panel" aria-label="Disclaimer">
     <div class="note small">
       <b>Illustration, not payroll.</b> ESR uses YTD (cumulative) PAYE/NI, rounding and other deductions, so results will differ.
-      <span>For personalised information, check NHS Pensions or the <b>LAS Pensions Department</b>.</span>
+      <span>Enter <b>pensionable pay only</b> (no overtime). For personal queries, contact the <b>LAS Pensions Department</b>.</span>
     </div>
   </section>
 
@@ -116,16 +116,12 @@
   <section id="inputs" class="panel grid2" aria-label="Inputs">
     <div>
       <h2 style="margin-top:0; font-weight:var(--heading)">Pensionable pay (monthly)</h2>
-      <p class="small muted" style="margin-top:6px">
-  Enter <b>pensionable pay only</b> (e.g. Basic, HCAS, pensionable allowances). 
-  Do <b>not</b> include overtime or other non-pensionable items.
-</p>
 
       <div id="items" aria-live="polite"></div>
 
       <div class="actions" style="margin-top:8px">
         <button id="addItem" class="btn" type="button">+ Add item</button>
-        <button id="clearEntries" class="btn" type="button">Clear</button>
+        <button id="clearEntries" class="btn" type="button">Clear amounts</button>
       </div>
 
       <div class="space" style="border-top:2px solid var(--border); padding-top:10px; margin-top:10px">
@@ -143,8 +139,13 @@
         <label class="cs6"><span class="small">Tax code (optional)</span>
           <input id="taxCode" type="text" placeholder="1257L, BR, D0, D1, NT" value="" />
         </label>
+        <label class="cs6"><span class="small">Other taxable (non-pensionable) pay (optional)</span>
+          <input id="taxNiExtras" type="number" step="0.01" min="0" placeholder="e.g. £30 rest-break comp" />
+        </label>
       </div>
-      <p class="small muted" style="margin-top:8px">Assumes NHS “net pay arrangement”. If left blank, a standard code (e.g. 1257L) is assumed.</p>
+      <p class="small muted" style="margin-top:8px">
+        The box above only affects PAYE/NI to mirror ESR; it doesn’t change the opt-out difference.
+      </p>
     </div>
   </section>
 
@@ -170,8 +171,14 @@
           <div>
             <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
             <div class="space"><div>NHS Pension <span id="nhsRate">(0.0%)</span></div><div id="stayNhs">£0.00</div></div>
-            <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="stayTaxable">£0.00</span>)</span></div><div id="stayTax">£0.00</div></div>
-            <div class="space"><div>National Insurance</div><div id="stayNi">£0.00</div></div>
+            <div class="space">
+              <div>PAYE <span class="small muted">(Taxable pay used: <span id="stayTaxable">£0.00</span><span id="noteExtrasStay" class="small muted"></span>)</span></div>
+              <div id="stayTax">£0.00</div>
+            </div>
+            <div class="space">
+              <div>National Insurance <span id="noteNiStay" class="small muted"></span></div>
+              <div id="stayNi">£0.00</div>
+            </div>
             <div class="space tot"><div>Total deductions</div><div id="stayTotalDeds">£0.00</div></div>
           </div>
         </div>
@@ -189,8 +196,14 @@
           <div>
             <div class="muted" style="font-weight:700; margin-bottom:4px">Deductions</div>
             <div class="space"><div>NHS Pension</div><div>£0.00</div></div>
-            <div class="space"><div>PAYE <span class="small muted">(Taxable pay used: <span id="outTaxable">£0.00</span>)</span></div><div id="outTax">£0.00</div></div>
-            <div class="space"><div>National Insurance</div><div id="outNi">£0.00</div></div>
+            <div class="space">
+              <div>PAYE <span class="small muted">(Taxable pay used: <span id="outTaxable">£0.00</span><span id="noteExtrasOut" class="small muted"></span>)</span></div>
+              <div id="outTax">£0.00</div>
+            </div>
+            <div class="space">
+              <div>National Insurance <span id="noteNiOut" class="small muted"></span></div>
+              <div id="outNi">£0.00</div>
+            </div>
             <div class="space tot"><div>Total deductions</div><div id="outTotalDeds">£0.00</div></div>
           </div>
         </div>
@@ -212,34 +225,24 @@
         <div id="employerPension" style="font-size:18px; font-weight:800">≈ £0.00/yr</div>
         <div class="small muted">Not deducted from pay but foregone if you opt out.</div>
       </div>
-
-      <div class="panel">
-        <h3 style="margin:0 0 6px 0">Benefits you will be giving up by opting out of the 2015 NHS Pension Scheme (CARE 1/54th)</h3>
-        <ul class="small" style="margin:0 0 0 18px">
-          <li>Based on your current pensionable earnings, you would give up an <b>annual pension accrual</b> of around <b><span id="accrual54">£0.00/yr</span></b> for life after retirement.</li>
-          <li>To illustrate the value of the NHS pension you would be giving up, buying similar benefits on the “open market” might cost around <b>£10,100</b> for each year you give up accruing benefits.</li>
-          <li>An annual pension payable for life after retirement.</li>
-          <li>Tax-free cash lump sum on retirement for those with 1995 Section membership (optional for other 2015 members).</li>
-          <li>Death-in-service life assurance lump sum to nominated people or an organisation.</li>
-          <li>Pension benefits payable to dependants, including children.</li>
-          <li>Ill-health retirement benefits.</li>
-          <li>Tax relief on pension contributions.</li>
-        </ul>
-        <p class="small" style="margin:8px 0 0">See the NHS Pension Scheme Guide at <a href="https://www.nhsbsa.nhs.uk/nhs-pensions" target="_blank" rel="noopener">nhsbsa.nhs.uk/nhs-pensions</a>.</p>
-        <p class="small muted" style="margin-top:4px">This is an illustration and excludes revaluation, survivor benefit calculations, early/late retirement factors and personal tax circumstances.</p>
-      </div>
-
-      <div class="panel small">
-        <b>Notes:</b>
-        <ul style="margin:8px 0 0 18px">
-          <li>Allowed tax codes: L, K, BR, D0, D1, NT and 0T.</li>
-          <li>Personal Allowance taper applied above £100,000 annual income (where relevant).</li>
-          <li>People born before 6 April 1948 who may receive a higher Personal Allowance are not modelled.</li>
-          <li>This compares scheme contributions vs opting out allowing for Income Tax and NI only.</li>
-          <li>Annual/Lifetime Allowance tax charges (if any) are not considered.</li>
-        </ul>
-      </div>
     </div>
+  </section>
+
+  <!-- Benefits -->
+  <section id="benefitsPanel" class="panel" aria-label="Benefits given up if you opt out">
+    <h3 style="margin:0 0 6px 0">Benefits you will be giving up by opting out of the 2015 NHS Pension Scheme (CARE 1/54th)</h3>
+    <ul class="small" style="margin:0 0 0 18px">
+      <li>Based on your current pensionable earnings, you would give up an <b>annual pension accrual</b> of around <b><span id="accrual54">£0.00/yr</span></b> for life after retirement.</li>
+      <li>To illustrate the value of the NHS pension you would be giving up, buying similar benefits on the “open market” might cost around <b>£10,100</b> for each year you give up accruing benefits.</li>
+      <li>An annual pension payable for life after retirement.</li>
+      <li>Tax-free cash lump sum on retirement for those with 1995 Section membership (optional for other 2015 members).</li>
+      <li>Death-in-service life assurance lump sum to nominated people or an organisation.</li>
+      <li>Pension benefits payable to dependants, including children.</li>
+      <li>Ill-health retirement benefits.</li>
+      <li>Tax relief on pension contributions.</li>
+    </ul>
+    <p class="small" style="margin:8px 0 0">See the NHS Pension Scheme Guide at <a href="https://www.nhsbsa.nhs.uk/nhs-pensions" target="_blank" rel="noopener">nhsbsa.nhs.uk/nhs-pensions</a>.</p>
+    <p class="small muted" style="margin-top:4px">This is an illustration and excludes revaluation, survivor benefit calculations, early/late retirement factors and personal tax circumstances.</p>
   </section>
 
   <!-- Admin -->
@@ -281,6 +284,7 @@ const defaultRates = {
       additionalRateThreshold: 125140,
       bands: { ENG_NI: [ {upper:37700,rate:.20},{upper:125140,rate:.40},{upper:null,rate:.45} ] }
     },
+    // HMRC 2025/26 NI monthly values
     ni: { monthly: { LEL: 542, PT: 1048, UEL: 4189 }, employeeRates: { main: .08, upper: .02 } },
     nhs: {
       tiers: [
@@ -306,20 +310,25 @@ function saveRates(r){ localStorage.setItem('las_optout_rates_v1', JSON.stringif
 
 function parseTaxCode(code){
   const c=(code||'').toUpperCase().trim();
-  if(!c) return {mode:'STANDARD', allowance:12570};
-  if(['BR','D0','D1','NT','0T'].includes(c)) return {mode:c};
+  if(!c) return {mode:'STANDARD', allowance:12570, code:''};
+  if(['BR','D0','D1','NT','0T','OT'].includes(c)) return {mode:c, code:c};
   const m=c.match(/(\d{3,4})[A-Z]*/);
-  if(m) return {mode:'STANDARD', allowance:parseInt(m[1],10)*10};
-  return {mode:'STANDARD', allowance:12570};
+  if(m) return {mode:'STANDARD', allowance:parseInt(m[1],10)*10, code:c};
+  return {mode:'STANDARD', allowance:12570, code:c};
 }
 function ageOnDate(dob,on){ if(!dob) return null; const b=new Date(dob); if(isNaN(b)) return null; let a=on.getFullYear()-b.getFullYear(); const m=on.getMonth()-b.getMonth(); if(m<0||(m===0&&on.getDate()<b.getDate())) a--; return a; }
 function nhsRateFor(annual,nhs){ const t=nhs.tiers.find(x=>annual>=x.min && (x.max===null||annual<=x.max)); return t?t.rate:0; }
-function calcNI(mGross,ncfg,overSPA){
-  if(overSPA) return 0; const {PT,UEL}=ncfg.monthly;
-  if(mGross<=PT) return 0;
-  const between=Math.max(0,Math.min(mGross,UEL)-PT);
-  const above=Math.max(0,mGross-UEL);
-  return +(between*ncfg.employeeRates.main + above*ncfg.employeeRates.upper).toFixed(2);
+
+/* NI on NI-able pay (pensionable + extras). HMRC rounds: whole pounds first, then calc. */
+function calcNI(niableGross,ncfg,overSPA){
+  if(overSPA) return 0;
+  const earnings = Math.floor(niableGross);      // whole-pound rule
+  const {PT,UEL}=ncfg.monthly;
+  if(earnings<=PT) return 0;
+  const between=Math.max(0,Math.min(earnings,UEL)-PT);
+  const above=Math.max(0,earnings-UEL);
+  const ni = between*ncfg.employeeRates.main + above*ncfg.employeeRates.upper;
+  return +ni.toFixed(2);
 }
 
 /* HMRC-style PAYE: annualise -> band tax -> /12 -> round */
@@ -333,7 +342,7 @@ function calcPAYE_annualised(monthlyTaxable, annualNetForTaper, tcfg, parsed){
   if (parsed.mode === 'BR') return +(monthlyTaxable * 0.20).toFixed(2);
   if (parsed.mode === 'D0') return +(monthlyTaxable * 0.40).toFixed(2);
   if (parsed.mode === 'D1') return +(monthlyTaxable * 0.45).toFixed(2);
-  if (parsed.mode === '0T'){ // 0T: no allowance
+  if (parsed.mode === '0T' || parsed.mode==='OT'){ // no allowance
     const annualTax = bandTax(monthlyTaxable*12, 0, tcfg.bands.ENG_NI);
     return +(annualTax/12).toFixed(2);
   }
@@ -377,6 +386,8 @@ const btnAdd=document.getElementById('addItem');
 const btnClearVals=document.getElementById('clearEntries');
 const elDob=document.getElementById('dob');
 const elTax=document.getElementById('taxCode');
+const elExtras=document.getElementById('taxNiExtras');
+const btnReset=document.getElementById('btnReset');
 
 let idSeq=0;
 
@@ -423,8 +434,22 @@ function rebuildItems(){ elItems.innerHTML=''; state.items.forEach(it=>elItems.a
 function addItem(label='Other'){ const it={id:'it-'+(idSeq++), label, useRate:false, rate:null, hours:null, amount:null}; state.items.push(it); elItems.appendChild(itemRow(it)); renderAll(); }
 function clearEntries(){ state.items.forEach(it=>{ it.rate=null; it.hours=null; it.amount=null; }); rebuildItems(); renderAll(); }
 
+/* Reset: keep theme/admin, restore default rows */
+function resetAll(){
+  state.items = [];
+  idSeq = 0;
+  addItem('Basic');
+  addItem('HCA');
+  elDob.value = '';
+  elTax.value = '';
+  elExtras.value = '';
+  renderAll();
+}
+
 btnAdd.addEventListener('click',()=>addItem('Other'));
 btnClearVals.addEventListener('click',clearEntries);
+btnReset.addEventListener('click', resetAll);
+elExtras.addEventListener('input', renderAll);
 
 // initial rows once
 addItem('Basic'); addItem('HCA');
@@ -434,6 +459,7 @@ function renderAll(){
   const monthlyGross=state.items.reduce((s,it)=> it.useRate ? s+((+it.rate||0)*(+it.hours||0)) : s+(+it.amount||0), 0);
   document.getElementById('totalPay').textContent=fmt(monthlyGross);
 
+  const extras = +elExtras.value || 0; // taxable/NI-able, non-pensionable
   const annualGross=monthlyGross*12;
   const nhsRate=nhsRateFor(annualGross,state.year.nhs);
   document.getElementById('nhsRate').textContent='('+pct(nhsRate)+')';
@@ -443,13 +469,15 @@ function renderAll(){
   const overSPA=(ageOnDate(elDob.value,monthEnd)??0)>=66;
 
   const parsed=parseTaxCode(elTax.value);
-  const aniStay=Math.max(0,annualGross-annualGross*nhsRate);
-  const taxableStay=Math.max(0,monthlyGross-monthlyNhs);
+  const aniStay=Math.max(0,(annualGross-annualGross*nhsRate) + (extras*12)); // taper uses annual taxable
+  const taxableStay=Math.max(0,(monthlyGross-monthlyNhs) + extras);          // PAYE used line (stay-in)
+  const taxableOut =Math.max(0, monthlyGross + extras);                       // PAYE used line (opt-out)
 
   const taxStay=calcPAYE_annualised(taxableStay, aniStay, state.year.tax, parsed);
-  const taxOut =calcPAYE_annualised(monthlyGross, annualGross, state.year.tax, parsed);
-  const niStay=calcNI(monthlyGross,state.year.ni,overSPA);
-  const niOut =calcNI(monthlyGross,state.year.ni,overSPA);
+  const taxOut =calcPAYE_annualised(taxableOut,  annualGross + (extras*12), state.year.tax, parsed);
+  const niable = monthlyGross + extras;
+  const niStay=calcNI(niable,state.year.ni,overSPA);
+  const niOut =calcNI(niable,state.year.ni,overSPA);
 
   const netStay=monthlyGross-monthlyNhs-taxStay-niStay;
   const netOut =monthlyGross-taxOut-niOut;
@@ -481,7 +509,7 @@ function renderAll(){
   document.getElementById('outNi').textContent =fmt(niOut);
   document.getElementById('outTotalDeds').textContent=fmt(taxOut+niOut);
   document.getElementById('outNet').textContent=fmt(netOut);
-  document.getElementById('outTaxable').textContent=fmt(monthlyGross);
+  document.getElementById('outTaxable').textContent=fmt(taxableOut);
 
   const elDelta=document.getElementById('delta'); elDelta.textContent=fmt(delta); elDelta.className='text-'+(delta>=0?'green':'red');
   document.getElementById('netAnnual').textContent=fmt(netStay*12)+' / '+fmt(netOut*12);
@@ -492,16 +520,21 @@ function renderAll(){
   const accrual=annualGross/54;
   document.getElementById('accrual54').textContent=fmt(accrual)+'/yr';
 
+  // Notes
+  const extrasNote = extras>0 ? ` + £${extras.toFixed(2)} other taxable` : '';
+  document.getElementById('noteExtrasStay').textContent = extrasNote;
+  document.getElementById('noteExtrasOut').textContent  = extrasNote;
+  document.getElementById('noteNiStay').textContent = overSPA ? ' (over State Pension age: NI not due)' : '';
+  document.getElementById('noteNiOut').textContent  = overSPA ? ' (over State Pension age: NI not due)' : '';
+
   refreshAdminText();
 }
 elDob.addEventListener('input',renderAll);
 elTax.addEventListener('input',renderAll);
 
-/* ---------- Admin / ANDI / Print ---------- */
+/* ---------- Admin / Print ---------- */
 const adminSec=document.getElementById('admin');
 const btnAdmin=document.getElementById('btnAdmin');
-const btnANDI=document.getElementById('btnANDI');
-const andiNote=document.getElementById('andiNote');
 const a11yBadge=document.getElementById('a11yBadge');
 const btnPrintIllo=document.getElementById('btnPrintIllo');
 
@@ -519,13 +552,10 @@ function disablePrintFlags(){ document.documentElement.classList.remove('print-i
 window.addEventListener('afterprint', disablePrintFlags);
 btnPrintIllo.addEventListener('click',()=>{ enablePrintFlags(); setTimeout(()=>window.print(),50); setTimeout(disablePrintFlags, 2000); });
 
-/* --- ADMIN UNLOCK: robust & persistent --- */
+/* --- ADMIN UNLOCK (unchanged) --- */
 function showAdmin(){
   a11yBadge.style.display='inline-block';
   btnAdmin?.classList.remove('hide');
-  btnANDI?.classList.remove('hide');
-  andiNote?.classList.remove('hide');
-  andiNote?.setAttribute('aria-hidden','false');
   adminSec?.classList.remove('hide');
   btnAdmin?.setAttribute('aria-expanded','true');
   localStorage.setItem('las_optout_admin','1');
@@ -552,18 +582,6 @@ document.addEventListener('keypress', (e)=>{
   _admBuf = (_admBuf + (e.key||'')).slice(-5);
   if (_admBuf.toLowerCase()==='admin') showAdmin();
 });
-
-/* ANDI loader (admin only / when requested) */
-function loadANDI(){
-  if(window.ANDI){ try{ window.ANDI.init(); }catch(e){} return; }
-  const s=document.createElement('script');
-  s.src='andi/andi.js';
-  s.onload=()=>{ a11yBadge.style.display='inline-block'; try{ window.ANDI.init(); }catch(e){} };
-  s.onerror=()=>alert('Could not load ANDI. Check the andi/ folder path.');
-  document.body.appendChild(s);
-}
-btnANDI?.addEventListener('click', loadANDI);
-if (isAdmin) { a11yBadge.style.display='inline-block'; }
 
 /* First paint */
 renderAll();
