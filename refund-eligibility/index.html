@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>NHS Refund Eligibility Tool</title>
+
+  <!-- Favicon -->
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23023020'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3E%C2%A3%3C/text%3E%3C/svg%3E"
+  />
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      max-width: 650px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #023020 0%, #036635 100%);
+      color: #fff;
+      padding: 30px;
+      text-align: center;
+    }
+    .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+    .header p { opacity: 0.9; font-size: 14px; }
+
+    .progress-bar { height: 4px; background: #e0e0e0; position: relative; overflow: hidden; }
+    .progress-fill { height: 100%; background: #023020; width: 0; transition: width 0.3s ease; }
+
+    .content { padding: 30px; min-height: 300px; }
+    .step { display: none; animation: fadeIn 0.3s ease; }
+    .step.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+
+    .question { margin-bottom: 25px; }
+    .question h2 { color: #023020; font-size: 20px; margin-bottom: 10px; }
+    .question p { color: #666; font-size: 15px; }
+
+    .button-group { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+    button {
+      background: #fff;
+      color: #023020;
+      border: 2px solid #023020;
+      padding: 15px 25px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      position: relative;
+    }
+    button:hover, button:focus { background: #023020; color: #fff; transform: translateX(5px); }
+    button:focus { outline: 3px solid #036635; outline-offset: 2px; }
+    button[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+    .result { background: #f8f9fa; border-left: 4px solid #023020; padding: 20px; border-radius: 8px; margin-top: 20px; }
+    .result h3 { color: #023020; margin-bottom: 10px; font-size: 18px; }
+    .result p { color: #333; margin-bottom: 10px; }
+    .result ul { margin-left: 20px; color: #555; }
+    .result ul li { margin-bottom: 8px; }
+
+    .navigation { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; }
+    .nav-button { background: transparent; color: #023020; border: 1px solid #ddd; padding: 10px 20px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .nav-button:hover { background: #f8f9fa; transform: none; }
+
+    .breadcrumbs { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 14px; color: #666; flex-wrap: wrap; }
+    .breadcrumb { display: flex; align-items: center; gap: 8px; }
+    .breadcrumb.active { color: #023020; font-weight: 600; }
+    .arrow { font-size: 18px; }
+
+    .info-box { background: #e8f4f0; border: 1px solid #a3d4c7; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 14px; }
+    .info-box strong { color: #023020; }
+
+    @media (max-width: 480px) {
+      .header h1 { font-size: 20px; }
+      .content { padding: 20px; }
+      button { padding: 12px 20px; font-size: 15px; }
+    }
+
+    a { color: #023020; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container" role="application" aria-label="NHS Refund Eligibility Tool">
+    <div class="header">
+      <h1>LAS Pensions Hub - Decision Tool</h1>
+      <p>NHS Pension Scheme guidance tool</p>
+    </div>
+
+    <div class="progress-bar" aria-hidden="true">
+      <div class="progress-fill" id="progressBar"></div>
+    </div>
+
+    <div class="content">
+      <div id="breadcrumbs" class="breadcrumbs" aria-label="Progress through questionnaire"></div>
+
+      <!-- Step 1: Initial Choice -->
+      <div class="step active" data-step="1" aria-live="polite">
+        <div class="question">
+          <h2>What would you like to know about?</h2>
+          <p>Select the option that best describes your situation</p>
+        </div>
+        <div class="button-group" role="group" aria-label="Initial options">
+          <button onclick="app.handleChoice('opt-out')" aria-describedby="opt-out-desc">
+            <strong>Opting Out</strong>
+            <div id="opt-out-desc" style="font-size: 14px; color: #666; font-weight: normal;">Learn about leaving the pension scheme</div>
+          </button>
+
+          <button onclick="app.handleChoice('refund')" aria-describedby="refund-desc">
+            <strong>Getting a Refund</strong>
+            <div id="refund-desc" style="font-size: 14px; color: #666; font-weight: normal;">Check if you're eligible for contribution refunds</div>
+          </button>
+
+          <button onclick="app.handleChoice('info')" aria-describedby="info-desc">
+            <strong>General Information</strong>
+            <div id="info-desc" style="font-size: 14px; color: #666; font-weight: normal;">View key forms and contact details</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Opt Out Result -->
+      <div class="step" data-step="2">
+        <div class="result">
+          <h3>✓ Opting Out of the NHS Pension Scheme</h3>
+          <p><strong>Yes, you can opt out at any time.</strong></p>
+          <p>To opt out, you need to:</p>
+          <ul>
+            <li>Complete Form SD502 (Application to Leave the NHS Pension Scheme)</li>
+            <li><strong>Print and sign the original form (wet signature required)</strong></li>
+            <li>Submit to LAS Pensions Department: 220 Waterloo Road, London SE1 8SD</li>
+            <li>LAS will process your opt-out via ESR</li>
+            <li>Keep a photocopy for your records</li>
+          </ul>
+          <div class="info-box">
+            <strong>Important:</strong> Opting out means you'll lose valuable benefits including employer contributions, life assurance, and ill-health retirement cover. The scheme may be more affordable than you think due to tax relief. Consider seeking independent financial advice before making this decision. See the
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/leaving-the-scheme--1" target="_blank" style="color: #023020; font-weight: bold;">Leaving the NHS Pension Scheme</a>
+            page on the LAS Pensions Hub for more information.
+          </div>
+          <p style="margin-top: 20px;">Would you also like to check if you're eligible for a refund?</p>
+          <div class="button-group">
+            <button onclick="app.checkRefundAfterOptOut()">Check Refund Eligibility</button>
+          </div>
+          <p style="margin-top: 15px; font-size: 14px; color: #666;">
+            <strong>Note:</strong> SD502 (opt-out) and RF12 (refund) are separate although linked processes. If eligible for a refund (less than 2 years membership), you can submit Form RF12 at the same time as your SD502 form, but not before. Both forms go to LAS Pensions Department. Only apply for a refund if you don't plan to opt back in within a year.
+          </p>
+        </div>
+      </div>
+
+      <!-- Step 3: Refund - Check Opt Out -->
+      <div class="step" data-step="3">
+        <div class="question">
+          <h2>Have you already opted out?</h2>
+          <p>You must submit Form SD502 to opt out. You can submit Form RF12 (refund application) at the same time as SD502, but not before</p>
+        </div>
+        <div class="button-group">
+          <button onclick="app.handleOptOutStatus(true)">Yes, I've submitted/am submitting SD502</button>
+          <button onclick="app.handleOptOutStatus(false)">No, I haven't opted out yet</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Must Opt Out First -->
+      <div class="step" data-step="4">
+        <div class="result">
+          <h3>⚠️ Action Required</h3>
+          <p><strong>You must opt out first before applying for a refund.</strong></p>
+          <p>Steps to take:</p>
+          <ul>
+            <li>Complete Form SD502 to opt out of the scheme</li>
+            <li><strong>Print and sign with wet signature (originals only accepted)</strong></li>
+            <li>Submit original hard copy to LAS Pensions Department</li>
+            <li>LAS will process your opt-out via ESR</li>
+            <li>If you want a refund and won't opt back in within a year, you can submit Form RF12 at the same time as SD502, but not before</li>
+          </ul>
+          <div class="info-box">
+            <strong>Note:</strong> Your opt-out will take effect from the 1st of the month following receipt of your SD502 form. SD502 and RF12 are separate although linked processes. We cannot accept photocopies, scans, or digital signatures. See the
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/leaving-the-scheme--1" target="_blank" style="color: #023020; font-weight: bold;">LAS Pensions Hub</a>
+            for full instructions.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Check Membership Duration -->
+      <div class="step" data-step="5">
+        <div class="question">
+          <h2>How long have you been a scheme member?</h2>
+          <p>Include all periods of qualifying NHS Pension Scheme membership, including any prior Trust employment. You must have <strong>less than 2 years</strong> of qualifying membership to be eligible for a refund.</p>
+        </div>
+        <div class="button-group">
+          <button onclick="app.handleMembershipDuration('less-than-2')">Less than 2 years total</button>
+          <button onclick="app.handleMembershipDuration('almost-2')">Almost 2 years (will be 2 years next month)</button>
+          <button onclick="app.handleMembershipDuration('more-than-2')">More than 2 years total</button>
+        </div>
+      </div>
+
+      <!-- Step 6: Eligible for Refund -->
+      <div class="step" data-step="6">
+        <div class="result">
+          <h3>✓ You May Be Eligible for a Refund</h3>
+          <p><strong>Based on your membership duration, you can apply for a refund.</strong></p>
+          <p>Next steps:</p>
+          <ul>
+            <li>Complete Form RF12 (Application for Refund of Pension Contributions)</li>
+            <li><strong>Must be original with wet signature - no photocopies accepted</strong></li>
+            <li>Submit to: LAS Pensions Department, 220 Waterloo Road, London SE1 8SD</li>
+            <li>Can be submitted at the same time as SD502 (but not before)</li>
+            <li>LAS will submit your RF12 application online to NHS Pensions</li>
+            <li>NHS Pensions will write to you directly with their decision</li>
+            <li>If approved, payment will be made directly to your bank account</li>
+          </ul>
+          <div class="info-box">
+            <strong>Important:</strong> Only apply for a refund if you don't plan to opt back into the scheme within a year. Refunds are subject to tax and National Insurance deductions. Refunds are only available if you haven't transferred your pension benefits to another scheme. See the
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/refunds-of-nhs-pension-contributions--4" target="_blank" style="color: #023020; font-weight: bold;">LAS Pensions Hub</a>
+            for full instructions.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7: Urgent Deadline -->
+      <div class="step" data-step="7">
+        <div class="result">
+          <h3>⏰ Urgent Action Required</h3>
+          <p><strong>You may be eligible, but you must act quickly!</strong></p>
+          <p>Critical deadline:</p>
+          <ul>
+            <li>Complete Form SD502 (opt-out) immediately</li>
+            <li>If you want a refund and won't be opting back in within a year, also complete Form RF12</li>
+            <li><strong>Must be originals with wet signatures - no photocopies or emails accepted</strong></li>
+            <li>Print and post them TODAY or TOMORROW to LAS Pensions Department</li>
+            <li><strong>Forms MUST reach LAS before you reach 2 years membership</strong></li>
+            <li>RF12 cannot be processed before SD502</li>
+            <li>LAS will submit RF12 online to NHS Pensions who make the final refund decision</li>
+            <li>NHS Pensions will write to you directly with their decision</li>
+          </ul>
+          <div class="info-box" style="background: #fee; border-color: #fcc;">
+            <strong>Warning:</strong> If your form arrives after you reach 2 years of membership, your refund will be automatically rejected. There are no exceptions to this rule. Forms cannot be submitted by email. Only apply for a refund if you don't plan to opt back in within a year. See the
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/refunds-of-nhs-pension-contributions--4" target="_blank" style="color: #c00; font-weight: bold;">LAS Pensions Hub</a>
+            for full instructions.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 8: Not Eligible -->
+      <div class="step" data-step="8">
+        <div class="result">
+          <h3>✗ Not Eligible for Refund</h3>
+          <p><strong>Members with more than 2 years of service cannot receive refunds.</strong></p>
+          <p>Your options:</p>
+          <ul>
+            <li><strong>Deferred benefits:</strong> Your pension will be preserved and payable at retirement age</li>
+            <li>Transfer to another registered pension scheme</li>
+            <li>NHS Pensions will write to you once LAS confirms your opt-out status</li>
+          </ul>
+          <div class="info-box">
+            <strong>Recommendation:</strong> Contact the LAS Pensions Department at
+            <a href="tel:02032674866" style="color: #023020;">020 3267 4866</a> or
+            <a href="mailto:londamb.Pensions@nhs.net" style="color: #023020;">londamb.Pensions@nhs.net</a>
+            to discuss your options, or seek independent financial advice. See the LAS Pensions Hub for more information about deferred benefits.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 9: General Information -->
+      <div class="step" data-step="9">
+        <div class="result">
+          <h3>📋 Key Information & Resources</h3>
+          <p><strong>Essential Forms:</strong></p>
+          <ul>
+            <li><strong>SD502:</strong> Application to Leave the NHS Pension Scheme (Opt-out)
+              <ul style="font-size: 14px; margin-top: 5px;">
+                <li>Submit to LAS Pensions Department</li>
+                <li>LAS processes your opt-out via ESR</li>
+                <li>Separate process from refund application</li>
+              </ul>
+            </li>
+            <li><strong>RF12:</strong> Application for Refund of Pension Contributions
+              <ul style="font-size: 14px; margin-top: 5px;">
+                <li>Submit to LAS Pensions Department</li>
+                <li>Can be submitted with SD502, but not before</li>
+                <li>LAS submits online to NHS Pensions</li>
+                <li>NHS Pensions makes final decision and contacts you directly</li>
+              </ul>
+            </li>
+          </ul>
+          <p><strong>Where to Send Forms:</strong></p>
+          <div class="info-box">
+            <strong>ALL forms go to LAS Pensions Department:</strong><br /><br />
+            London Ambulance Service NHS Trust<br />
+            220 Waterloo Road<br />
+            London SE1 8SD<br /><br />
+            <strong>SD502 (Opt-out):</strong> LAS processes via ESR<br />
+            <strong>RF12 (Refund):</strong> Can be sent with SD502 (but not before). LAS submits RF12 online to NHS Pensions<br /><br />
+            <strong>⚠️ Forms NOT accepted by email - original hard copies with wet signatures only</strong>
+          </div>
+          <p><strong>Contact Details:</strong></p>
+          <ul>
+            <li><strong>LAS Pensions Department:</strong>
+              <ul>
+                <li>Tel: <a href="tel:02032674866" style="color: #023020;">020 3267 4866</a></li>
+                <li>Email: <a href="mailto:londamb.Pensions@nhs.net" style="color: #023020;">londamb.Pensions@nhs.net</a></li>
+                <li>Can discuss your pension options and process questions</li>
+              </ul>
+            </li>
+            <li><strong>NHS Pensions (NHSBSA):</strong>
+              <ul>
+                <li>Tel: <a href="tel:03003301346" style="color: #023020;">0300 330 1346</a></li>
+                <li>Email: <a href="mailto:nhsbsa.pensionsmember@nhsbsa.nhs.uk" style="color: #023020;">nhsbsa.pensionsmember@nhsbsa.nhs.uk</a></li>
+                <li>Hours: Monday–Friday, 8am–6pm</li>
+                <li>General scheme information only</li>
+              </ul>
+            </li>
+            <li><strong>For personalised financial advice:</strong> Consider seeking independent financial advice</li>
+          </ul>
+          <div class="info-box">
+            <strong>Before submitting forms:</strong> Ensure your current address is updated via Employee Self-Service to avoid delays. For help updating details, contact: <a href="mailto:londamb.MYESR@nhs.net" style="color: #023020;">londamb.MYESR@nhs.net</a><br /><br />
+            <strong>For detailed instructions:</strong> Please see the relevant pages on the LAS Pensions Hub intranet:
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/leaving-the-scheme--1" target="_blank" style="color: #023020; font-weight: bold;">Leaving the NHS Pension Scheme</a>
+            and
+            <a href="https://londonambulanceservice.workvivo.com/spaces/61463/pages/refunds-of-nhs-pension-contributions--4" target="_blank" style="color: #023020; font-weight: bold;">Refunds of NHS Pension Contributions</a>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="navigation" id="navigation">
+        <button class="nav-button" onclick="app.goBack()" id="backButton"><span class="arrow">←</span> Back</button>
+        <button class="nav-button" onclick="app.reset()">Start Over</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const app = {
+      currentStep: 1,
+      history: [],
+      steps: {
+        1: { title: 'Start', progress: 0 },
+        2: { title: 'Opt Out Info', progress: 100 },
+        3: { title: 'Refund Check', progress: 33 },
+        4: { title: 'Must Opt Out', progress: 100 },
+        5: { title: 'Membership Duration', progress: 66 },
+        6: { title: 'Eligible', progress: 100 },
+        7: { title: 'Urgent', progress: 100 },
+        8: { title: 'Not Eligible', progress: 100 },
+        9: { title: 'Information', progress: 100 }
+      },
+
+      init() {
+        this.updateBreadcrumbs();
+        this.updateProgressBar();
+        this.updateNavigation();
+      },
+
+      handleChoice(choice) {
+        this.history.push(this.currentStep);
+        switch (choice) {
+          case 'opt-out':
+            this.goToStep(2);
+            break;
+          case 'refund':
+            this.goToStep(3);
+            break;
+          case 'info':
+            this.goToStep(9);
+            break;
+        }
+      },
+
+      checkRefundAfterOptOut() {
+        this.history.push(this.currentStep);
+        this.goToStep(5);
+      },
+
+      handleOptOutStatus(hasOptedOut) {
+        this.history.push(this.currentStep);
+        if (hasOptedOut) {
+          this.goToStep(5);
+        } else {
+          this.goToStep(4);
+        }
+      },
+
+      handleMembershipDuration(duration) {
+        this.history.push(this.currentStep);
+        switch (duration) {
+          case 'less-than-2':
+            this.goToStep(6);
+            break;
+          case 'almost-2':
+            this.goToStep(7);
+            break;
+          case 'more-than-2':
+            this.goToStep(8);
+            break;
+        }
+      },
+
+      goToStep(stepNumber) {
+        // Hide current step
+        const current = document.querySelector(`.step[data-step="${this.currentStep}"]`);
+        if (current) current.classList.remove('active');
+
+        // Show new step
+        this.currentStep = stepNumber;
+        const next = document.querySelector(`.step[data-step="${stepNumber}"]`);
+        if (next) next.classList.add('active');
+
+        // Update UI
+        this.updateBreadcrumbs();
+        this.updateProgressBar();
+        this.updateNavigation();
+
+        // Accessibility: focus first interactive control in the new step
+        if (next) {
+          const firstInteractive = next.querySelector('button, a, input, select, textarea');
+          if (firstInteractive) setTimeout(() => firstInteractive.focus(), 100);
+        }
+      },
+
+      goBack() {
+        if (this.history.length > 0) {
+          const previousStep = this.history.pop();
+          this.goToStep(previousStep);
+        }
+      },
+
+      reset() {
+        // Hide current
+        const current = document.querySelector(`.step[data-step="${this.currentStep}"]`);
+        if (current) current.classList.remove('active');
+
+        this.history = [];
+        this.currentStep = 1;
+
+        // Show step 1
+        const start = document.querySelector('.step[data-step="1"]');
+        if (start) start.classList.add('active');
+
+        this.updateBreadcrumbs();
+        this.updateProgressBar();
+        this.updateNavigation();
+
+        // Focus first option
+        const firstBtn = start && start.querySelector('button');
+        if (firstBtn) setTimeout(() => firstBtn.focus(), 100);
+      },
+
+      updateBreadcrumbs() {
+        const container = document.getElementById('breadcrumbs');
+        const path = [...this.history, this.currentStep];
+        container.innerHTML = path
+          .map((step, index) => {
+            const isLast = index === path.length - 1;
+            const stepInfo = this.steps[step] || { title: `Step ${step}`, progress: 0 };
+            return `
+              <span class="breadcrumb ${isLast ? 'active' : ''}" ${isLast ? 'aria-current="step"' : ''}>
+                ${stepInfo.title}
+              </span>
+              ${!isLast ? '<span class="arrow" aria-hidden="true">→</span>' : ''}
+            `;
+          })
+          .join('');
+      },
+
+      updateProgressBar() {
+        const progress = (this.steps[this.currentStep] && this.steps[this.currentStep].progress) || 0;
+        document.getElementById('progressBar').style.width = progress + '%';
+      },
+
+      updateNavigation() {
+        const backButton = document.getElementById('backButton');
+        backButton.style.visibility = this.history.length > 0 ? 'visible' : 'hidden';
+      }
+    };
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => app.init());
+
+    // Keyboard navigation: ESC to reset
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') app.reset();
+    });
+  </script>
+</body>
+</html>
