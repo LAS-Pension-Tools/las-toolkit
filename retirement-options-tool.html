@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>NHS Retirement Options Tool</title>
+
+  <!-- Favicon -->
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23023020'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3ERE%3C/text%3E%3C/svg%3E"
+  />
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      max-width: 750px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #023020 0%, #036635 100%);
+      color: #fff;
+      padding: 30px;
+      text-align: center;
+    }
+    .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+    .header p { opacity: 0.9; font-size: 14px; }
+
+    .progress-bar { height: 4px; background: #e0e0e0; position: relative; overflow: hidden; }
+    .progress-fill { height: 100%; background: #023020; width: 0; transition: width 0.3s ease; }
+
+    .content { padding: 30px; min-height: 300px; }
+    .step { display: none; animation: fadeIn 0.3s ease; }
+    .step.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+
+    .question { margin-bottom: 25px; }
+    .question h2 { color: #023020; font-size: 20px; margin-bottom: 10px; }
+    .question p { color: #666; font-size: 15px; }
+
+    .button-group { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+    button {
+      background: #fff;
+      color: #023020;
+      border: 2px solid #023020;
+      padding: 15px 25px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      position: relative;
+    }
+    button:hover,
+    button:focus {
+      background: #023020;
+      color: #fff;
+      transform: translateX(5px);
+    }
+    button:focus { outline: 3px solid #036635; outline-offset: 2px; }
+    button[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+    .result {
+      background: #f8f9fa;
+      border-left: 4px solid #023020;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .result h3 { color: #023020; margin-bottom: 10px; font-size: 18px; }
+    .result p { color: #333; margin-bottom: 10px; }
+    .result ul { margin-left: 20px; color: #555; }
+    .result ul li { margin-bottom: 8px; }
+
+    .navigation {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+    }
+    .nav-button {
+      background: transparent;
+      color: #023020;
+      border: 1px solid #ddd;
+      padding: 10px 20px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-button:hover {
+      background: #f8f9fa;
+      transform: none;
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #666;
+      flex-wrap: wrap;
+    }
+    .breadcrumb { display: flex; align-items: center; gap: 8px; }
+    .breadcrumb.active { color: #023020; font-weight: 600; }
+    .arrow { font-size: 18px; }
+
+    .info-box {
+      background: #e8f4f0;
+      border: 1px solid #a3d4c7;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    .info-box strong { color: #023020; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      vertical-align: top;
+    }
+    th {
+      background: #f0f2f5;
+      color: #023020;
+      text-align: left;
+    }
+
+    @media (max-width: 480px) {
+      .header h1 { font-size: 20px; }
+      .content { padding: 20px; }
+      button { padding: 12px 20px; font-size: 15px; }
+      table { font-size: 13px; }
+    }
+
+    a { color: #023020; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container" role="application" aria-label="NHS Retirement Options Tool">
+    <div class="header">
+      <h1>LAS Pensions Hub – Retirement Options Tool</h1>
+      <p>Guidance on Partial Retirement, Retire and Return, and full retirement. For LAS staff only.</p>
+    </div>
+
+    <div class="progress-bar" aria-hidden="true">
+      <div class="progress-fill" id="progressBar"></div>
+    </div>
+
+    <div class="content">
+      <div id="breadcrumbs" class="breadcrumbs" aria-label="Progress through questionnaire"></div>
+
+      <!-- Step 1: Start -->
+      <div class="step active" data-step="1" aria-live="polite">
+        <div class="question">
+          <h2>What are you thinking about doing?</h2>
+          <p>
+            This tool gives general guidance only. It does not replace the Intention to Retire form and is not financial advice.
+            Choose the option that best matches your current plans.
+          </p>
+        </div>
+        <div class="button-group" role="group" aria-label="Retirement options">
+          <button onclick="app.handleChoice('partial')" aria-describedby="partial-desc">
+            <strong>Partial Retirement (Draw Down)</strong>
+            <div id="partial-desc" style="font-size: 14px; color: #666; font-weight: normal;">
+              Take some or all of your pension while staying in work and reducing your pensionable pay.
+            </div>
+          </button>
+
+          <button onclick="app.handleChoice('rtr')" aria-describedby="rtr-desc">
+            <strong>Retire and Return</strong>
+            <div id="rtr-desc" style="font-size: 14px; color: #666; font-weight: normal;">
+              Retire, take a break of at least 14 days, then come back on a new contract (subject to approval).
+            </div>
+          </button>
+
+          <button onclick="app.handleChoice('full')" aria-describedby="full-desc">
+            <strong>Retire – No Return (LAS)</strong>
+            <div id="full-desc" style="font-size: 14px; color: #666; font-weight: normal;">
+              Finish work with LAS and take your NHS pension, with no plans to return.
+            </div>
+          </button>
+
+          <button onclick="app.handleChoice('info')" aria-describedby="info-desc">
+            <strong>I'm not sure – show me a comparison</strong>
+            <div id="info-desc" style="font-size: 14px; color: #666; font-weight: normal;">
+              See a simple overview of the main flexible retirement options.
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Partial – 10% reduction check -->
+      <div class="step" data-step="2">
+        <div class="question">
+          <h2>Can you reduce your pensionable pay by at least 10% for 12 months?</h2>
+          <p>
+            To use <strong>Partial Retirement (Draw Down)</strong>, NHS Pensions require your
+            <strong>pensionable pay</strong> to reduce by at least <strong>10%</strong>
+            for at least <strong>12 months</strong>. This is usually achieved by:
+          </p>
+          <ul style="margin-left: 20px; color: #555; margin-top: 8px;">
+            <li>Reducing your hours in your current role (wind down), and/or</li>
+            <li>Stepping down to a lower banded role with lower pensionable pay (step down).</li>
+          </ul>
+        </div>
+        <div class="button-group">
+          <button onclick="app.handlePartialEligibility(true)">
+            Yes – I can reduce my pensionable pay by at least 10% for 12 months
+          </button>
+          <button onclick="app.handlePartialEligibility(false)">
+            No / not sure – I can’t commit to that level of reduction
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Partial Retirement – likely suitable -->
+      <div class="step" data-step="3">
+        <div class="result">
+          <h3>✓ Partial Retirement (Draw Down) – key points</h3>
+          <p>
+            Partial retirement may be suitable if you want to <strong>stay in work</strong> but start taking
+            some or all of your NHS pension.
+          </p>
+          <p><strong>Headline features:</strong></p>
+          <ul>
+            <li>You can normally take between <strong>20% and 100%</strong> of your pension benefits.</li>
+            <li>You <strong>stay employed</strong> by LAS – there is <strong>no need to terminate</strong> your contract.</li>
+            <li>You must reduce your <strong>pensionable pay</strong> by at least <strong>10% for 12 months</strong>.</li>
+            <li>You can usually draw down pension on up to <strong>two occasions</strong> before full retirement.</li>
+            <li>You can continue to build further benefits in the <strong>2015 Scheme</strong> (if eligible).</li>
+            <li>Benefits taken before your Normal Pension Age will be <strong>actuarially reduced</strong>.</li>
+          </ul>
+
+          <p><strong>Next steps (linked to the Intention to Retire form):</strong></p>
+          <ul>
+            <li>
+              <strong>Check your eligibility</strong> and read the NHSBSA guidance on Partial Retirement and the
+              online calculators (Retire and return / partial retirement).
+            </li>
+            <li>
+              <strong>Discuss and agree</strong> your proposed working pattern or step-down with your
+              <strong>line manager</strong> and <strong>HR</strong>, including how overtime will be managed during the 12-month period.
+            </li>
+            <li>
+              Consider requesting a <strong>pension estimate directly from NHS Pensions</strong> so you can see
+              the impact of different retirement dates.
+            </li>
+            <li>
+              Once agreed, complete the <strong>LAS Intention to Retire form</strong> and tick
+              <strong>“Partial Retirement (Draw Down)”</strong>, then send it to the LAS Pensions Department.
+            </li>
+            <li>
+              Aim to give at least <strong>3 months’ notice</strong> before the date you want partial retirement to start.
+            </li>
+          </ul>
+
+          <div class="info-box">
+            <strong>Important:</strong> Partial retirement must be approved by Management and HR.
+            Your reduced pensionable pay must be maintained for at least 12 months. If you later
+            increase your pay too soon (for example via extra hours or promotion), this could affect
+            your eligibility for the pension already taken.
+          </div>
+
+          <p style="margin-top: 15px;">
+            You may also find it helpful to view a <strong>comparison of options</strong> before you decide:
+          </p>
+          <div class="button-group">
+            <button onclick="app.goToStep(7)">View comparison of retirement options</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Partial Retirement – not currently suitable -->
+      <div class="step" data-step="4">
+        <div class="result">
+          <h3>⚠ Partial Retirement may not be suitable right now</h3>
+          <p>
+            Partial retirement requires your <strong>pensionable pay</strong> to reduce by at least
+            <strong>10% for 12 months</strong>. If that cannot be achieved or approved, this option may not currently
+            be available.
+          </p>
+          <p><strong>Consider the following:</strong></p>
+          <ul>
+            <li>
+              Talk to your <strong>line manager</strong> and <strong>HR</strong> about whether a change in hours (wind down) or
+              a lower-banded role (step down) could be agreed in future.
+            </li>
+            <li>
+              If a 10% reduction cannot be maintained, you may wish to look at
+              <strong>Retire and Return</strong> instead, which uses a break in service and a new contract rather than
+              a pay reduction before retirement.
+            </li>
+            <li>
+              You can still request a <strong>pension estimate</strong> from NHS Pensions to understand the figures
+              for different retirement ages.
+            </li>
+          </ul>
+
+          <div class="info-box">
+            <strong>Tip:</strong> Even if partial retirement is not possible now, flexible options such as
+            <strong>wind down</strong> (reducing hours) or <strong>step down</strong> (moving to a lower banded role) may still
+            support your wellbeing and work–life balance in the lead-up to retirement.
+          </div>
+
+          <div class="button-group" style="margin-top: 15px;">
+            <button onclick="app.handleChoice('rtr')">Look at Retire and Return instead</button>
+            <button onclick="app.goToStep(7)">Show comparison of options</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Retire and Return -->
+      <div class="step" data-step="5">
+        <div class="result">
+          <h3>✓ Retire and Return – key points</h3>
+          <p>
+            <strong>Retire and Return</strong> allows you to take your NHS pension, have a break in service,
+            and then return to work for LAS on a new contract (subject to approval).
+          </p>
+          <p><strong>Headline features:</strong></p>
+          <ul>
+            <li>
+              You <strong>retire from LAS</strong> and take a <strong>mandatory break of at least 14 days</strong>
+              (Sunday to Saturday) before returning.
+            </li>
+            <li>
+              You come back on a <strong>new contract of employment</strong> with a new Date Entered Service.
+            </li>
+            <li>
+              If you are currently on <strong>Section 5</strong>, any <strong>new contract will be on Section 2</strong> terms.
+            </li>
+            <li>
+              Your previous service will still count for things like <strong>annual leave</strong> (subject to local policy),
+              but some entitlements may change if the break is long.
+            </li>
+            <li>
+              You may be able to <strong>re-join the 2015 Scheme</strong> and continue to build pension, depending on age and eligibility.
+            </li>
+          </ul>
+
+          <p><strong>Next steps (linked to the Intention to Retire form):</strong></p>
+          <ul>
+            <li>
+              Discuss your plans with your <strong>line manager</strong> and <strong>HR</strong> before you give formal notice,
+              including proposed hours, role and start date of the return.
+            </li>
+            <li>
+              Check your pension position and, if needed, request an <strong>estimate from NHS Pensions</strong>.
+            </li>
+            <li>
+              When ready, complete the <strong>LAS Intention to Retire form</strong> and select
+              <strong>“Retire and Return”</strong>.
+            </li>
+            <li>
+              Aim to give at least <strong>3 months’ notice</strong> before your retirement date so your AW8 and retirement
+              pack can be prepared in time.
+            </li>
+            <li>
+              Ensure you understand how your <strong>new contract</strong> will be structured (band, hours, Section 2,
+              work pattern, location).
+            </li>
+          </ul>
+
+          <div class="info-box">
+            <strong>Important:</strong> Retire and Return must be approved by Management and HR and
+            must also comply with LAS and NHS Pensions rules. This tool does not grant approval and
+            does not replace any formal process or policy.
+          </div>
+
+          <p style="margin-top: 15px;">
+            If you are unsure whether Retire and Return or Partial Retirement is better for you, you can view a
+            simple comparison:
+          </p>
+          <div class="button-group">
+            <button onclick="app.goToStep(7)">View comparison of retirement options</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6: Retire – No Return -->
+      <div class="step" data-step="6">
+        <div class="result">
+          <h3>✓ Retire – No Return (LAS)</h3>
+          <p>
+            You are planning to <strong>leave LAS and not return</strong>. You will take your NHS pension in line
+            with the Scheme rules and will not be taking up a new LAS contract.
+          </p>
+          <p><strong>Headline features:</strong></p>
+          <ul>
+            <li>
+              You resign from your LAS post and <strong>fully retire</strong> from your role.
+            </li>
+            <li>
+              You normally do <strong>not</strong> intend to return to LAS, although you could work elsewhere
+              in future within HMRC and NHS Pensions rules.
+            </li>
+            <li>
+              Your NHS pension is put into payment from the agreed retirement date (subject to NHS Pensions approval).
+            </li>
+            <li>
+              If you retire <strong>before</strong> your Normal Pension Age, your benefits may be
+              <strong>actuarially reduced</strong>.
+            </li>
+          </ul>
+
+          <p><strong>Next steps (linked to the Intention to Retire form):</strong></p>
+          <ul>
+            <li>
+              Discuss your intended <strong>retirement date</strong> and notice period with your
+              <strong>line manager</strong> and <strong>HR</strong>.
+            </li>
+            <li>
+              Consider requesting a <strong>pension estimate from NHS Pensions</strong> to confirm figures for your planned date.
+            </li>
+            <li>
+              Complete the <strong>LAS Intention to Retire form</strong> and select
+              <strong>“Retire – No Return (LAS)”</strong>.
+            </li>
+            <li>
+              The LAS Pensions Department will then issue your retirement pack (including the AW8 form) once
+              your termination form has been received and processed.
+            </li>
+          </ul>
+
+          <div class="info-box">
+            <strong>Reminder:</strong> This option is for staff who do not plan to return to LAS. If you think
+            you might want to come back later, you may wish to explore <strong>Retire and Return</strong> first.
+          </div>
+
+          <div class="button-group" style="margin-top: 15px;">
+            <button onclick="app.goToStep(7)">View comparison of retirement options</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7: Comparison / General Info -->
+      <div class="step" data-step="7">
+        <div class="result">
+          <h3>📋 Comparing your main retirement options</h3>
+          <p>
+            This table summarises the main differences between <strong>Partial Retirement (Draw Down)</strong>,
+            <strong>Retire and Return</strong>, and <strong>Retire – No Return (LAS)</strong>, plus other flexibilities such as
+            wind down and step down.
+          </p>
+
+          <table aria-label="Comparison of retirement options">
+            <thead>
+              <tr>
+                <th>Option</th>
+                <th>What it involves</th>
+                <th>Break in service?</th>
+                <th>Contract / pay changes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Partial Retirement (Draw Down)</strong></td>
+                <td>
+                  Take some or all of your pension while staying in employment. You continue working
+                  on reduced pensionable pay and may build further pension in the 2015 Scheme.
+                </td>
+                <td><strong>No</strong> – you remain continuously employed by LAS.</td>
+                <td>
+                  Must reduce pensionable pay by at least <strong>10% for 12 months</strong> (e.g. fewer hours or
+                  lower banded role). Contract continues; pattern/pay is varied.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Retire and Return</strong></td>
+                <td>
+                  Retire and take your pension, take a break (minimum 14 days), then return to LAS on
+                  a new contract if approved.
+                </td>
+                <td>
+                  <strong>Yes</strong> – mandatory break of at least 14 days (Sunday to Saturday) between
+                  retirement and return.
+                </td>
+                <td>
+                  New contract, new Date Entered Service. If you were on <strong>Section 5</strong>, you return on
+                  <strong>Section 2</strong> terms. Hours, role and location are agreed with management and HR.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Retire – No Return (LAS)</strong></td>
+                <td>
+                  Finish work with LAS and take your NHS pension. No planned return to LAS employment.
+                </td>
+                <td>
+                  You leave LAS at your retirement date (no planned re-employment with LAS).
+                </td>
+                <td>
+                  Your LAS contract ends. No new contract is issued. You are fully retired from LAS.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Wind Down / Step Down</strong></td>
+                <td>
+                  Stay in work but reduce hours (wind down) and/or move to a lower banded role
+                  (step down) without taking pension yet. May be used on its own or alongside partial retirement.
+                </td>
+                <td><strong>No</strong> – you remain in employment.</td>
+                <td>
+                  Reduced hours and/or lower banded role with lower pensionable pay. Local approval and business
+                  need apply. May support the 10% reduction needed for partial retirement.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="info-box">
+            <strong>Important:</strong> This tool is for <strong>guidance only</strong> and does not override any NHS Pensions
+            or LAS policies. It is not financial advice. For personalised advice, you should speak to an
+            independent financial adviser.
+          </div>
+
+          <p style="margin-top: 15px;"><strong>Useful next steps and contacts:</strong></p>
+          <ul>
+            <li>
+              Read the <strong>Ready for Retirement</strong> (or <strong>Planning for Retirement</strong>) page on the
+              LAS Pensions Hub for local process details.
+            </li>
+            <li>
+              Contact the <strong>LAS Pensions Department</strong> for questions about forms and local processes:
+              <ul style="margin-top: 5px;">
+                <li>Tel: <a href="tel:02032674866">020 3267 4866</a></li>
+                <li>Email: <a href="mailto:londamb.Pensions@nhs.net">londamb.Pensions@nhs.net</a></li>
+              </ul>
+            </li>
+            <li>
+              Visit the NHSBSA website for national guidance on <strong>partial retirement</strong> and
+              <strong>flexible retirement options</strong>.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="navigation" id="navigation">
+        <button class="nav-button" onclick="app.goBack()" id="backButton">
+          <span class="arrow">←</span> Back
+        </button>
+        <button class="nav-button" onclick="app.reset()">Start Over</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const app = {
+      currentStep: 1,
+      history: [],
+      steps: {
+        1: { title: 'Start', progress: 0 },
+        2: { title: 'Check 10% reduction', progress: 40 },
+        3: { title: 'Partial – next steps', progress: 80 },
+        4: { title: 'Partial – other options', progress: 80 },
+        5: { title: 'Retire and Return', progress: 80 },
+        6: { title: 'Retire – No Return', progress: 80 },
+        7: { title: 'Compare options', progress: 100 }
+      },
+
+      init() {
+        this.updateBreadcrumbs();
+        this.updateProgressBar();
+        this.updateNavigation();
+      },
+
+      handleChoice(choice) {
+        this.history.push(this.currentStep);
+
+        switch (choice) {
+          case 'partial':
+            this.goToStep(2);
+            break;
+          case 'rtr':
+            this.goToStep(5);
+            break;
+          case 'full':
+            this.goToStep(6);
+            break;
+          case 'info':
+            this.goToStep(7);
+            break;
+        }
+      },
+
+      handlePartialEligibility(isEligible) {
+        this.history.push(this.currentStep);
+        if (isEligible) {
+          this.goToStep(3);
+        } else {
+          this.goToStep(4);
+        }
+      },
+
+      goToStep(stepNumber) {
+        const current = document.querySelector(\`.step[data-step="\${this.currentStep}"]\`);
+        if (current) current.classList.remove('active');
+
+        this.currentStep = stepNumber;
+        const next = document.querySelector(\`.step[data-step="\${stepNumber}"]\`);
+        if (next) next.classList.add('active');
+
+        this.updateBreadcrumbs();
+        this.updateProgressBar();
+        this.updateNavigation();
+
+        if (next) {
+          const firstInteractive = next.querySelector('button, a, input, select, textarea');
+          if (firstInteractive) setTimeout(() => firstInteractive.focus(), 100);
+        }
+      },
+
+      goBack() {
+        if (this.history.length > 0) {
+          const previousStep = this.history.pop();
+          this.goToStep(previousStep);
+        }
+      },
+
+      reset() {
+        const current = document.querySelector(\`.step[data-step="\${this.currentStep}"]\`);
+        if (current) current.classList.remove('active');
+
+        this.history = [];
+        this.currentStep = 1;
+
+        const start = document.querySelector('.step[data-step="1"]');
+        if (start) start.classList.add('active');
+
+        this.updateBreadcrumbs();
+        this.updateProgressBar();
+        this.updateNavigation();
+
+        const firstBtn = start && start.querySelector('button');
+        if (firstBtn) setTimeout(() => firstBtn.focus(), 100);
+      },
+
+      updateBreadcrumbs() {
+        const container = document.getElementById('breadcrumbs');
+        const path = [...this.history, this.currentStep];
+
+        container.innerHTML = path
+          .map((step, index) => {
+            const isLast = index === path.length - 1;
+            const stepInfo = this.steps[step] || { title: \`Step \${step}\`, progress: 0 };
+            return \`
+              <span class="breadcrumb \${isLast ? 'active' : ''}" \${isLast ? 'aria-current="step"' : ''}>
+                \${stepInfo.title}
+              </span>
+              \${!isLast ? '<span class="arrow" aria-hidden="true">→</span>' : ''}
+            \`;
+          })
+          .join('');
+      },
+
+      updateProgressBar() {
+        const progress = (this.steps[this.currentStep] && this.steps[this.currentStep].progress) || 0;
+        document.getElementById('progressBar').style.width = progress + '%';
+      },
+
+      updateNavigation() {
+        const backButton = document.getElementById('backButton');
+        backButton.style.visibility = this.history.length > 0 ? 'visible' : 'hidden';
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => app.init());
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') app.reset();
+    });
+  </script>
+</body>
+</html>
