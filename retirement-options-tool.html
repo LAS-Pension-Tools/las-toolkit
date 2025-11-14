@@ -30,7 +30,7 @@
       background: #fff;
       border-radius: 12px;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-      max-width: 750px;
+      max-width: 800px;
       width: 100%;
       overflow: hidden;
     }
@@ -172,7 +172,7 @@
   <div class="container" role="application" aria-label="NHS Retirement Options Tool">
     <div class="header">
       <h1>LAS Pensions Hub – Retirement Options Tool</h1>
-      <p>Guidance on Partial Retirement, Retire and Return, and full retirement. For LAS staff only.</p>
+      <p>Guidance on Partial Retirement, Retire and Return, full retirement and NASPF flexible options. For LAS staff only.</p>
     </div>
 
     <div class="progress-bar" aria-hidden="true">
@@ -187,7 +187,7 @@
         <div class="question">
           <h2>What are you thinking about doing?</h2>
           <p>
-            This tool gives general guidance only. It does not replace the Intention to Retire form and is not financial advice.
+            This tool gives general guidance only. It does not replace the LAS Intention to Retire form and is not financial advice.
             Choose the option that best matches your current plans.
           </p>
         </div>
@@ -214,9 +214,16 @@
           </button>
 
           <button onclick="app.handleChoice('info')" aria-describedby="info-desc">
-            <strong>I'm not sure – show me a comparison</strong>
+            <strong>I’m not sure – show me a comparison</strong>
             <div id="info-desc" style="font-size: 14px; color: #666; font-weight: normal;">
-              See a simple overview of the main flexible retirement options.
+              See an overview of the main retirement options side by side.
+            </div>
+          </button>
+
+          <button onclick="app.handleChoice('plan')" aria-describedby="plan-desc">
+            <strong>Planning ahead / flexible options (NASPF)</strong>
+            <div id="plan-desc" style="font-size: 14px; color: #666; font-weight: normal;">
+              I’m more than 12 months away from retiring and want to explore wind down, step down, AVCs, ERRBO, etc.
             </div>
           </button>
         </div>
@@ -256,10 +263,10 @@
           </p>
           <p><strong>Headline features:</strong></p>
           <ul>
-            <li>You can normally take between <strong>20% and 100%</strong> of your pension benefits.</li>
+            <li>You can usually take between <strong>20% and 100%</strong> of your pension benefits.</li>
             <li>You <strong>stay employed</strong> by LAS – there is <strong>no need to terminate</strong> your contract.</li>
             <li>You must reduce your <strong>pensionable pay</strong> by at least <strong>10% for 12 months</strong>.</li>
-            <li>You can usually draw down pension on up to <strong>two occasions</strong> before full retirement.</li>
+            <li>You can normally draw down pension on up to <strong>two occasions</strong> before full retirement.</li>
             <li>You can continue to build further benefits in the <strong>2015 Scheme</strong> (if eligible).</li>
             <li>Benefits taken before your Normal Pension Age will be <strong>actuarially reduced</strong>.</li>
           </ul>
@@ -267,8 +274,8 @@
           <p><strong>Next steps (linked to the Intention to Retire form):</strong></p>
           <ul>
             <li>
-              <strong>Check your eligibility</strong> and read the NHSBSA guidance on Partial Retirement and the
-              online calculators (Retire and return / partial retirement).
+              <strong>Check your eligibility</strong> and read the NHSBSA guidance on Partial Retirement and
+              flexible retirement calculators.
             </li>
             <li>
               <strong>Discuss and agree</strong> your proposed working pattern or step-down with your
@@ -331,7 +338,7 @@
 
           <div class="info-box">
             <strong>Tip:</strong> Even if partial retirement is not possible now, flexible options such as
-            <strong>wind down</strong> (reducing hours) or <strong>step down</strong> (moving to a lower banded role) may still
+            <strong>wind down</strong> (reducing hours) or <strong>step down</strong> (moving to a lower-banded role) may still
             support your wellbeing and work–life balance in the lead-up to retirement.
           </div>
 
@@ -495,7 +502,7 @@
                 <td><strong>No</strong> – you remain continuously employed by LAS.</td>
                 <td>
                   Must reduce pensionable pay by at least <strong>10% for 12 months</strong> (e.g. fewer hours or
-                  lower banded role). Contract continues; pattern/pay is varied.
+                  lower-banded role). Contract continues; pattern/pay is varied.
                 </td>
               </tr>
               <tr>
@@ -528,12 +535,12 @@
               <tr>
                 <td><strong>Wind Down / Step Down</strong></td>
                 <td>
-                  Stay in work but reduce hours (wind down) and/or move to a lower banded role
+                  Stay in work but reduce hours (wind down) and/or move to a lower-banded role
                   (step down) without taking pension yet. May be used on its own or alongside partial retirement.
                 </td>
                 <td><strong>No</strong> – you remain in employment.</td>
                 <td>
-                  Reduced hours and/or lower banded role with lower pensionable pay. Local approval and business
+                  Reduced hours and/or lower-banded role with lower pensionable pay. Local approval and business
                   need apply. May support the 10% reduction needed for partial retirement.
                 </td>
               </tr>
@@ -567,6 +574,127 @@
         </div>
       </div>
 
+      <!-- Step 8: Planning ahead (NASPF options) -->
+      <div class="step" data-step="8">
+        <div class="result">
+          <h3>🧭 Planning ahead – NASPF flexible retirement options</h3>
+          <p>
+            If you are more than 12 months away from retiring, the National Ambulance Social Partnership Forum
+            (NASPF) guidance highlights several ways to shape your working life and pension before you reach
+            retirement.
+          </p>
+
+          <p><strong>1. Step down to a lower-graded role</strong></p>
+          <ul>
+            <li>
+              Voluntarily move to a lower-banded role, usually with fewer responsibilities and a different pay rate.
+            </li>
+            <li>
+              Can reduce work intensity and support your wellbeing as you approach retirement.
+            </li>
+            <li>
+              Permanent change – depends on a suitable vacancy and there is no automatic right to move back up.
+            </li>
+            <li>
+              May be used on its own or combined with partial retirement (if the 10% pensionable pay reduction
+              requirement is met).
+            </li>
+          </ul>
+
+          <p><strong>2. Wind down (flexible / part-time working in current role)</strong></p>
+          <ul>
+            <li>
+              Stay in your current role but reduce your hours instead of stepping down to a different post.
+            </li>
+            <li>
+              Final salary benefits already built up in the 1995/2008 sections are based on whole-time equivalent pay,
+              not your part-time pay.
+            </li>
+            <li>
+              Future 2015 Scheme pension is based on actual pay – so reducing hours will reduce future build-up.
+            </li>
+            <li>
+              Can help you transition gradually towards retirement and can be used with partial retirement if the
+              reduction in hours meets the 10% pensionable pay rule.
+            </li>
+          </ul>
+
+          <p><strong>3. Additional Pension within the NHS Scheme</strong></p>
+          <ul>
+            <li>
+              Lets you buy extra defined benefit pension in fixed amounts up to the scheme limit while you are an
+              active 2015 Scheme member.
+            </li>
+            <li>
+              Cost depends on your age and the amount of additional pension you choose.
+            </li>
+            <li>
+              Increases the secure, inflation-linked income you receive from the NHS Pension Scheme at retirement.
+            </li>
+          </ul>
+
+          <p><strong>4. Money Purchase AVC (MPAVC)</strong></p>
+          <ul>
+            <li>
+              Extra pension saving with an external provider (e.g. Standard Life or Prudential) alongside your NHS pension.
+            </li>
+            <li>
+              Contributions are invested to build up a pot that can be used at retirement within tax rules.
+            </li>
+            <li>
+              Investment values can go up or down – unlike the defined benefits in the main NHS scheme, they are not guaranteed.
+            </li>
+          </ul>
+
+          <p><strong>5. Early Retirement Reduction Buy Out (ERRBO)</strong></p>
+          <ul>
+            <li>
+              For 2015 Scheme members – pay extra to reduce or remove some of the early retirement reduction
+              if you retire up to 1–3 years before your Normal Pension Age.
+            </li>
+            <li>
+              There is a maximum on the total extra benefits you can buy; cost depends on age and how many years
+              of reduction you want to cover.
+            </li>
+            <li>
+              For eligible frontline ambulance staff, part of the ERRBO cost may be met by the employer under the
+              national ambulance arrangements.
+            </li>
+          </ul>
+
+          <div class="info-box">
+            <strong>Key considerations across all NASPF options:</strong>
+            <ul style="margin-left: 18px; margin-top: 6px;">
+              <li>Impact on your take-home pay and future pension build-up.</li>
+              <li>Whether the change is permanent (e.g. step down) or can be adjusted later (e.g. wind down hours).</li>
+              <li>Whether a suitable post is available and your manager/HR can agree the change.</li>
+              <li>Your wider plans – for example, whether you may later use partial retirement or retire and return.</li>
+            </ul>
+          </div>
+
+          <p style="margin-top: 15px;"><strong>What to do next:</strong></p>
+          <ul>
+            <li>
+              Read the NASPF <strong>Flexible Retirement Options</strong> guide and relevant NHSBSA webpages.
+            </li>
+            <li>
+              Discuss options such as step down or wind down with your <strong>line manager</strong> and <strong>HR</strong>.
+            </li>
+            <li>
+              Use your <strong>Total Reward Statement</strong> and any pension estimates to understand how your choices
+              could affect your retirement income.
+            </li>
+            <li>
+              Consider speaking to an <strong>independent financial adviser</strong> if you need personalised financial advice.
+            </li>
+          </ul>
+
+          <div class="button-group" style="margin-top: 15px;">
+            <button onclick="app.goToStep(7)">View comparison of retirement options</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Navigation -->
       <div class="navigation" id="navigation">
         <button class="nav-button" onclick="app.goBack()" id="backButton">
@@ -588,7 +716,8 @@
         4: { title: 'Partial – other options', progress: 80 },
         5: { title: 'Retire and Return', progress: 80 },
         6: { title: 'Retire – No Return', progress: 80 },
-        7: { title: 'Compare options', progress: 100 }
+        7: { title: 'Compare options', progress: 100 },
+        8: { title: 'Planning ahead (NASPF)', progress: 60 }
       },
 
       init() {
@@ -613,6 +742,9 @@
           case 'info':
             this.goToStep(7);
             break;
+          case 'plan':
+            this.goToStep(8);
+            break;
         }
       },
 
@@ -626,11 +758,11 @@
       },
 
       goToStep(stepNumber) {
-        const current = document.querySelector(\`.step[data-step="\${this.currentStep}"]\`);
+        const current = document.querySelector(`.step[data-step="${this.currentStep}"]`);
         if (current) current.classList.remove('active');
 
         this.currentStep = stepNumber;
-        const next = document.querySelector(\`.step[data-step="\${stepNumber}"]\`);
+        const next = document.querySelector(`.step[data-step="${stepNumber}"]`);
         if (next) next.classList.add('active');
 
         this.updateBreadcrumbs();
@@ -651,7 +783,7 @@
       },
 
       reset() {
-        const current = document.querySelector(\`.step[data-step="\${this.currentStep}"]\`);
+        const current = document.querySelector(`.step[data-step="${this.currentStep}"]`);
         if (current) current.classList.remove('active');
 
         this.history = [];
@@ -675,13 +807,13 @@
         container.innerHTML = path
           .map((step, index) => {
             const isLast = index === path.length - 1;
-            const stepInfo = this.steps[step] || { title: \`Step \${step}\`, progress: 0 };
-            return \`
-              <span class="breadcrumb \${isLast ? 'active' : ''}" \${isLast ? 'aria-current="step"' : ''}>
-                \${stepInfo.title}
+            const stepInfo = this.steps[step] || { title: `Step ${step}`, progress: 0 };
+            return `
+              <span class="breadcrumb ${isLast ? 'active' : ''}" ${isLast ? 'aria-current="step"' : ''}>
+                ${stepInfo.title}
               </span>
-              \${!isLast ? '<span class="arrow" aria-hidden="true">→</span>' : ''}
-            \`;
+              ${!isLast ? '<span class="arrow" aria-hidden="true">→</span>' : ''}
+            `;
           })
           .join('');
       },
@@ -698,7 +830,6 @@
     };
 
     document.addEventListener('DOMContentLoaded', () => app.init());
-
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') app.reset();
     });
